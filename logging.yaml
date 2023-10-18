@@ -1,0 +1,29 @@
+version: 1
+loggers:
+  uvicorn.access:
+    handlers: [ efk ]
+    level: INFO
+#    propagate: True
+formatters:
+  human:
+    format: '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s'
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+  json:
+    format: '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s | %(exc_text)s %(exc_info)s'
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+    class: 'pythonjsonlogger.jsonlogger.JsonFormatter'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: human
+    level: DEBUG
+    stream: ext://sys.stdout
+  efk:
+    class: logging.StreamHandler
+    formatter: json
+    level: DEBUG
+    stream: ext://sys.stdout
+root:
+  level: DEBUG
+  handlers:
+    - efk
