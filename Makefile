@@ -1,6 +1,6 @@
 default: help
 
-.PHONY: help test coverage run dev docker-build docker-build-x86 docker-run docker-stop docker-rm
+.PHONY: help test coverage run dev docker-build docker-build-x86 docker-run docker-stop docker-rm redis
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
@@ -32,3 +32,6 @@ docker-stop: # stop cloud-native container
 
 docker-rm: # rm cloud-native container
 	docker rm cloud-native
+
+redis: # run redis docker
+	docker run -d --rm --name redis -p 6379:6379 redis
