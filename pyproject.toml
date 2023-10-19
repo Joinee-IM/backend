@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "fastapi-backend-template"
+name = "cloud-native"
 version = "0.1.0"
 description = ""
 authors = ["wsa"]
