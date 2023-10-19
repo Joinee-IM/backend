@@ -1,7 +1,9 @@
+import logging
 from unittest.mock import patch
 
 from fastapi import Request
 
+from config import app_config
 import exceptions as exc
 from middleware.envelope import middleware
 from util.mock import AsyncTestCase, AsyncMock
@@ -10,6 +12,7 @@ from util.mock import AsyncTestCase, AsyncMock
 class TestMiddleware(AsyncTestCase):
     def setUp(self) -> None:
         self.request = Request({'type': 'http', 'method': 'GET', 'headers': []})
+        logging.getLogger(app_config.logger_name).disabled = True
 
     async def test_happy_path(self):
         call_next = AsyncMock(return_value=None)

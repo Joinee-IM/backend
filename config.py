@@ -31,6 +31,7 @@ class AppConfig:
     title = env_values.get('APP_TITLE')
     docs_url = env_values.get('APP_DOCS_URL', None)
     redoc_url = env_values.get('APP_REDOC_URL', None)
+    logger_name = env_values.get('APP_LOGGER_NAME', None)
 
 
 class JWTConfig:
@@ -56,9 +57,15 @@ class S3Config:
     secret_key = env_values.get('S3_SECRET_KEY')
 
 
+class RedisConfig:
+    url = env_values.get('REDIS_URL')
+    max_pool_size = int(env_values.get('REDIS_MAX_POOL_SIZE') or 1)
+
+
 pg_config = PGConfig()
 ch_config = CHConfig()
 app_config = AppConfig()
 jwt_config = JWTConfig()
 amqp_config = AMQPConfig()
 s3_config = S3Config()
+redis_config = RedisConfig()

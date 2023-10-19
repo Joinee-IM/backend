@@ -3,13 +3,12 @@ import collections
 import itertools
 import typing
 
-import asynch
 import asyncpg
 
 import exceptions as exc
 import log
 
-from . import clickhouse_pool_handler, pg_pool_handler
+from . import pg_pool_handler
 
 
 class QueryExecutor:
@@ -49,35 +48,6 @@ class QueryExecutor:
         raise NotImplementedError
 
 
-class ClickHouseQueryExecutor(QueryExecutor):
-
-    @staticmethod
-    def _format(sql: str, parameters: dict[str, any] = None, **params):
-        named_args = {**params}
-        if parameters:
-            named_args.update(parameters)
-        log.info((sql, named_args))
-        return sql, named_args
-
-    async def fetch_all(self):
-        async with clickhouse_pool_handler.cursor() as cursor:
-            cursor: asynch.connection.Cursor
-            await cursor.execute(self.sql, self.params)
-            results = await cursor.fetchall()
-        return results
-
-    async def fetch_one(self):
-        async with clickhouse_pool_handler.cursor() as cursor:
-            await cursor.execute(self.sql, self.params)
-            result = await cursor.fetchone()
-        return result
-
-    async def fetch_none(self):
-        async with clickhouse_pool_handler.cursor() as cursor:
-            await cursor.execute(self.sql, self.params)
-            await cursor.fetchall()
-
-
 class PostgresQueryExecutor(QueryExecutor):
     UNIQUE_VIOLATION_ERROR = asyncpg.exceptions.UniqueViolationError
 
@@ -107,12 +77,12 @@ class PostgresQueryExecutor(QueryExecutor):
         return results
 
     async def fetch_one(self):
-        async with clickhouse_pool_handler.cursor() as cursor:
+        async with pg_pool_handler.cursor() as cursor:
             cursor: asyncpg.connection.Connection
             result = await cursor.fetchrow(self.sql, *self.params)
         return result
 
     async def fetch_none(self):
-        async with clickhouse_pool_handler.cursor() as cursor:
+        async with pg_pool_handler.cursor() as cursor:
             cursor: asyncpg.connection.Connection
             await cursor.execute(self.sql, *self.params)

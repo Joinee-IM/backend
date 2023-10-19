@@ -3,28 +3,38 @@ import traceback
 
 from starlette_context import context
 
+from config import app_config
 
-logger = logging.getLogger(__name__)
+
+logger = logging.getLogger(app_config.logger_name)
 
 
-def info(msg, extra=None):
-    logger.info(f"request {context['request_uuid']}\t{msg}", extra=extra)
+def info(msg, extra: dict = None):
+    extra = {} if not extra else extra
+    extra['request_uuid'] = context['request_uuid']
+    logger.info(msg, extra=extra)
 
 
 def debug(msg, extra=None):
-    logger.debug(f"request {context['request_uuid']}\t{msg}", extra=extra)
+    extra = {} if not extra else extra
+    extra['request_uuid'] = context['request_uuid']
+    logger.debug(msg, extra=extra)
 
 
 def error(msg, extra=None):
-    logger.error(f"request {context['request_uuid']}\t{msg}", extra=extra)
+    extra = {} if not extra else extra
+    extra['request_uuid'] = context['request_uuid']
+    logger.error(msg, extra=extra)
 
 
-def exception(exc: Exception, msg='', info_level=False):
+def exception(exc: Exception, msg='', info_level=False, extra: dict = None):
+    extra = {} if not extra else extra
+    extra['request_uuid'] = context['request_uuid']
     if info_level:
-        logger.info(f"{format_exc(exc)}\n{traceback.format_exc()}")
+        logger.info(f"{format_exc(exc)}\n{traceback.format_exc()}", extra=extra)
     else:
-        logger.error(f"request {context['request_uuid']}\t{msg}\t{exc.__repr__()}")
-        logger.exception(exc)
+        logger.error(f"{msg}\t{exc.__repr__()}", extra=extra)
+        logger.exception(exc, extra=extra)
 
 
 def format_exc(e: Exception):
