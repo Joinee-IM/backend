@@ -1,11 +1,6 @@
 import json
 import dataclasses
 
-import pydantic
-
-from base import do
-import persistence.database as db
-
 # template for unmarshal mq message
 # def unmarshal_report(body: bytes) -> do.JudgeReport:
 #     return pydantic.parse_raw_as(do.JudgeReport, body.decode())

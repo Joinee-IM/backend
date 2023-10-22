@@ -10,7 +10,7 @@ from typing import AsyncContextManager
 import asyncpg
 
 from base import mcs
-from config import PGConfig, CHConfig
+from config import PGConfig
 from persistence import PoolHandlerBase
 
 

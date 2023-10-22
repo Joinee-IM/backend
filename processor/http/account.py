@@ -30,8 +30,6 @@ class AddAccountOutput:
 
 @router.post('/account')
 async def add_account(data: AddAccountInput) -> AddAccountOutput:
-    if await db.account.is_duplicate_student_id(student_id=data.student_id):
-        raise exc.DuplicateStudentId
 
     account_id = await db.account.add(username=data.username,
                                       pass_hash=hash_password(data.password))
@@ -51,7 +49,7 @@ class LoginOutput:
 
 
 @router.post('/login')
-async def login(data: LoginInput, db_=Depends()) -> LoginOutput:
+async def login(data: LoginInput) -> LoginOutput:
     try:
         account_id, pass_hash, role = await db.account.read_by_username(data.username)
     except TypeError:

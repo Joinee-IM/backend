@@ -1,8 +1,7 @@
 import aio_pika
 
-from config import AMQPConfig, AMQP_PUBLISH_QUEUE
-from base import mcs, do
-from processor.amqp import marshal
+from config import AMQPConfig
+from base import mcs
 
 
 class AMQPPublishHandler(metaclass=mcs.Singleton):
