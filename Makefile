@@ -35,3 +35,12 @@ docker-rm: # rm cloud-native container
 
 redis: # run redis docker
 	docker run -d --rm --name redis -p 6379:6379 redis
+
+helm-upgrade: # helm upgrade
+	helm upgrade cloud-native deploy --install --namespace=cloud-native  --values deploy/values.yaml
+
+NODE_PORT := $(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native)
+NODE_IP := $(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}")
+
+show_url:
+	echo http://$(NODE_IP):$(NODE_PORT)
