@@ -3,7 +3,7 @@ import traceback
 
 from starlette_context import context
 
-from config import app_config
+from app.config import app_config
 
 
 logger = logging.getLogger(app_config.logger_name)

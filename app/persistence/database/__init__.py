@@ -9,9 +9,9 @@ from typing import AsyncContextManager
 
 import asyncpg
 
-from base import mcs
-from config import PGConfig
-from persistence import PoolHandlerBase
+from app.base import mcs
+from app.config import PGConfig
+from app.persistence import PoolHandlerBase
 
 
 class PGPoolHandler(PoolHandlerBase, metaclass=mcs.Singleton):

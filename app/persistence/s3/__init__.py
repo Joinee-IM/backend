@@ -2,8 +2,8 @@ import aioboto3
 import typing
 from uuid import UUID
 
-from base import mcs
-from config import S3Config
+from app.base import mcs
+from app.config import S3Config
 
 
 class S3Handler(metaclass=mcs.Singleton):

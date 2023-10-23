@@ -1,5 +1,5 @@
 from fastapi import Request
-import log
+import app.log as log
 
 
 async def middleware(request: Request, call_next):

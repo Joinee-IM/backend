@@ -4,10 +4,10 @@ from unittest.mock import patch
 from fastapi import Request, Response
 from freezegun import freeze_time
 
-from base.enums import RoleType
-from middleware.auth import middleware
-from util.mock import AsyncTestCase, AsyncMock, Mock
-from security import AuthedAccount
+from app.base.enums import RoleType
+from app.middleware.auth import middleware
+from app.security import AuthedAccount
+from test import AsyncTestCase, AsyncMock, Mock
 
 
 class TestMiddleware(AsyncTestCase):
@@ -34,7 +34,7 @@ class TestMiddleware(AsyncTestCase):
     @freeze_time('2023-10-18')
     async def test_without_auth_token(self):
         with (
-            patch('middleware.auth.context', self.context) as context,
+            patch('app.middleware.auth.context', self.context) as context,
             patch('uuid.uuid1', Mock(return_value=self.uuid)),
         ):
             result = await middleware(self.request, self.call_next)
@@ -46,9 +46,9 @@ class TestMiddleware(AsyncTestCase):
     @freeze_time('2023-10-18')
     async def test_with_auth_token(self):
         with (
-            patch('middleware.auth.context', self.context) as context,
+            patch('app.middleware.auth.context', self.context) as context,
             patch('uuid.uuid1', Mock(return_value=self.uuid)),
-            patch('security.decode_jwt', Mock(return_value=self.jwt_result))
+            patch('app.security.decode_jwt', Mock(return_value=self.jwt_result))
         ):
             result = await middleware(self.request_with_auth_token, self.call_next)
             self.assertDictEqual(context, self.context_expect_result_with_auth_token)

@@ -5,8 +5,8 @@ import typing
 
 import asyncpg
 
-import exceptions as exc
-import log
+import app.exceptions as exc
+import app.log as log
 
 from . import pg_pool_handler
 

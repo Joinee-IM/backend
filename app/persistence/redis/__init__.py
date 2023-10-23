@@ -3,8 +3,8 @@ from typing import AsyncContextManager
 
 import aioredis
 
-from config import RedisConfig
-from persistence import PoolHandlerBase
+from app.config import RedisConfig
+from app.persistence import PoolHandlerBase
 
 
 class RedisPoolHandler(PoolHandlerBase):

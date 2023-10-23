@@ -5,9 +5,9 @@ from typing import NamedTuple
 import jwt
 from passlib.hash import argon2
 
-from config import jwt_config
-from base import enums
-import exceptions as exc
+from app.config import jwt_config
+from app.base import enums
+import app.exceptions as exc
 
 _jwt_encoder = partial(jwt.encode, key=jwt_config.jwt_secret, algorithm=jwt_config.jwt_encode_algorithm)
 _jwt_decoder = partial(jwt.decode, key=jwt_config.jwt_secret, algorithms=[jwt_config.jwt_encode_algorithm])

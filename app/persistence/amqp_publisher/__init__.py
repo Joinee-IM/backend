@@ -1,7 +1,7 @@
 import aio_pika
 
-from config import AMQPConfig
-from base import mcs
+from app.config import AMQPConfig
+from app.base import mcs
 
 
 class AMQPPublishHandler(metaclass=mcs.Singleton):

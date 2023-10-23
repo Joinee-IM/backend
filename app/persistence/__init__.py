@@ -2,7 +2,7 @@ from abc import abstractmethod
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
-from config import PGConfig
+from app.config import PGConfig
 
 
 class PoolHandlerBase:

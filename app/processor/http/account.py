@@ -3,10 +3,10 @@ from dataclasses import dataclass
 from fastapi import APIRouter, responses, Depends
 from pydantic import BaseModel
 
-from security import encode_jwt, verify_password, hash_password
-from middleware.headers import get_auth_token
-import persistence.database as db
-import exceptions as exc
+from app.security import encode_jwt, verify_password, hash_password
+from app.middleware.headers import get_auth_token
+import app.persistence.database as db
+import app.exceptions as exc
 
 
 router = APIRouter(

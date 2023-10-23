@@ -1,4 +1,4 @@
-from .util import PostgresQueryExecutor
+from app.persistence.database.util import PostgresQueryExecutor
 
 
 async def add(username: str, pass_hash: str) -> int:

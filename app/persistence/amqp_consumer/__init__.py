@@ -3,8 +3,8 @@ from typing import Callable, Coroutine, Any
 
 import aio_pika
 
-import log
-from config import AMQPConfig, AMQP_CONSUME_QUEUE
+import app.log as log
+from app.config import AMQPConfig, AMQP_CONSUME_QUEUE
 
 
 def make_consumer(amqp_config: AMQPConfig, consume_function: Callable[[bytes], Coroutine[Any, Any, None]]) \

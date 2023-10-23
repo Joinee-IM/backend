@@ -1,6 +1,6 @@
-from base import do
+from app.base import do
 
-from .util import PostgresQueryExecutor
+from app.persistence.database.util import PostgresQueryExecutor
 
 
 async def add(s3_file: do.S3File) -> None:

@@ -5,7 +5,7 @@ data objects
 from dataclasses import dataclass
 from uuid import UUID
 
-from base import enums
+from app.base import enums
 
 
 @dataclass
