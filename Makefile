@@ -39,8 +39,7 @@ redis: # run redis docker
 helm: # helm upgrade
 	helm upgrade cloud-native-backend deploy --install --namespace=cloud-native  --values deploy/values.yaml
 
-NODE_PORT := $(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native)
-NODE_IP := $(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}")
-
 show_url:
-	echo http://$(NODE_IP):$(NODE_PORT)
+	NODE_PORT=$(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native-backend); \
+	NODE_IP=$(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}"); \
+	echo http://$${NODE_IP}:$${NODE_PORT}
