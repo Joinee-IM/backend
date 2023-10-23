@@ -10,7 +10,7 @@ class PoolHandlerBase:
         self._pool: _Pool = None  # noqa
 
     @abstractmethod
-    async def initialize(self, db_config: PGConfig):
+    async def initialize(self, db_config):
         raise NotImplementedError
 
     async def close(self):
