@@ -46,13 +46,10 @@ async def app_startup():
     # await clickhouse_pool_handler.initialize(db_config=ch_config)
 
     # if redis needed
-    import log
-    from config import redis_config
-    from persistence.redis import redis_pool_handler
-    try:
-        await redis_pool_handler.initialize(db_config=redis_config)
-    except Exception as e:
-        log.info(e)
+    # from config import redis_config
+    # from persistence.redis import redis_pool_handler
+    # await redis_pool_handler.initialize(db_config=redis_config)
+
     # if s3 needed
     # from config import s3_config
     # from persistence.s3 import s3_handler
@@ -82,8 +79,8 @@ async def app_shutdown():
     # await clickhouse_pool_handler.close()
 
     # if redis needed
-    from persistence.redis import redis_pool_handler
-    await redis_pool_handler.close()
+    # from persistence.redis import redis_pool_handler
+    # await redis_pool_handler.close()
 
     # if s3 needed
     # from persistence.s3 import s3_handler

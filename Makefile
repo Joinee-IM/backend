@@ -18,10 +18,10 @@ run: # run service without reload flag
 dev: # run service with reload flag
 	uvicorn main:app --reload
 
-docker-build: # build docker image
+build: # build docker image
 	docker build -t cloud-native .
 
-docker-build-x86: # build x86_64 docker image
+build-x86: # build x86_64 docker image
 	docker build --platform=linux/amd64 -t cloud-native .
 
 docker-run: # run docker container with newest image of "cloud-native", backend port would be 8000
@@ -36,8 +36,8 @@ docker-rm: # rm cloud-native container
 redis: # run redis docker
 	docker run -d --rm --name redis -p 6379:6379 redis
 
-helm-upgrade: # helm upgrade
-	helm upgrade cloud-native deploy --install --namespace=cloud-native  --values deploy/values.yaml
+helm: # helm upgrade
+	helm upgrade cloud-native-backend deploy --install --namespace=cloud-native  --values deploy/values.yaml
 
 NODE_PORT := $(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native)
 NODE_IP := $(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}")

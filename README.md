@@ -1,5 +1,5 @@
 ```shell
-conda create --name backend python=3.11
+conda create --name backend python=3.10
 conda activate backend
 pip install -r requirements.txt
 cp .env.example .env
