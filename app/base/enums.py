@@ -5,6 +5,7 @@ T = typing.TypeVar("T")
 
 
 class RoleType(enum.Enum):
+    # role2 > role1
     role1 = 'ROLE1'
     role2 = 'ROLE2'
 
