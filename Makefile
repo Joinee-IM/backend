@@ -6,8 +6,8 @@ help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
 test: # run unit test for backend service
-	pycodestyle --ignore "E501, E402" app
-	coverage run -m unittest -v
+	poetry run pycodestyle --ignore "E501, E402" app
+	poetry run coverage run -m unittest -v
 
 coverage: # show coverage report
 	coverage report
