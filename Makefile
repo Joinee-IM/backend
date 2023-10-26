@@ -13,10 +13,10 @@ coverage: # show coverage report
 	coverage report
 
 run: # run service without reload flag
-	uvicorn app.main:app
+	poetry run uvicorn app.main:app
 
 dev: # run service with reload flag
-	uvicorn app.main:app --reload
+	poetry run uvicorn app.main:app --reload
 
 build: # build docker image
 	docker build -t cloud-native-backend .
@@ -43,12 +43,12 @@ helm: # helm upgrade
         --values deploy/helm/production/values.yaml \
         --set image.tag=amd-202310241713
 
-show_url:
+show-url: # show helm deployment's service url
 	NODE_PORT=$(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native-backend); \
 	NODE_IP=$(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}"); \
 	echo http://$${NODE_IP}:$${NODE_PORT}
 
-cloud_sql_proxy:
+cloud-sql-proxy: # start up cloud sql proxy for postgres
 	docker run -d --rm \
 		-v ./config/gcp-service-account.json:/config \
 		-p 127.0.0.1:5432:5432 \

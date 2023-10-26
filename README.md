@@ -1,15 +1,15 @@
-```shell
-conda create --name backend python=3.10
-conda activate backend
-pip install -r requirements.txt
-cp .env.example .env
-```
+# Cloud Native Backend
+## Setup
+1. Python environment
+   ```shell
+   pip install poetry
+   poetry install
+   cp .env.example .env
+   ```
+   and paste environment variables
+2. Run backend service
+    ```shell
+    make run
+    ```
 
-paste environment variables
-
-```shell
-pip install uvicorn
-uvicorn main:app --reload
-```
-
-go to localhost:8000/docs and you will see backend swagger
+3. Backend openapi documents should be accessed through http://localhost:8000/docs
