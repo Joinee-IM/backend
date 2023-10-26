@@ -22,4 +22,3 @@ class S3File:
     uuid: UUID
     key: str
     bucket: str
-

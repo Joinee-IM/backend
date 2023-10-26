@@ -1,9 +1,8 @@
 version: 1
 loggers:
-  uvicorn.access:
+  fastapi:
     handlers: [ efk ]
     level: INFO
-#    propagate: True
 formatters:
   human:
     format: '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s'

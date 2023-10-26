@@ -10,6 +10,7 @@ from fastapi.middleware.gzip import GZipMiddleware
 
 
 from app.config import app_config
+from app import log
 
 app = FastAPI(
     title=app_config.title,
@@ -17,15 +18,9 @@ app = FastAPI(
     redoc_url=app_config.redoc_url,
 )
 
-origins = [
-    'http://localhost',
-    'http://localhost:3000',
-    'http://localhost:3006',
-]
-
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=origins,
+    allow_origins=["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -36,7 +31,7 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.on_event('startup')
 async def app_startup():
-    pass
+    log.info('app start.')
     # from app.config import pg_config
     # from app.persistence.database import pg_pool_handler
     # await pg_pool_handler.initialize(db_config=pg_config)
@@ -71,7 +66,7 @@ async def app_startup():
 
 @app.on_event('shutdown')
 async def app_shutdown():
-    pass
+    log.info('app shutdown')
     # from app.persistence.database import pg_pool_handler
     # await pg_pool_handler.close()
 

@@ -17,16 +17,16 @@ class TestMiddleware(AsyncTestCase):
         self.now = datetime(2023, 10, 18)
         self.request = Request({'type': 'http', 'method': 'GET', 'headers': []})
         self.expect_result = Response(headers={'X-Request-UUID': 'fad08f83-6ad7-429f-baa6-b1c3abf4991c'})
-        self.context_expect_result = {'account': None, 'time': self.now, 'request_uuid': self.uuid}
+        self.context_expect_result = {'AUTHED_ACCOUNT': None, 'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
 
         self.request_with_auth_token = Request(
             {'type': 'http', 'method': 'GET', 'headers': [(b'auth-token', b'token')]}
         )
         self.jwt_result = AuthedAccount(id=1, role=RoleType.role1, time=datetime(2023, 10, 18))
         self.context_expect_result_with_auth_token = {
-            'account': self.jwt_result,
-            'time': self.now,
-            'request_uuid': self.uuid
+            'AUTHED_ACCOUNT': self.jwt_result,
+            'REQUEST_TIME': self.now,
+            'REQUEST_UUID': self.uuid
         }
 
         self.call_next = AsyncMock(return_value=Response())
@@ -38,7 +38,7 @@ class TestMiddleware(AsyncTestCase):
             patch('uuid.uuid1', Mock(return_value=self.uuid)),
         ):
             result = await middleware(self.request, self.call_next)
-            self.assertDictEqual(context, self.context_expect_result)
+            self.assertDictEqual(context._context, self.context_expect_result)
 
         self.assertIsInstance(result, Response)
         self.assertDictEqual(dict(result.headers), dict(self.expect_result.headers))
@@ -51,7 +51,7 @@ class TestMiddleware(AsyncTestCase):
             patch('app.security.decode_jwt', Mock(return_value=self.jwt_result))
         ):
             result = await middleware(self.request_with_auth_token, self.call_next)
-            self.assertDictEqual(context, self.context_expect_result_with_auth_token)
+            self.assertDictEqual(context._context, self.context_expect_result_with_auth_token)
 
         self.assertIsInstance(result, Response)
         self.assertDictEqual(dict(result.headers), dict(self.expect_result.headers))

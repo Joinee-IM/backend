@@ -3,6 +3,9 @@ from unittest.mock import AsyncMock as _AsyncMock
 from unittest import IsolatedAsyncioTestCase
 from unittest import TestCase as _TestCase
 
+from app.utils.context import Context
+from app.security import AuthedAccount
+
 
 class Mock(_Mock):
     def __init__(self, return_value=None, side_effect=None, *args, **kwargs):
@@ -14,15 +17,28 @@ class AsyncMock(_AsyncMock):
         super().__init__(return_value=return_value, side_effect=side_effect, *args, **kwargs)
 
 
+class MockContext(Context):
+    _context = {'REQUEST_UUID': 'test_uuid'}
+
+    def get_request_time(self):
+        return self._context.get(self.REQUEST_TIME)
+
+    def get_request_uuid(self):
+        return self._context.get(self.REQUEST_UUID)
+
+    def get_account(self) -> AuthedAccount:
+        return self._context.get(self.CONTEXT_AUTHED_ACCOUNT_KEY)  # noqa
+
+
 class AsyncTestCase(IsolatedAsyncioTestCase):
-    context = {'request_uuid': 'test_uuid'}
+    context = MockContext()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
 
 
 class TestCase(_TestCase):
-    context = {'request_uuid': 'test_uuid'}
+    context = MockContext()
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
