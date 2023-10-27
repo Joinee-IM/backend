@@ -7,10 +7,11 @@ help: # Show help for each of the Makefile recipes.
 
 test: # run unit test for backend service
 	poetry run pycodestyle --ignore "E501, E402" app
-	poetry run coverage run -m unittest -v
+	poetry run coverage run --source=app -m unittest -v
+	poetry run coverage report
 
 coverage: # show coverage report
-	coverage report
+	poetry run coverage report
 
 run: # run service without reload flag
 	poetry run uvicorn app.main:app
