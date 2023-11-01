@@ -24,25 +24,25 @@ class TestMiddleware(AsyncTestCase):
         call_next = AsyncMock(side_effect=exc.NotFound)
         result = await middleware(self.request, call_next)
         self.assertEqual(result.status_code, 404)
-        self.assertEqual(result.body, b'{"error":"NotFound"}')
+        self.assertEqual(result.body, b'{"data":null,"error":"NotFound"}')
 
     @patch('app.log.context', AsyncTestCase.context)
     async def test_illegal_input(self):
         call_next = AsyncMock(side_effect=exc.IllegalInput)
         result = await middleware(self.request, call_next)
         self.assertEqual(result.status_code, 422)
-        self.assertEqual(result.body, b'{"error":"IllegalInput"}')
+        self.assertEqual(result.body, b'{"data":null,"error":"IllegalInput"}')
 
     @patch('app.log.context', AsyncTestCase.context)
     async def test_no_permission(self):
         call_next = AsyncMock(side_effect=exc.NoPermission)
         result = await middleware(self.request, call_next)
         self.assertEqual(result.status_code, 401)
-        self.assertEqual(result.body, b'{"error":"NoPermission"}')
+        self.assertEqual(result.body, b'{"data":null,"error":"NoPermission"}')
 
     @patch('app.log.context', AsyncTestCase.context)
     async def test_unexpected_error(self):
         call_next = AsyncMock(side_effect=TypeError)
         result = await middleware(self.request, call_next)
         self.assertEqual(result.status_code, 500)
-        self.assertEqual(result.body, b'{"error":"TypeError"}')
+        self.assertEqual(result.body, b'{"data":null,"error":"TypeError"}')
