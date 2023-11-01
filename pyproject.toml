@@ -22,6 +22,7 @@ python-multipart = "0.0.5"
 python-json-logger = "2.0.7"
 PyYAML = "6.0.1"
 aioredis = "^2.0.1"
+google-cloud-storage = "^2.13.0"
 
 [tool.poetry.group.dev.dependencies]
 responses = "^0.23.3"

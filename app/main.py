@@ -41,11 +41,6 @@ async def app_startup():
     # from app.persistence.redis import redis_pool_handler
     # await redis_pool_handler.initialize(db_config=redis_config)
 
-    # if s3 needed
-    # from app.config import s3_config
-    # from app.persistence.s3 import s3_handler
-    # await s3_handler.initialize(s3_config=s3_config)
-
 
 @app.on_event('shutdown')
 async def app_shutdown():
@@ -56,10 +51,6 @@ async def app_shutdown():
     # if redis needed
     # from app.persistence.redis import redis_pool_handler
     # await redis_pool_handler.close()
-
-    # if s3 needed
-    # from app.persistence.s3 import s3_handler
-    # await s3_handler.close()
 
 
 from app.middleware import envelope
