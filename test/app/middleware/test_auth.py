@@ -17,14 +17,13 @@ class TestMiddleware(AsyncTestCase):
         self.now = datetime(2023, 10, 18)
         self.request = Request({'type': 'http', 'method': 'GET', 'headers': []})
         self.expect_result = Response(headers={'X-Request-UUID': 'fad08f83-6ad7-429f-baa6-b1c3abf4991c'})
-        self.context_expect_result = {'AUTHED_ACCOUNT': None, 'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
+        self.context_expect_result = {'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
 
         self.request_with_auth_token = Request(
             {'type': 'http', 'method': 'GET', 'headers': [(b'auth-token', b'token')]}
         )
         self.jwt_result = AuthedAccount(id=1, role=RoleType.role1, time=datetime(2023, 10, 18))
         self.context_expect_result_with_auth_token = {
-            'AUTHED_ACCOUNT': self.jwt_result,
             'REQUEST_TIME': self.now,
             'REQUEST_UUID': self.uuid
         }
