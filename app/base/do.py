@@ -18,7 +18,8 @@ class Account:
 
 
 @dataclass
-class S3File:
+class GCSFile:
     uuid: UUID
     key: str
     bucket: str
+    filename: str

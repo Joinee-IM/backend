@@ -13,3 +13,5 @@
     ```
 
 3. Backend openapi documents should be accessed through http://localhost:8000/docs
+
+Note: you may check other usages through `make help` command.

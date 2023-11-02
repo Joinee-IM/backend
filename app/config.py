@@ -31,12 +31,6 @@ class JWTConfig:
     login_expire = timedelta(days=float(env_values.get('LOGIN_EXPIRE', '7')))
 
 
-class S3Config:
-    endpoint = env_values.get('S3_ENDPOINT')
-    access_key = env_values.get('S3_ACCESS_KEY')
-    secret_key = env_values.get('S3_SECRET_KEY')
-
-
 class RedisConfig:
     url = env_values.get('REDIS_URL')
     max_pool_size = int(env_values.get('REDIS_MAX_POOL_SIZE') or 1)
@@ -45,5 +39,4 @@ class RedisConfig:
 pg_config = PGConfig()
 app_config = AppConfig()
 jwt_config = JWTConfig()
-s3_config = S3Config()
 redis_config = RedisConfig()

@@ -26,4 +26,5 @@ class TestPGPoolHandler(AsyncTestCase):
             password=self.config.password,
             database=self.config.db_name,
             max_size=self.config.max_pool_size,
+            min_size=1,
         )

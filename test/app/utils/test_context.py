@@ -30,7 +30,7 @@ class TestContext(TestCase):
         self.context = MockContext()
         self.authed_account = AuthedAccount(
             id=1,
-            role=RoleType.role1,
+            role=RoleType.normal,
             time=datetime(2023, 10, 27),
         )
         self.request_time = datetime(2023, 10, 27)

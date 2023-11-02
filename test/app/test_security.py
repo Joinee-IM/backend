@@ -13,7 +13,7 @@ from test import TestCase, Mock
 class TestEncodeJWT(TestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.role = RoleType.role1
+        self.role = RoleType.normal
         self.expire = timedelta(seconds=1)
 
     @freeze_time('2023-10-25')
@@ -33,7 +33,7 @@ class TestEncodeJWT(TestCase):
 class TestDecodeJWT(TestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.role = RoleType.role1
+        self.role = RoleType.normal
         self.expire = timedelta(seconds=1)
         self.decoded = {
             'account_id': self.account_id,

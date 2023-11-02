@@ -28,7 +28,7 @@ async def health_check() -> Response[HealthCheckOutput]:
 
 
 class LoginInput(BaseModel):
-    username: str
+    email: str
     password: str
 
 
@@ -41,7 +41,7 @@ class LoginOutput:
 @router.post('/login')
 async def login(data: LoginInput) -> Response[LoginOutput]:
     try:
-        account_id, pass_hash, role = await db.account.read_by_username(data.username)
+        account_id, pass_hash, role = await db.account.read_by_email(email=data.email)
     except TypeError:
         raise exc.LoginFailed
 

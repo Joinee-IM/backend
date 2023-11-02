@@ -4,20 +4,33 @@ import enum
 T = typing.TypeVar("T")
 
 
-class RoleType(enum.Enum):
-    # role2 > role1
-    role1 = 'ROLE1'
-    role2 = 'ROLE2'
+class StrEnum(str, enum.Enum):
+    pass
 
-    def __gt__(self: T, other: T):
-        items = tuple(self.__class__)
-        return items.index(self).__gt__(items.index(other))
 
-    def __lt__(self: T, other: T):
-        return self != other and not self.__gt__(other)
+class GenderType(StrEnum):
+    male = 'MALE'
+    femail = 'FEMALE'
+    unrevealed = 'UNREVEALED'
 
-    def __ge__(self: T, other: T):
-        return self == other or self.__gt__(other)
 
-    def __le__(self: T, other: T):
-        return self == other or not self.__gt__(other)
+class FeeType(StrEnum):
+    per_hour = 'PER_HOUR'
+    per_person = 'PER_PERSON'
+    per_person_per_hour = 'PER_PERSON_PER_HOUR'
+
+
+class PlaceType(StrEnum):
+    stadium = 'STADIUM'
+    venue = 'VENUE'
+
+
+class TechnicalType(StrEnum):
+    entry = 'ENTRY'
+    intermediate = 'INTERMEDIATE'
+    advanced = 'ADVANCED'
+
+
+class RoleType(StrEnum):
+    provider = 'PROVIDER'
+    normal = 'NORMAL'

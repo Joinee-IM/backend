@@ -24,6 +24,7 @@ class PGPoolHandler(PoolHandlerBase, metaclass=mcs.Singleton):
                 password=db_config.password,
                 database=db_config.db_name,
                 max_size=db_config.max_pool_size,
+                min_size=1
             )
 
     @asynccontextmanager
@@ -47,5 +48,5 @@ pg_pool_handler = PGPoolHandler()
 # For import usage
 from . import (
     account,
-    s3_file,
+    gcs_file,
 )

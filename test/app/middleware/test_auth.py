@@ -22,7 +22,7 @@ class TestMiddleware(AsyncTestCase):
         self.request_with_auth_token = Request(
             {'type': 'http', 'method': 'GET', 'headers': [(b'auth-token', b'token')]}
         )
-        self.jwt_result = AuthedAccount(id=1, role=RoleType.role1, time=datetime(2023, 10, 18))
+        self.jwt_result = AuthedAccount(id=1, role=RoleType.normal, time=datetime(2023, 10, 18))
         self.context_expect_result_with_auth_token = {
             'REQUEST_TIME': self.now,
             'REQUEST_UUID': self.uuid
