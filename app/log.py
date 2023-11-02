@@ -1,10 +1,8 @@
 import logging
 import traceback
 
-from app.utils.context import context
-
 from app.config import app_config
-
+from app.utils.context import context
 
 logger = logging.getLogger(app_config.logger_name)
 

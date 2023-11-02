@@ -4,11 +4,10 @@ from typing import Optional
 from fastapi import APIRouter, responses
 from pydantic import BaseModel
 
-import app.persistence.database as db
-from app.utils.response import Response
-from app.security import verify_password, encode_jwt
 import app.exceptions as exc
-
+import app.persistence.database as db
+from app.security import encode_jwt, verify_password
+from app.utils.response import Response
 
 router = APIRouter(tags=['Public'])
 

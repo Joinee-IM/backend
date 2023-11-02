@@ -1,5 +1,4 @@
 from app.base import do
-
 from app.persistence.database.util import PostgresQueryExecutor
 
 

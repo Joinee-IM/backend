@@ -1,10 +1,10 @@
+from test import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 
-from app.base.enums import RoleType
 from app import exceptions as exc
+from app.base.enums import RoleType
 from app.processor.http import public
 from app.utils import Response
-from test import AsyncTestCase, AsyncMock, Mock
 
 
 class TestDefaultPage(AsyncTestCase):

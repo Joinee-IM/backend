@@ -1,8 +1,8 @@
+from test import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
-from app.persistence.database import PGPoolHandler
 from app.config import PGConfig
-from test import AsyncTestCase, AsyncMock
+from app.persistence.database import PGPoolHandler
 
 
 class TestPGPoolHandler(AsyncTestCase):

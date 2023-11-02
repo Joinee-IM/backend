@@ -1,10 +1,10 @@
-from unittest.mock import Mock as _Mock
-from unittest.mock import AsyncMock as _AsyncMock
 from unittest import IsolatedAsyncioTestCase
 from unittest import TestCase as _TestCase
+from unittest.mock import AsyncMock as _AsyncMock
+from unittest.mock import Mock as _Mock
 
-from app.utils.context import Context
 from app.security import AuthedAccount
+from app.utils.context import Context
 
 
 class Mock(_Mock):

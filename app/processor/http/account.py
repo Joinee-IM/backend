@@ -1,14 +1,13 @@
 from dataclasses import dataclass
 
-from fastapi import APIRouter, responses, Depends
+from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
 
-from app.base.enums import GenderType, RoleType
-from app.security import hash_password
-from app.middleware.headers import get_auth_token
-from app.utils.response import Response
 import app.persistence.database as db
-
+from app.base.enums import GenderType, RoleType
+from app.middleware.headers import get_auth_token
+from app.security import hash_password
+from app.utils.response import Response
 
 router = APIRouter(
     tags=['Account'],

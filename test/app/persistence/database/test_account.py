@@ -1,9 +1,9 @@
+from test import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
+import app.exceptions as exc
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import account
-from test import AsyncMock, AsyncTestCase
-import app.exceptions as exc
 
 
 class TestAddAccount(AsyncTestCase):

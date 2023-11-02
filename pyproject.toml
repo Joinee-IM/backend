@@ -27,6 +27,10 @@ responses = "^0.23.3"
 coverage = "^7.3.2"
 freezegun = "^1.2.2"
 pycodestyle = "^2.11.1"
+isort = "^5.12.0"
+
+[tool.isort]
+src_paths = ["isort", "test"]
 
 [build-system]
 requires = ["poetry-core"]

@@ -1,7 +1,7 @@
+from test import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
 from app.persistence.database.util import PostgresQueryExecutor
-from test import AsyncTestCase, AsyncMock
 
 
 class TestPostgresQueryExecutor(AsyncTestCase):

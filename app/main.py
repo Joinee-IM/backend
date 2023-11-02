@@ -8,9 +8,8 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
-
-from app.config import app_config
 from app import log
+from app.config import app_config
 
 app = FastAPI(
     title=app_config.title,
@@ -61,16 +60,21 @@ async def app_shutdown():
 
 
 from app.middleware import envelope
+
 app.middleware('http')(envelope.middleware)
 
 from app.middleware import logging
+
 app.middleware('http')(logging.middleware)
 
 from app.middleware import auth
+
 app.middleware('http')(auth.middleware)
 
 import starlette_context.middleware
+
 app.add_middleware(starlette_context.middleware.RawContextMiddleware)
 
 from app.processor import http
+
 http.register_routers(app)

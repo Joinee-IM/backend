@@ -1,4 +1,4 @@
-from app.base.enums import RoleType, GenderType
+from app.base.enums import GenderType, RoleType
 from app.persistence.database.util import PostgresQueryExecutor
 
 

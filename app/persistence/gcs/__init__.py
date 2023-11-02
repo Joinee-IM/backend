@@ -1,5 +1,5 @@
-from time import time
 import typing
+from time import time
 from uuid import UUID, uuid4
 
 from google.cloud import storage

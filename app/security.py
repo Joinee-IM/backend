@@ -1,13 +1,13 @@
+from datetime import datetime, timedelta
 from functools import partial
-from datetime import timedelta, datetime
 from typing import NamedTuple
 
 import jwt
 from passlib.hash import argon2
 
-from app.config import jwt_config
-from app.base import enums
 import app.exceptions as exc
+from app.base import enums
+from app.config import jwt_config
 
 _jwt_encoder = partial(jwt.encode, key=jwt_config.jwt_secret, algorithm=jwt_config.jwt_encode_algorithm)
 _jwt_decoder = partial(jwt.decode, key=jwt_config.jwt_secret, algorithms=[jwt_config.jwt_encode_algorithm])

@@ -1,13 +1,13 @@
 from datetime import datetime, timedelta
+from test import Mock, TestCase
 from unittest.mock import patch
 
-from freezegun import freeze_time
 import jwt
+from freezegun import freeze_time
 
+import app.exceptions as exc
 from app import security
 from app.base.enums import RoleType
-import app.exceptions as exc
-from test import TestCase, Mock
 
 
 class TestEncodeJWT(TestCase):

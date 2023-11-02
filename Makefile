@@ -20,10 +20,10 @@ dev: # run service with reload flag
 	poetry run uvicorn app.main:app --reload
 
 build: # build docker image
-	docker build -t cloud-native-backend .
+	docker build -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend .
 
 build-x86: # build x86_64 docker image
-	docker build --platform=linux/amd64 -t cloud-native-backend .
+	docker build --platform=linux/amd64 -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend .
 
 docker-run: # run docker container with newest image of "cloud-native", backend port would be 8000
 	docker run -d --name cloud-native-backend -p 8000:80 cloud-native-backend
@@ -40,7 +40,7 @@ redis: # run redis docker
 helm: # helm upgrade
 	helm upgrade cloud-native-backend deploy/helm/charts \
         --install \
-        --namespace=cloud-native  \
+        --namespace=prod  \
         --values deploy/helm/production/values.yaml \
         --set image.tag=amd-202310241713
 
