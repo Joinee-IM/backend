@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "cloud-native"
+name = "Joinee"
 version = "0.1.0"
 description = ""
 authors = ["wsa"]
