@@ -1,5 +1,6 @@
 import os
 from datetime import timedelta
+from distutils.util import strtobool
 
 from dotenv import dotenv_values
 
@@ -36,7 +37,29 @@ class RedisConfig:
     max_pool_size = int(env_values.get('REDIS_MAX_POOL_SIZE') or 1)
 
 
+class SMTPConfig:
+    host = env_values.get('SMTP_HOST')
+    port = env_values.get('SMTP_PORT')
+    username = env_values.get('SMTP_USERNAME')
+    password = env_values.get('SMTP_PASSWORD')
+    use_tls = strtobool(env_values.get('SMTP_USE_TLS'))
+
+
+class ServiceConfig:
+    domain = env_values.get('SERVICE_DOMAIN')
+    port = env_values.get('SERVICE_PORT')
+    use_https = bool(strtobool(env_values.get('SERVICE_USE_HTTPS', 'false')))
+
+    @property
+    def url(self) -> str:
+        protocol = 'https' if self.use_https else 'http'
+        port_postfix = f':{self.port}' if self.port else ''
+        return f"{protocol}://{self.domain}{port_postfix}"
+
+
 pg_config = PGConfig()
 app_config = AppConfig()
 jwt_config = JWTConfig()
 redis_config = RedisConfig()
+smtp_config = SMTPConfig()
+service_config = ServiceConfig()

@@ -3,7 +3,9 @@ from dataclasses import dataclass
 from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
 
+import app.exceptions as exc
 import app.persistence.database as db
+import app.persistence.email as email
 from app.base.enums import GenderType, RoleType
 from app.middleware.headers import get_auth_token
 from app.security import hash_password
@@ -31,14 +33,17 @@ class AddAccountOutput:
 
 @router.post('/account')
 async def add_account(data: AddAccountInput) -> Response[AddAccountOutput]:
-
-    account_id = await db.account.add(
-        email=data.email,
-        pass_hash=hash_password(data.password),
-        nickname=data.nickname,
-        gender=data.gender,
-        role=data.role,
-        is_google_login=False,
-    )
-
+    try:
+        account_id = await db.account.add(
+            email=data.email,
+            pass_hash=hash_password(data.password),
+            nickname=data.nickname,
+            gender=data.gender,
+            role=data.role,
+            is_google_login=False,
+        )
+    except exc.UniqueViolationError:
+        raise exc.EmailExists
+    code = await db.email_verification.add(account_id=account_id, email=data.email)
+    await email.verification.send(to=data.email, code=str(code))
     return Response(data=AddAccountOutput(id=account_id))

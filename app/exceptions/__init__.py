@@ -40,9 +40,9 @@ class NoPermission(AckException):
     status_code = 403
 
 
-class UsernameExists(AckException):
+class EmailExists(AckException):
     """
-    duplicate username
+    duplicate email
     """
     status_code = 200
 
