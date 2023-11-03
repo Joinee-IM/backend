@@ -2,6 +2,7 @@ from test import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
 import app.exceptions as exc
+from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import account
 
@@ -41,3 +42,26 @@ class TestReadByEmail(AsyncTestCase):
         result = await account.read_by_email(self.email)
 
         self.assertEqual(result, self.expect_output)
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.expect_result = do.Account(
+            id=1, email='email', nickname='nickname', gender=GenderType.male, image_uuid=None,
+            role=RoleType.normal, is_verified=True, is_google_login=False,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_executor: AsyncMock):
+        mock_executor.return_value = 1, 'email', 'nickname', 'MALE', None, 'NORMAL', True, False
+
+        result = await account.read(self.account_id)
+
+        self.assertEqual(result, self.expect_result)
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_executor: AsyncMock):
+        mock_executor.return_value = None
+        with self.assertRaises(exc.NotFound):
+            await account.read(self.account_id)

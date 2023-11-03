@@ -2,23 +2,26 @@
 data objects
 """
 
-from dataclasses import dataclass
+from typing import Optional
 from uuid import UUID
+
+from pydantic import BaseModel
 
 from app.base import enums
 
 
-@dataclass
-class Account:
+class Account(BaseModel):
     id: int
-    username: str
+    email: str
+    nickname: str
+    gender: enums.GenderType
+    image_uuid: Optional[UUID]
     role: enums.RoleType
-    real_name: str
-    student_id: str
+    is_verified: bool
+    is_google_login: bool
 
 
-@dataclass
-class GCSFile:
+class GCSFile(BaseModel):
     uuid: UUID
     key: str
     bucket: str
