@@ -20,6 +20,9 @@ class AsyncMock(_AsyncMock):
 class MockContext(Context):
     _context = {'REQUEST_UUID': 'test_uuid'}
 
+    def reset_context(self):
+        self._context = {'REQUEST_UUID': 'test_uuid'}
+
     def get_request_time(self):
         return self._context.get(self.REQUEST_TIME)
 

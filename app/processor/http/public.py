@@ -58,8 +58,8 @@ class EmailVerificationOutput(BaseModel):
     success: bool
 
 
-@router.get('/email-verification', tags=['Account'])
-@router.post('/email-verification', tags=['Account'])
+@router.get('/email-verification')
+@router.post('/email-verification')
 async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
     await db.email_verification.verify_email(code=code)
     return Response(data=EmailVerificationOutput(success=True))

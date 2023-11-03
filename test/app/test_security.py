@@ -44,7 +44,6 @@ class TestDecodeJWT(TestCase):
         self.late_request_time = datetime(2023, 10, 26)
         self.expect_output = security.AuthedAccount(
             id=self.account_id,
-            role=self.role,
             time=self.request_time,
         )
 

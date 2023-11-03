@@ -23,7 +23,6 @@ def encode_jwt(account_id: int, role: enums.RoleType, expire: timedelta = jwt_co
 
 class AuthedAccount(NamedTuple):
     id: int
-    role: enums.RoleType
     time: datetime
 
 
@@ -38,8 +37,7 @@ def decode_jwt(encoded: str, time: datetime) -> AuthedAccount:
         raise exc.LoginExpired
 
     account_id = decoded['account_id']
-    role = decoded['role']
-    return AuthedAccount(id=account_id, role=enums.RoleType(role), time=time)
+    return AuthedAccount(id=account_id, time=time)
 
 
 def hash_password(password: str) -> str:
