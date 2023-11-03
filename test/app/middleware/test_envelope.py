@@ -37,7 +37,7 @@ class TestMiddleware(AsyncTestCase):
     async def test_no_permission(self):
         call_next = AsyncMock(side_effect=exc.NoPermission)
         result = await middleware(self.request, call_next)
-        self.assertEqual(result.status_code, 401)
+        self.assertEqual(result.status_code, 403)
         self.assertEqual(result.body, b'{"data":null,"error":"NoPermission"}')
 
     @patch('app.log.context', AsyncTestCase.context)

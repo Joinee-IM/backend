@@ -1,40 +1,54 @@
-class NotFound(Exception):
+class AckException(Exception):
+    """
+    Base exception class, represents that the error is acked by the server.
+    """
+    status_code: int = 400
+
+
+class NotFound(AckException):
     """
     Not found
     """
+    status_code = 404
 
 
-class UniqueViolationError(Exception):
+class UniqueViolationError(AckException):
     """
     Unique Violation Error
     """
+    status_code = 409
 
 
-class LoginExpired(Exception):
+class LoginExpired(AckException):
     """
     Login token expired
     """
+    status_code = 401
 
 
-class LoginFailed(Exception):
+class LoginFailed(AckException):
     """
     Login failed
     """
+    status_code = 401
 
 
-class NoPermission(Exception):
+class NoPermission(AckException):
     """
     No access to resource
     """
+    status_code = 403
 
 
-class UsernameExists(Exception):
+class UsernameExists(AckException):
     """
     duplicate username
     """
+    status_code = 200
 
 
-class IllegalInput(Exception):
+class IllegalInput(AckException):
     """
     Input is not legal
     """
+    status_code = 422
