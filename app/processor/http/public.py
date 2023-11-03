@@ -7,8 +7,10 @@ from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
-from app.security import encode_jwt, verify_password
-from app.utils.response import Response
+import app.persistence.email as email
+from app.base.enums import GenderType, RoleType
+from app.security import encode_jwt, hash_password, verify_password
+from app.utils import Response
 
 router = APIRouter(tags=['Public'])
 
@@ -61,3 +63,34 @@ class EmailVerificationOutput(BaseModel):
 async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
     await db.email_verification.verify_email(code=code)
     return Response(data=EmailVerificationOutput(success=True))
+
+
+@dataclass
+class AddAccountOutput:
+    id: int
+
+
+class AddAccountInput(BaseModel):
+    email: str
+    password: str
+    nickname: str
+    gender: GenderType
+    role: RoleType
+
+
+@router.post('/account')
+async def add_account(data: AddAccountInput) -> Response[AddAccountOutput]:
+    try:
+        account_id = await db.account.add(
+            email=data.email,
+            pass_hash=hash_password(data.password),
+            nickname=data.nickname,
+            gender=data.gender,
+            role=data.role,
+            is_google_login=False,
+        )
+    except exc.UniqueViolationError:
+        raise exc.EmailExists
+    code = await db.email_verification.add(account_id=account_id, email=data.email)
+    await email.verification.send(to=data.email, code=str(code))
+    return Response(data=AddAccountOutput(id=account_id))
