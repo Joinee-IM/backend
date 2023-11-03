@@ -1,7 +1,6 @@
 import abc
 import collections
 import itertools
-import typing
 
 import asyncpg
 
@@ -14,8 +13,8 @@ from . import pg_pool_handler
 class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
-    def __init__(self, sql: str, parameters: dict[str, any] = None,
-                 fetch: typing.Optional[int | str] = 'all', **params):
+    def __init__(self, sql: str, fetch: int | str, parameters: dict[str, any] = None,
+                 **params):
         self.sql, self.params = self._format(sql, parameters, **params)
         self.fetch = fetch
 

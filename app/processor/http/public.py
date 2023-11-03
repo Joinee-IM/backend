@@ -1,5 +1,6 @@
 from dataclasses import dataclass
 from typing import Optional
+from uuid import UUID
 
 from fastapi import APIRouter, responses
 from pydantic import BaseModel
@@ -49,3 +50,14 @@ async def login(data: LoginInput) -> Response[LoginOutput]:
 
     token = encode_jwt(account_id=account_id, role=role)
     return Response(data=LoginOutput(account_id=account_id, token=token))
+
+
+class EmailVerificationOutput(BaseModel):
+    success: bool
+
+
+@router.get('/email-verification', tags=['Account'])
+@router.post('/email-verification', tags=['Account'])
+async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
+    await db.email_verification.verify_email(code=code)
+    return Response(data=EmailVerificationOutput(success=True))

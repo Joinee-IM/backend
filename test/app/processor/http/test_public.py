@@ -1,5 +1,6 @@
 from test import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
+from uuid import UUID
 
 from app import exceptions as exc
 from app.base.enums import RoleType
@@ -80,3 +81,16 @@ class TestLogin(AsyncTestCase):
         mock_verify.assert_called_with(
             self.login_input.password, self.pass_hash
         )
+
+
+class TestEmailVerification(AsyncTestCase):
+    def setUp(self) -> None:
+        self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
+        self.expect_output = Response(data=public.EmailVerificationOutput(success=True))
+
+    @patch('app.persistence.database.email_verification.verify_email', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_verify: AsyncMock):
+        result = await public.email_verification(code=self.code)
+
+        mock_verify.assert_called_with(code=self.code)
+        self.assertEqual(result, self.expect_output)
