@@ -30,7 +30,7 @@ class TestHealthCheck(AsyncTestCase):
 class TestLogin(AsyncTestCase):
     def setUp(self) -> None:
         self.login_input = public.LoginInput(
-            email='email',
+            email='email@email.com',
             password='password',
         )
         self.pass_hash = 'pass_hash'
@@ -100,7 +100,7 @@ class TestEmailVerification(AsyncTestCase):
 class TestAddAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.data = app.processor.http.public.AddAccountInput(
-            email='email',
+            email='email@email.com',
             password='password',
             nickname='nickname',
             gender=GenderType.male,
@@ -160,7 +160,7 @@ class TestAddAccount(AsyncTestCase):
 
 class TestResendEmailVerification(AsyncTestCase):
     def setUp(self) -> None:
-        self.email = 'email'
+        self.email = 'email@email.com'
         self.data = public.ResendEmailVerificationInput(email=self.email)
         self.account_id = 1
         self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')

@@ -3,7 +3,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, responses
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 import app.exceptions as exc
 import app.persistence.database as db
@@ -30,7 +30,7 @@ async def health_check() -> Response[HealthCheckOutput]:
 
 
 class LoginInput(BaseModel):
-    email: str
+    email: EmailStr
     password: str
 
 
@@ -71,7 +71,7 @@ class AddAccountOutput:
 
 
 class AddAccountInput(BaseModel):
-    email: str
+    email: EmailStr
     password: str
     nickname: str
     gender: GenderType
@@ -97,7 +97,7 @@ async def add_account(data: AddAccountInput) -> Response[AddAccountOutput]:
 
 
 class ResendEmailVerificationInput(BaseModel):
-    email: str
+    email: EmailStr
 
 
 @router.post('/email-verification/resend')

@@ -15,7 +15,7 @@ class TestReadAccount(AsyncTestCase):
         self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
         self.account_id = 1
         self.account = do.Account(
-            id=1, email='email', nickname='nickname', gender=GenderType.male, image_uuid=None,
+            id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
             role=RoleType.normal, is_verified=True, is_google_login=False,
         )
         self.expect_output = account.Response(

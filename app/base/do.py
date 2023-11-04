@@ -5,14 +5,14 @@ data objects
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, EmailStr
 
 from app.base import enums
 
 
 class Account(BaseModel):
     id: int
-    email: str
+    email: EmailStr
     nickname: str
     gender: enums.GenderType
     image_uuid: Optional[UUID]
