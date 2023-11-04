@@ -5,7 +5,6 @@ from unittest.mock import patch
 from fastapi import Request, Response
 from freezegun import freeze_time
 
-from app.base.enums import RoleType
 from app.middleware.auth import middleware
 from app.security import AuthedAccount
 

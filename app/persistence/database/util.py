@@ -13,7 +13,7 @@ from . import pg_pool_handler
 class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
-    def __init__(self, sql: str, fetch: int | str = 0, parameters: dict[str, any] = None,
+    def __init__(self, sql: str, fetch: int | str, parameters: dict[str, any] = None,
                  **params):
         self.sql, self.params = self._format(sql, parameters, **params)
         self.fetch = fetch

@@ -1,7 +1,61 @@
 from test import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
-from app.persistence.database.util import PostgresQueryExecutor
+from parameterized import parameterized
+
+from app.persistence.database.util import PostgresQueryExecutor, QueryExecutor
+
+
+class MockQueryExecutor(QueryExecutor):
+    @staticmethod
+    def _format(sql: str, parameters: dict[str, any] = None, **params):
+        return "", []
+
+    async def fetch_all(self):
+        return 2
+
+    async def fetch_one(self):
+        return 1
+
+    async def fetch_none(self):
+        return 0
+
+
+class TestQueryExecutor(AsyncTestCase):
+    def setUp(self) -> None:
+        self.sql = 'SELECT * FROM account WHERE id = %(account_id)s AND name = %(name)s'  # noqa
+        self.params = {'account_id': 1, 'name': 'name'}
+
+    def test_format(self):
+        with self.assertRaises(NotImplementedError):
+            QueryExecutor._format(sql=self.sql, parameters=self.params)
+
+    async def test_fetch_all(self):
+        QueryExecutor.__abstracemethods__ = set()
+        with self.assertRaises(NotImplementedError):
+            await QueryExecutor(self.sql, fetch='all').fetch_all()
+
+    async def test_fetch_one(self):
+        QueryExecutor.__abstracemethods__ = set()
+        with self.assertRaises(NotImplementedError):
+            await QueryExecutor(self.sql, fetch=1).fetch_one()
+
+    async def test_fetch_none(self):
+        QueryExecutor.__abstracemethods__ = set()
+        with self.assertRaises(NotImplementedError):
+            await QueryExecutor(self.sql, fetch=0).fetch_none()
+
+    @parameterized.expand([
+        (None, 0),
+        (0, 0),
+        (1, 1),
+        ('one', 1),
+        ('all', 2)
+    ])
+    async def test_execute(self, fetch, expect_result: int):
+        executor = MockQueryExecutor(sql=self.sql, parameters=self.params, fetch=fetch)
+        result = await executor.execute()
+        self.assertEqual(result, expect_result)
 
 
 class TestPostgresQueryExecutor(AsyncTestCase):
