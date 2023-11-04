@@ -1,7 +1,6 @@
 from datetime import datetime
 from test import TestCase
 
-from app.base.enums import RoleType
 from app.security import AuthedAccount
 from app.utils.context import Context
 
@@ -9,6 +8,7 @@ from app.utils.context import Context
 class MockStarletteContext:
     def __init__(self):
         self.context = {}
+
     def exists(self):
         return True
 

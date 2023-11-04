@@ -2,8 +2,6 @@ from abc import abstractmethod
 from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
-from app.config import PGConfig
-
 
 class PoolHandlerBase:
     def __init__(self):

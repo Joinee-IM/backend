@@ -169,7 +169,9 @@ class TestResendEmailVerification(AsyncTestCase):
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.persistence.database.email_verification.read', new_callable=AsyncMock)
     @patch('app.persistence.email.verification.send', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_send: AsyncMock, mock_read_verification: AsyncMock, mock_read_by_email: AsyncMock):
+    async def test_happy_path(self, mock_send: AsyncMock,
+                              mock_read_verification: AsyncMock,
+                              mock_read_by_email: AsyncMock):
         mock_read_by_email.return_value = self.account_id,
         mock_read_verification.return_value = self.code
 

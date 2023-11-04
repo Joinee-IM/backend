@@ -3,7 +3,6 @@ import uuid
 
 from fastapi import Request
 
-import app.security as security
 from app.utils.context import context
 
 
