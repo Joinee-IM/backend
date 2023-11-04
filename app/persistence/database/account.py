@@ -20,12 +20,18 @@ async def add(email: str, pass_hash: str, nickname: str,
 
 
 async def read_by_email(email: str) -> tuple[int, str, RoleType]:
-    id_, pass_hash, role = await PostgresQueryExecutor(
-        sql=r'SELECT id, pass_hash, role'
-            r'  FROM account'
-            r' WHERE email = %(email)s',
-        email=email, fetch=1,
-    ).execute()
+    """
+    :return: (account_id, pass_hash, role)
+    """
+    try:
+        id_, pass_hash, role = await PostgresQueryExecutor(
+            sql=r'SELECT id, pass_hash, role'
+                r'  FROM account'
+                r' WHERE email = %(email)s',
+            email=email, fetch=1,
+        ).execute()
+    except TypeError:
+        raise exc.NotFound
 
     return id_, pass_hash, RoleType(role)
 

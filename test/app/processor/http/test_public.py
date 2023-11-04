@@ -156,3 +156,26 @@ class TestAddAccount(AsyncTestCase):
             role=self.data.role,
             is_google_login=False,
         )
+
+
+class TestResendEmailVerification(AsyncTestCase):
+    def setUp(self) -> None:
+        self.email = 'email'
+        self.data = public.ResendEmailVerificationInput(email=self.email)
+        self.account_id = 1
+        self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
+        self.expect_output = Response(data=public.EmailVerificationOutput())
+
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.persistence.database.email_verification.read', new_callable=AsyncMock)
+    @patch('app.persistence.email.verification.send', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_send: AsyncMock, mock_read_verification: AsyncMock, mock_read_by_email: AsyncMock):
+        mock_read_by_email.return_value = self.account_id,
+        mock_read_verification.return_value = self.code
+
+        result = await public.resend_email_verification(data=self.data)
+
+        self.assertEqual(result, self.expect_output)
+        mock_read_by_email.assert_called_with(email=self.email)
+        mock_read_verification.assert_called_with(account_id=self.account_id, email=self.email)
+        mock_send.assert_called_with(to=self.email, code=str(self.code))

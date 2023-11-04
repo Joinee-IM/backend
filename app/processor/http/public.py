@@ -55,7 +55,7 @@ async def login(data: LoginInput) -> Response[LoginOutput]:
 
 
 class EmailVerificationOutput(BaseModel):
-    success: bool
+    success: bool = True
 
 
 @router.get('/email-verification')
@@ -94,3 +94,15 @@ async def add_account(data: AddAccountInput) -> Response[AddAccountOutput]:
     code = await db.email_verification.add(account_id=account_id, email=data.email)
     await email.verification.send(to=data.email, code=str(code))
     return Response(data=AddAccountOutput(id=account_id))
+
+
+class ResendEmailVerificationInput(BaseModel):
+    email: str
+
+
+@router.post('/email-verification/resend')
+async def resend_email_verification(data: ResendEmailVerificationInput):
+    account_id, *_ = await db.account.read_by_email(email=data.email)
+    code = await db.email_verification.read(account_id=account_id, email=data.email)
+    await email.verification.send(to=data.email, code=str(code))
+    return Response(data=EmailVerificationOutput(success=True))

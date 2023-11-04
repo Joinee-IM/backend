@@ -43,6 +43,12 @@ class TestReadByEmail(AsyncTestCase):
 
         self.assertEqual(result, self.expect_output)
 
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock):
+        mock_execute.return_value = None
+        with self.assertRaises(exc.NotFound):
+            await account.read_by_email(self.email)
+
 
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:

@@ -30,5 +30,19 @@ async def verify_email(code: UUID):
         sql=r'UPDATE account'
             r'   SET is_verified = %(is_verified)s'
             r' WHERE id = %(account_id)s',
-        is_verified=True, account_id=account_id, fetch=None,
+        is_verified=True, account_id=account_id, fetch=0,
     ).execute()
+
+
+async def read(account_id: int, email: str) -> UUID:
+    try:
+        code, = await PostgresQueryExecutor(
+            sql=r'SELECT code'
+                r'  FROM email_verification'
+                r' WHERE account_id = %(account_id)s AND email = %(email)s',
+            email=email, account_id=account_id, fetch=1,
+        ).execute()
+    except TypeError:
+        raise exc.NotFound
+
+    return code

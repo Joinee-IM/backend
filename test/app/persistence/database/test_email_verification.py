@@ -41,3 +41,23 @@ class TestVerifyEmail(AsyncTestCase):
 
         with self.assertRaises(exc.NotFound):
             await email_verification.verify_email(self.code)
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self) -> None:
+        self.email = 'email'
+        self.account_id = 1
+        self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_executor: AsyncMock):
+        mock_executor.return_value = self.code,
+        result = await email_verification.read(account_id=self.account_id, email=self.email)
+
+        self.assertEqual(result, self.code)
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_executor: AsyncMock):
+        mock_executor.return_value = None
+        with self.assertRaises(exc.NotFound):
+            await email_verification.read(account_id=self.account_id, email=self.email)

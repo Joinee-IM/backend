@@ -44,9 +44,7 @@ class TestPostgresQueryExecutor(AsyncTestCase):
     async def test_execute_fetch_none(self, mock_fetch_none):
         mock_fetch_none.return_value = None
         result = await PostgresQueryExecutor(
-            sql=self.sql, **self.params, fetch=None,
+            sql=self.sql, **self.params, fetch=0,
         ).execute()
         mock_fetch_none.assert_called_once()
         self.assertIsNone(result)
-
-

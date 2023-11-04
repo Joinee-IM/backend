@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from unittest import IsolatedAsyncioTestCase
 from unittest import TestCase as _TestCase
 from unittest.mock import AsyncMock as _AsyncMock
