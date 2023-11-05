@@ -106,3 +106,26 @@ async def resend_email_verification(data: ResendEmailVerificationInput):
     code = await db.email_verification.read(account_id=account_id, email=data.email)
     await email.verification.send(to=data.email, code=str(code))
     return Response(data=EmailVerificationOutput(success=True))
+
+
+class ForgetPasswordInput(BaseModel):
+    email: EmailStr
+
+
+@router.post('/forget-password')
+async def forget_password(data: ForgetPasswordInput) -> Response:
+    account_id, *_ = await db.account.read_by_email(email=data.email)
+    code = await db.email_verification.add(account_id=account_id, email=data.email)
+    await email.forget_password.send(to=data.email, code=str(code))
+    return Response()
+
+
+class ResetPasswordInput(BaseModel):
+    code: str
+    password: str
+
+
+@router.post('/reset-password')
+async def reset_password(data: ResetPasswordInput) -> Response:
+    await db.account.reset_password(code=data.code, pass_hash=hash_password(data.password))
+    return Response()

@@ -181,3 +181,47 @@ class TestResendEmailVerification(AsyncTestCase):
         mock_read_by_email.assert_called_with(email=self.email)
         mock_read_verification.assert_called_with(account_id=self.account_id, email=self.email)
         mock_send.assert_called_with(to=self.email, code=str(self.code))
+
+
+class TestForgetPassword(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.code = UUID('d0a7fb2d-dca7-4e1e-85a0-f0f5f6f0c651')
+        self.email = 'email@email.com'
+
+        self.data = public.ForgetPasswordInput(email=self.email)
+        self.expect_result = Response()
+
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.persistence.database.email_verification.add', new_callable=AsyncMock)
+    @patch('app.persistence.email.forget_password.send', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_send: AsyncMock, mock_add: AsyncMock, mock_read: AsyncMock):
+        mock_read.return_value = self.account_id,
+        mock_add.return_value = self.code
+
+        result = await public.forget_password(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(email=self.data.email)
+        mock_add.assert_called_with(account_id=self.account_id, email=self.data.email)
+        mock_send.assert_called_with(to=self.data.email, code=str(self.code))
+
+
+class TestResetPassword(AsyncTestCase):
+    def setUp(self) -> None:
+        self.code = 'd0a7fb2d-dca7-4e1e-85a0-f0f5f6f0c651'
+        self.password = 'password'
+        self.hashed = 'psd'
+        self.data = public.ResetPasswordInput(code=self.code, password=self.password)
+        self.expect_result = Response()
+
+    @patch('app.persistence.database.account.reset_password', new_callable=AsyncMock)
+    @patch('app.processor.http.public.hash_password', new_callable=Mock)
+    async def test_happy_path(self, mock_hash: Mock, mock_reset: AsyncMock):
+        mock_hash.return_value = self.hashed
+
+        result = await public.reset_password(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+        mock_hash.assert_called_with(self.data.password)
+        mock_reset.assert_called_with(code=self.data.code, pass_hash=self.hashed)

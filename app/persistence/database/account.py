@@ -1,6 +1,9 @@
+import asyncpg
+
 import app.exceptions as exc
 from app.base import do
 from app.base.enums import GenderType, RoleType
+from app.persistence.database import pg_pool_handler
 from app.persistence.database.util import PostgresQueryExecutor
 
 
@@ -51,3 +54,24 @@ async def read(account_id: int) -> do.Account:
         id=id_, email=email, nickname=nickname, gender=GenderType(gender), image_uuid=image_uuid,
         role=RoleType(role), is_verified=is_verified, is_google_login=is_google_login,
     )
+
+
+async def reset_password(code: str, pass_hash: str) -> None:
+    async with pg_pool_handler.cursor() as cursor:
+        cursor: asyncpg.connection.Connection
+        try:
+            account_id, = await cursor.fetchrow(
+                'UPDATE email_verification'
+                '   SET is_consumed = $1'
+                ' WHERE code = $2'
+                '   AND is_consumed = $3',
+                True, code, False,
+            )
+        except TypeError:
+            raise exc.NotFound
+        await cursor.execute(
+            r'UPDATE account'
+            r'   SET pass_hash = $1'
+            r' WHERE id = $2',
+            pass_hash, account_id,
+        )
