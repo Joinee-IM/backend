@@ -11,6 +11,10 @@ test: # run unit test for backend service
 	poetry run coverage run --source=app -m unittest -v
 	poetry run coverage report
 
+install: # install dependencies
+	pip install poetry
+	poetry install
+
 coverage: # show coverage report
 	poetry run coverage report
 
