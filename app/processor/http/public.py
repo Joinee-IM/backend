@@ -15,16 +15,16 @@ from app.utils import Response
 router = APIRouter(tags=['Public'])
 
 
-@router.get("/", status_code=200, response_class=responses.HTMLResponse)
+@router.get('/', status_code=200, response_class=responses.HTMLResponse)
 async def default_page():
-    return "<a href=\"/docs\">/docs</a>"
+    return '<a href="/docs">/docs</a>'
 
 
 class HealthCheckOutput(BaseModel):
     health: Optional[str] = 'ok'
 
 
-@router.get("/health")
+@router.get('/health')
 async def health_check() -> Response[HealthCheckOutput]:
     return Response(data=HealthCheckOutput(health='ok'))
 
@@ -40,7 +40,7 @@ class LoginOutput:
     token: str
 
 
-@router.post('/login')
+@router.post('/login', tags=['Account'])
 async def login(data: LoginInput) -> Response[LoginOutput]:
     try:
         account_id, pass_hash, role = await db.account.read_by_email(email=data.email)
@@ -58,8 +58,8 @@ class EmailVerificationOutput(BaseModel):
     success: bool = True
 
 
-@router.get('/email-verification')
-@router.post('/email-verification')
+@router.get('/email-verification', tags=['Email Verification'])
+@router.post('/email-verification', tags=['Email Verification'])
 async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
     await db.email_verification.verify_email(code=code)
     return Response(data=EmailVerificationOutput(success=True))
@@ -78,7 +78,7 @@ class AddAccountInput(BaseModel):
     role: RoleType
 
 
-@router.post('/account')
+@router.post('/account', tags=['Account'])
 async def add_account(data: AddAccountInput) -> Response[AddAccountOutput]:
     try:
         account_id = await db.account.add(
@@ -100,7 +100,7 @@ class ResendEmailVerificationInput(BaseModel):
     email: EmailStr
 
 
-@router.post('/email-verification/resend')
+@router.post('/email-verification/resend', tags=['Email Verification'])
 async def resend_email_verification(data: ResendEmailVerificationInput):
     account_id, *_ = await db.account.read_by_email(email=data.email)
     code = await db.email_verification.read(account_id=account_id, email=data.email)
@@ -112,7 +112,7 @@ class ForgetPasswordInput(BaseModel):
     email: EmailStr
 
 
-@router.post('/forget-password')
+@router.post('/forget-password', tags=['Account'])
 async def forget_password(data: ForgetPasswordInput) -> Response:
     account_id, *_ = await db.account.read_by_email(email=data.email)
     code = await db.email_verification.add(account_id=account_id, email=data.email)
@@ -125,7 +125,7 @@ class ResetPasswordInput(BaseModel):
     password: str
 
 
-@router.post('/reset-password')
+@router.post('/reset-password', tags=['Account'])
 async def reset_password(data: ResetPasswordInput) -> Response:
     await db.account.reset_password(code=data.code, pass_hash=hash_password(data.password))
     return Response()

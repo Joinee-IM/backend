@@ -29,11 +29,11 @@ def exception(exc: Exception, msg='', info_level=False, extra: dict = None):
     extra = {} if not extra else extra
     extra['request_uuid'] = context.get_request_uuid()
     if info_level:
-        logger.info(f"{format_exc(exc)}\n{traceback.format_exc()}", extra=extra)
+        logger.info(f'{format_exc(exc)}\n{traceback.format_exc()}', extra=extra)
     else:
-        logger.error(f"{msg}\t{exc.__repr__()}", extra=extra)
+        logger.error(f'{msg}\t{exc.__repr__()}', extra=extra)
         logger.exception(exc, extra=extra)
 
 
 def format_exc(e: Exception):
-    return f"{type(e).__name__}: {e}"
+    return f'{type(e).__name__}: {e}'

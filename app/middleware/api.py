@@ -10,7 +10,7 @@ def get_openapi_path(
     schema_generator: fastapi.openapi.utils.GenerateJsonSchema,
     model_name_map: fastapi.openapi.utils.ModelNameMap,
     field_mapping: Dict[
-        Tuple[fastapi.openapi.utils.ModelField, fastapi.openapi.utils.Literal["validation", "serialization"]],
+        Tuple[fastapi.openapi.utils.ModelField, fastapi.openapi.utils.Literal['validation', 'serialization']],
         fastapi.openapi.utils.JsonSchemaValue
     ],
     separate_input_output_schemas: bool = True,
@@ -18,12 +18,12 @@ def get_openapi_path(
     path = {}
     security_schemes: Dict[str, Any] = {}
     definitions: Dict[str, Any] = {}
-    assert route.methods is not None, "Methods must be a list"
+    assert route.methods is not None, 'Methods must be a list'
     if isinstance(route.response_class, fastapi.openapi.utils.DefaultPlaceholder):
         current_response_class: Type[fastapi.openapi.utils.Response] = route.response_class.value
     else:
         current_response_class = route.response_class
-    assert current_response_class, "A response class is needed to generate OpenAPI"
+    assert current_response_class, 'A response class is needed to generate OpenAPI'
     route_response_media_type: Optional[str] = current_response_class.media_type
     if route.include_in_schema:
         for method in route.methods:
@@ -36,7 +36,7 @@ def get_openapi_path(
                 flat_dependant=flat_dependant
             )
             if operation_security:
-                operation.setdefault("security", []).extend(operation_security)
+                operation.setdefault('security', []).extend(operation_security)
             if security_definitions:
                 security_schemes.update(security_definitions)
             all_route_params = fastapi.openapi.utils.get_flat_params(route.dependant)
@@ -50,17 +50,17 @@ def get_openapi_path(
             parameters.extend(operation_parameters)
             if parameters:
                 all_parameters = {
-                    (param["in"], param["name"]): param for param in parameters
+                    (param['in'], param['name']): param for param in parameters
                 }
                 required_parameters = {
-                    (param["in"], param["name"]): param
+                    (param['in'], param['name']): param
                     for param in parameters
-                    if param.get("required")
+                    if param.get('required')
                 }
                 # Make sure required definitions of the same parameter take precedence
                 # over non-required definitions
                 all_parameters.update(required_parameters)
-                operation["parameters"] = list(all_parameters.values())
+                operation['parameters'] = list(all_parameters.values())
             if method in fastapi.openapi.utils.METHODS_WITH_BODY:
                 request_body_oai = fastapi.openapi.utils.get_openapi_operation_request_body(
                     body_field=route.body_field,
@@ -70,7 +70,7 @@ def get_openapi_path(
                     separate_input_output_schemas=separate_input_output_schemas,
                 )
                 if request_body_oai:
-                    operation["requestBody"] = request_body_oai
+                    operation['requestBody'] = request_body_oai
             if route.callbacks:
                 callbacks = {}
                 for callback in route.callbacks:
@@ -88,7 +88,7 @@ def get_openapi_path(
                             separate_input_output_schemas=separate_input_output_schemas,
                         )
                         callbacks[callback.name] = {callback.path: cb_path}
-                operation["callbacks"] = callbacks
+                operation['callbacks'] = callbacks
             status_code = None
             if route.status_code is not None:
                 status_code = str(route.status_code)
@@ -99,11 +99,11 @@ def get_openapi_path(
                 # TODO: probably make status_code a default class attribute for all
                 # responses in Starlette
                 response_signature = fastapi.openapi.utils.inspect.signature(current_response_class.__init__)
-                status_code_param = response_signature.parameters.get("status_code")
+                status_code_param = response_signature.parameters.get('status_code')
                 if status_code_param is not None:
                     if isinstance(status_code_param.default, int):
                         status_code = str(status_code_param.default)
-            operation.setdefault("responses", {}).setdefault(status_code, {})[
+            operation.setdefault('responses', {}).setdefault(status_code, {})[
                 "description"
             ] = route.response_description
             if route_response_media_type and fastapi.openapi.utils.is_body_allowed_for_status_code(

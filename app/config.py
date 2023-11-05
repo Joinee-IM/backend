@@ -5,7 +5,7 @@ from distutils.util import strtobool
 from dotenv import dotenv_values
 
 env_values = {
-    **dotenv_values(".env"),
+    **dotenv_values('.env'),
     **os.environ,
 }
 
@@ -54,7 +54,7 @@ class ServiceConfig:
     def url(self) -> str:
         protocol = 'https' if self.use_https else 'http'
         port_postfix = f':{self.port}' if self.port else ''
-        return f"{protocol}://{self.domain}{port_postfix}"
+        return f'{protocol}://{self.domain}{port_postfix}'
 
 
 pg_config = PGConfig()
