@@ -47,11 +47,11 @@ helm: # helm upgrade
         --install \
         --namespace=prod  \
         --values deploy/helm/production/values.yaml \
-        --set image.tag=amd-202310241713
+        --set image.tag=x86-202310241732
 
 show-url: # show helm deployment's service url
-	NODE_PORT=$(shell kubectl get --namespace cloud-native -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native-backend); \
-	NODE_IP=$(shell kubectl get nodes --namespace cloud-native -o jsonpath="{.items[0].status.addresses[0].address}"); \
+	NODE_PORT=$(shell kubectl get --namespace prod -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native-backend); \
+	NODE_IP=$(shell kubectl get nodes --namespace prod -o jsonpath="{.items[0].status.addresses[0].address}"); \
 	echo http://$${NODE_IP}:$${NODE_PORT}
 
 cloud-sql-proxy: # start up cloud sql proxy for postgres
