@@ -2,9 +2,7 @@
 ## Setup
 1. Python environment
    ```shell
-   pip install poetry
-   poetry install
-   cp .env.example .env
+   make install
    ```
    and paste environment variables
 2. Run backend service

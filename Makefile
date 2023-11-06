@@ -12,8 +12,9 @@ test: # run unit test for backend service
 	poetry run coverage report
 
 install: # install dependencies
-	pip install poetry
 	poetry install
+	pre-commit install
+	cp .env.example .env
 
 coverage: # show coverage report
 	poetry run coverage report
