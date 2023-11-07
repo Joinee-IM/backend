@@ -16,7 +16,7 @@ async def send(to: str, code: str, subject='Joinee Email Verification'):
                         <p style="color: black;">Hello, {to}</p>
                         <p style="color: black;">Thanks for registering for our application.</p>
                         <p style="color: black;">Please click on the following link to verify!</p>
-                        <a href="{service_config.url}/login?code={code}">Click here to verify</a>
+                        <a href="{service_config.url}/auth/login?code={code}">Click here to verify</a>
                     </body>
                 </html>
             """
