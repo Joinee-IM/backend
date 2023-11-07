@@ -32,12 +32,17 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 async def app_startup():
     log.info('app start.')
 
+    log.info('initializing database')
     from app.config import pg_config
     from app.persistence.database import pg_pool_handler
-
-    log.info('initializing database')
     await pg_pool_handler.initialize(db_config=pg_config)
     log.info('initialized database')
+
+    log.info('initializing smtp')
+    from app.config import smtp_config
+    from app.persistence.email import smtp_handler
+    await smtp_handler.initialize(smtp_config=smtp_config)
+    log.info('initialized smtp')
 
     # if redis needed
     # from app.config import redis_config
@@ -48,11 +53,16 @@ async def app_startup():
 @app.on_event('shutdown')
 async def app_shutdown():
     log.info('app shutdown')
-    from app.persistence.database import pg_pool_handler
 
     log.info('closing database')
+    from app.persistence.database import pg_pool_handler
     await pg_pool_handler.close()
     log.info('closed database')
+
+    log.info('closing smtp')
+    from app.persistence.email import smtp_handler
+    await smtp_handler.close()
+    log.info('closed smtp')
 
     # if redis needed
     # from app.persistence.redis import redis_pool_handler
