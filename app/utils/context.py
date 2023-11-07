@@ -6,7 +6,7 @@ import starlette_context
 
 import app.exceptions as exc
 from app.base import mcs
-from app.security import AuthedAccount
+from app.utils.security import AuthedAccount
 
 
 class Context(metaclass=mcs.Singleton):

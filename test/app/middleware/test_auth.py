@@ -6,7 +6,7 @@ from fastapi import Request, Response
 from freezegun import freeze_time
 
 from app.middleware.auth import middleware
-from app.security import AuthedAccount
+from app.utils.security import AuthedAccount
 
 
 class TestMiddleware(AsyncTestCase):
@@ -46,7 +46,7 @@ class TestMiddleware(AsyncTestCase):
         with (
             patch('app.middleware.auth.context', self.context) as context,
             patch('uuid.uuid1', Mock(return_value=self.uuid)),
-            patch('app.security.decode_jwt', Mock(return_value=self.jwt_result))
+            patch('app.utils.security.decode_jwt', Mock(return_value=self.jwt_result))
         ):
             result = await middleware(self.request_with_auth_token, self.call_next)
             self.assertDictEqual(context._context, self.context_expect_result_with_auth_token)

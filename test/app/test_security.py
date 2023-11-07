@@ -6,8 +6,8 @@ import jwt
 from freezegun import freeze_time
 
 import app.exceptions as exc
-from app import security
 from app.base.enums import RoleType
+from app.utils import security
 
 
 class TestEncodeJWT(TestCase):
@@ -17,7 +17,7 @@ class TestEncodeJWT(TestCase):
         self.expire = timedelta(seconds=1)
 
     @freeze_time('2023-10-25')
-    @patch('app.security._jwt_encoder', new_callable=Mock)
+    @patch('app.utils.security._jwt_encoder', new_callable=Mock)
     def test_happy_path(self, mock_encoder: Mock):
         mock_encoder.return_value = 'mock-token'
         result = security.encode_jwt(self.account_id, self.role, self.expire)
@@ -48,7 +48,7 @@ class TestDecodeJWT(TestCase):
         )
 
     @freeze_time('2023-10-25')
-    @patch('app.security._jwt_decoder', new_callable=Mock)
+    @patch('app.utils.security._jwt_decoder', new_callable=Mock)
     def test_happy_path(self, mock_decoder: Mock):
         mock_decoder.return_value = self.decoded
         result = security.decode_jwt('encoded', self.request_time)
@@ -56,14 +56,14 @@ class TestDecodeJWT(TestCase):
         self.assertEqual(result, self.expect_output)
 
     @freeze_time('2023-10-25')
-    @patch('app.security._jwt_decoder', new_callable=Mock)
+    @patch('app.utils.security._jwt_decoder', new_callable=Mock)
     def test_decode_error(self, mock_decoder: Mock):
         with self.assertRaises(exc.LoginExpired):
             mock_decoder.side_effect = jwt.DecodeError
             security.decode_jwt('encoded', self.request_time)
 
     @freeze_time('2023-10-25')
-    @patch('app.security._jwt_decoder', new_callable=Mock)
+    @patch('app.utils.security._jwt_decoder', new_callable=Mock)
     def test_login_expire(self, mock_decoder: Mock):
         with self.assertRaises(exc.LoginExpired):
             mock_decoder.return_value = self.decoded

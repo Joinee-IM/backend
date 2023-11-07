@@ -3,8 +3,8 @@ from unittest import TestCase as _TestCase
 from unittest.mock import AsyncMock as _AsyncMock
 from unittest.mock import Mock as _Mock
 
-from app.security import AuthedAccount
 from app.utils.context import Context
+from app.utils.security import AuthedAccount
 
 
 class Mock(_Mock):

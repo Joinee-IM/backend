@@ -6,7 +6,7 @@ import app.exceptions as exc
 from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.processor.http import account
-from app.security import AuthedAccount
+from app.utils.security import AuthedAccount
 
 
 class TestReadAccount(AsyncTestCase):

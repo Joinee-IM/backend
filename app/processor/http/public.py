@@ -9,8 +9,8 @@ import app.exceptions as exc
 import app.persistence.database as db
 import app.persistence.email as email
 from app.base.enums import GenderType, RoleType
-from app.security import encode_jwt, hash_password, verify_password
 from app.utils import Response
+from app.utils.security import encode_jwt, hash_password, verify_password
 
 router = APIRouter(tags=['Public'])
 
