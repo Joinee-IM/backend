@@ -13,7 +13,7 @@ test: # run unit test for backend service
 
 install: # install dependencies
 	poetry install
-	pre-commit install
+	poetry run pre-commit install
 	cp .env.example .env
 
 coverage: # show coverage report
