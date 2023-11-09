@@ -26,3 +26,13 @@ class GCSFile(BaseModel):
     key: str
     bucket: str
     filename: str
+
+
+class Stadium(BaseModel):
+    id: int
+    name: str
+    district_id: int
+    contact_number: Optional[str]
+    description: Optional[str]
+    long: float
+    lat: float
