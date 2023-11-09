@@ -1,9 +1,8 @@
-from test import AsyncMock, AsyncTestCase
+from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
-from parameterized import parameterized
-
 from app.persistence.database.util import PostgresQueryExecutor, QueryExecutor
+from parameterized import parameterized
 
 
 class MockQueryExecutor(QueryExecutor):

@@ -2,9 +2,8 @@ import typing
 from time import time
 from uuid import UUID, uuid4
 
-from google.cloud import storage
-
 from app.base import mcs
+from google.cloud import storage
 
 
 class GCSHandler(metaclass=mcs.Singleton):

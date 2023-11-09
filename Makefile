@@ -5,7 +5,7 @@ default: help
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
-test: # run unit test for backend service
+test: # run unit tests for backend service
 	poetry run isort .
 	poetry run pycodestyle --ignore "E501, E402, W503, W504" app
 	poetry run coverage run --source=app -m unittest -v

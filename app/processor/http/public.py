@@ -2,15 +2,14 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, responses
-from pydantic import BaseModel, EmailStr
-
 import app.exceptions as exc
 import app.persistence.database as db
 import app.persistence.email as email
 from app.base.enums import GenderType, RoleType
 from app.utils import Response
 from app.utils.security import encode_jwt, hash_password, verify_password
+from fastapi import APIRouter, responses
+from pydantic import BaseModel, EmailStr
 
 router = APIRouter(tags=['Public'])
 
@@ -50,7 +49,7 @@ async def login(data: LoginInput) -> Response[LoginOutput]:
     if not verify_password(data.password, pass_hash):
         raise exc.LoginFailed
 
-    token = encode_jwt(account_id=account_id, role=role)
+    token = encode_jwt(account_id=account_id)
     return Response(data=LoginOutput(account_id=account_id, token=token))
 
 

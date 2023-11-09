@@ -1,4 +1,4 @@
-from test import AsyncMock, AsyncTestCase
+from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
 from app.config import PGConfig

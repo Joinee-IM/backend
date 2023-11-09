@@ -1,9 +1,8 @@
 import datetime
 import uuid
 
-from fastapi import Request
-
 from app.utils.context import context
+from fastapi import Request
 
 
 async def middleware(request: Request, call_next):

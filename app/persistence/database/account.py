@@ -1,22 +1,30 @@
-import asyncpg
+from typing import Optional
 
 import app.exceptions as exc
+import asyncpg
 from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import pg_pool_handler
 from app.persistence.database.util import PostgresQueryExecutor
 
 
-async def add(email: str, pass_hash: str, nickname: str,
+async def add(email: str,
+              pass_hash: Optional[str] = None,
+              nickname: Optional[str] = None,
               gender: GenderType = GenderType.unrevealed,
               role: RoleType = RoleType.normal,
-              is_google_login: bool = False) -> int:
+              is_google_login: bool = False,
+              access_token: Optional[str] = None,
+              refresh_token: Optional[str] = None
+              ) -> int:
     id_, = await PostgresQueryExecutor(
         sql=r'INSERT INTO account'
-            r'            (email, pass_hash, nickname, gender, role, is_google_login)'
-            r'     VALUES (%(email)s, %(pass_hash)s, %(nickname)s, %(gender)s, %(role)s, %(is_google_login)s)'
+            r'            (email, pass_hash, nickname, gender, role, is_google_login, access_token, refresh_token)'
+            r'     VALUES (%(email)s, %(pass_hash)s, %(nickname)s, %(gender)s, %(role)s, %(is_google_login)s,'
+            r'             %(access_token)s, %(refresh_token)s)'
             r'  RETURNING id',
-        email=email, pass_hash=pass_hash, nickname=nickname, gender=gender, role=role, is_google_login=is_google_login,
+        email=email, pass_hash=pass_hash, nickname=nickname, gender=gender, role=role,
+        is_google_login=is_google_login, access_token=access_token, refresh_token=refresh_token,
         fetch=1,
     ).execute()
     return id_
@@ -75,3 +83,15 @@ async def reset_password(code: str, pass_hash: str) -> None:
             r' WHERE id = $2',
             pass_hash, account_id,
         )
+
+
+async def update_google_token(account_id: int, access_token: str, refresh_token: str) -> None:
+    await PostgresQueryExecutor(
+        sql=r"UPDATE account"
+            r"   SET access_token = %(access_token)s,"
+            r"       refresh_token = %(refresh_token)s,"
+            r"       is_google_login = %(is_google_login)s"
+            r" WHERE id = %(account_id)s",
+        access_token=access_token, refresh_token=refresh_token, is_google_login=True, account_id=account_id,
+        fetch=None,
+    ).execute()

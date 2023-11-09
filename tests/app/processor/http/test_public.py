@@ -1,4 +1,4 @@
-from test import AsyncMock, AsyncTestCase, Mock
+from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 from uuid import UUID
 
@@ -56,7 +56,7 @@ class TestLogin(AsyncTestCase):
             self.login_input.password, self.pass_hash
         )
         mock_encode.assert_called_with(
-            account_id=self.account_id, role=self.role
+            account_id=self.account_id,
         )
 
         self.assertEqual(result, Response(data=self.expect_output))

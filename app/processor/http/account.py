@@ -1,10 +1,9 @@
-from fastapi import APIRouter, Depends, responses
-
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do
 from app.middleware.headers import get_auth_token
 from app.utils import Response, context
+from fastapi import APIRouter, Depends, responses
 
 router = APIRouter(
     tags=['Account'],

@@ -1,4 +1,4 @@
-from test import AsyncMock, AsyncTestCase
+from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
 import app.exceptions as exc
@@ -71,3 +71,19 @@ class TestRead(AsyncTestCase):
         mock_executor.return_value = None
         with self.assertRaises(exc.NotFound):
             await account.read(self.account_id)
+
+
+class TestUpdateGoogleToken(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.access_token = 'access'
+        self.refresh_token = 'refresh'
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=None))
+    async def test_happy_path(self):
+        result = await account.update_google_token(
+            account_id=self.account_id,
+            access_token=self.access_token,
+            refresh_token=self.refresh_token,
+        )
+        self.assertIsNone(result)

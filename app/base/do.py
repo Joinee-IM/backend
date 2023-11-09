@@ -5,9 +5,8 @@ data objects
 from typing import Optional
 from uuid import UUID
 
-from pydantic import BaseModel, EmailStr
-
 from app.base import enums
+from pydantic import BaseModel, EmailStr
 
 
 class Account(BaseModel):

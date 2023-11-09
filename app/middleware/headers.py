@@ -1,7 +1,6 @@
-from fastapi import Header
-
 from app.utils import security
 from app.utils.context import context
+from fastapi import Header
 
 
 async def get_auth_token(auth_token: str = Header(None, convert_underscores=True)):

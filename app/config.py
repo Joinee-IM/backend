@@ -57,9 +57,18 @@ class ServiceConfig:
         return f'{protocol}://{self.domain}{port_postfix}'
 
 
+class GoogleConfig:
+    CLIENT_ID = env_values.get('GOOGLE_CLIENT_ID')
+    CLIENT_SECRET = env_values.get('GOOGLE_CLIENT_SECRET')
+    LOGIN_REDIRECT_URI = env_values.get('GOOGLE_LOGIN_REDIRECT_URI')
+    SERVER_URL = env_values.get('GOOGLE_SERVER_URL')
+    CLIENT_KWARGS = env_values.get('GOOGLE_CLIENT_KWARGS')
+
+
 pg_config = PGConfig()
 app_config = AppConfig()
 jwt_config = JWTConfig()
 redis_config = RedisConfig()
 smtp_config = SMTPConfig()
 service_config = ServiceConfig()
+google_config = GoogleConfig()

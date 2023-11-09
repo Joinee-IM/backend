@@ -1,5 +1,5 @@
 from datetime import datetime
-from test import TestCase
+from tests import TestCase
 
 from app.utils.context import Context
 from app.utils.security import AuthedAccount

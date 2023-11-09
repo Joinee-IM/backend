@@ -27,6 +27,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install poetry
         poetry install
-    - name: Run lint and unit test
+    - name: Run lint and unit tests
       run: |
         make test

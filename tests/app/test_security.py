@@ -1,31 +1,28 @@
 from datetime import datetime, timedelta
-from test import Mock, TestCase
+from tests import Mock, TestCase
 from unittest.mock import patch
 
-import jwt
-from freezegun import freeze_time
-
 import app.exceptions as exc
+import jwt
 from app.base.enums import RoleType
 from app.utils import security
+from freezegun import freeze_time
 
 
 class TestEncodeJWT(TestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.role = RoleType.normal
         self.expire = timedelta(seconds=1)
 
     @freeze_time('2023-10-25')
     @patch('app.utils.security._jwt_encoder', new_callable=Mock)
     def test_happy_path(self, mock_encoder: Mock):
         mock_encoder.return_value = 'mock-token'
-        result = security.encode_jwt(self.account_id, self.role, self.expire)
+        result = security.encode_jwt(self.account_id, self.expire)
 
         self.assertEqual(result, 'mock-token')
         mock_encoder.assert_called_with({
             'account_id': self.account_id,
-            'role': self.role.value,
             'expire': '2023-10-25T00:00:01',
         })
 
@@ -37,7 +34,6 @@ class TestDecodeJWT(TestCase):
         self.expire = timedelta(seconds=1)
         self.decoded = {
             'account_id': self.account_id,
-            'role': self.role.value,
             'expire': '2023-10-25T00:00:01',
         }
         self.request_time = datetime(2023, 10, 25)

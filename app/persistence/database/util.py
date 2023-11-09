@@ -2,10 +2,9 @@ import abc
 import collections
 import itertools
 
-import asyncpg
-
 import app.exceptions as exc
 import app.log as log
+import asyncpg
 
 from . import pg_pool_handler
 
@@ -13,7 +12,7 @@ from . import pg_pool_handler
 class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
-    def __init__(self, sql: str, fetch: int | str, parameters: dict[str, any] = None,
+    def __init__(self, sql: str, fetch: int | str | None, parameters: dict[str, any] = None,
                  **params):
         self.sql, self.params = self._format(sql, parameters, **params)
         self.fetch = fetch

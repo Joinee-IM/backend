@@ -1,5 +1,5 @@
 from datetime import datetime
-from test import AsyncMock, AsyncTestCase, MockContext
+from tests import AsyncMock, AsyncTestCase, MockContext
 from unittest.mock import patch
 
 import app.exceptions as exc

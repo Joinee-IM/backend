@@ -2,7 +2,6 @@ from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 import aioredis
-
 from app.config import RedisConfig
 from app.persistence import PoolHandlerBase
 
