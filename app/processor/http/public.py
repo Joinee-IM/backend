@@ -3,6 +3,7 @@ from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter, responses
+from fastapi import Response as FastAPIResponse
 from pydantic import BaseModel, EmailStr
 
 import app.exceptions as exc
@@ -41,7 +42,7 @@ class LoginOutput:
 
 
 @router.post('/login', tags=['Account'])
-async def login(data: LoginInput) -> Response[LoginOutput]:
+async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOutput]:
     try:
         account_id, pass_hash, role = await db.account.read_by_email(email=data.email)
     except TypeError:
@@ -51,6 +52,8 @@ async def login(data: LoginInput) -> Response[LoginOutput]:
         raise exc.LoginFailed
 
     token = encode_jwt(account_id=account_id)
+    response.set_cookie(key="account_id", value=str(account_id), httponly=True)
+    response.set_cookie(key="token", value=str(token), httponly=True)
     return Response(data=LoginOutput(account_id=account_id, token=token))
 
 
