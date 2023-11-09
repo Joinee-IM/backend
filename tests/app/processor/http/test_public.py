@@ -2,6 +2,8 @@ from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 from uuid import UUID
 
+from fastapi import Response as FastAPIResponse
+
 import app.processor
 from app import exceptions as exc
 from app.base.enums import GenderType, RoleType
@@ -33,6 +35,7 @@ class TestLogin(AsyncTestCase):
             email='email@email.com',
             password='password',
         )
+        self.response = FastAPIResponse()
         self.pass_hash = 'pass_hash'
         self.account_id = 1
         self.role = RoleType.normal
@@ -49,7 +52,7 @@ class TestLogin(AsyncTestCase):
         mock_verify.return_value = True
         mock_encode.return_value = 'token'
 
-        result = await public.login(self.login_input)
+        result = await public.login(data=self.login_input, response=self.response)
 
         mock_read.assert_called_with(email=self.login_input.email)
         mock_verify.assert_called_with(
@@ -65,7 +68,7 @@ class TestLogin(AsyncTestCase):
     async def test_no_account(self, mock_read: AsyncMock):
         mock_read.side_effect = TypeError
         with self.assertRaises(exc.LoginFailed):
-            await public.login(self.login_input)
+            await public.login(self.login_input, self.response)
 
         mock_read.assert_called_with(email=self.login_input.email)
 
@@ -76,7 +79,7 @@ class TestLogin(AsyncTestCase):
         mock_verify.return_value = False
 
         with self.assertRaises(exc.LoginFailed):
-            await public.login(self.login_input)
+            await public.login(self.login_input, self.response)
 
         mock_read.assert_called_with(email=self.login_input.email)
         mock_verify.assert_called_with(

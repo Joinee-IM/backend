@@ -2,8 +2,9 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, responses
+from fastapi import APIRouter
 from fastapi import Response as FastAPIResponse
+from fastapi import responses
 from pydantic import BaseModel, EmailStr
 
 import app.exceptions as exc
