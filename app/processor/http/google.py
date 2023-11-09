@@ -1,11 +1,12 @@
+from fastapi import APIRouter, Depends, Request, responses
+from starlette.responses import RedirectResponse
+
 import app.exceptions as exc
 import app.persistence.database as db
 from app.client.oauth import oauth_handler
 from app.config import service_config
 from app.middleware.headers import get_auth_token
 from app.utils.security import encode_jwt
-from fastapi import APIRouter, Depends, Request, responses
-from starlette.responses import RedirectResponse
 
 router = APIRouter(
     tags=['Google'],

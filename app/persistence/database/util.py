@@ -2,9 +2,10 @@ import abc
 import collections
 import itertools
 
+import asyncpg
+
 import app.exceptions as exc
 import app.log as log
-import asyncpg
 
 from . import pg_pool_handler
 

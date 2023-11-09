@@ -2,10 +2,11 @@ import logging
 from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
+from fastapi import Request
+
 import app.exceptions as exc
 from app.config import app_config
 from app.middleware.envelope import middleware
-from fastapi import Request
 
 
 class TestMiddleware(AsyncTestCase):

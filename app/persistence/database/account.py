@@ -1,7 +1,8 @@
 from typing import Optional
 
-import app.exceptions as exc
 import asyncpg
+
+import app.exceptions as exc
 from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import pg_pool_handler

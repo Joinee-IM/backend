@@ -1,6 +1,7 @@
+from authlib.integrations.starlette_client import OAuth
+
 from app.base import mcs
 from app.config import GoogleConfig
-from authlib.integrations.starlette_client import OAuth
 
 
 class OAuthHandler(metaclass=mcs.Singleton):

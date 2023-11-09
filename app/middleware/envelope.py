@@ -1,7 +1,8 @@
-import app.exceptions as exc
-import app.log as log
 from fastapi import Request
 from fastapi.responses import JSONResponse
+
+import app.exceptions as exc
+import app.log as log
 
 
 async def middleware(request: Request, call_next):

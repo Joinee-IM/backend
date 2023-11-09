@@ -8,6 +8,7 @@ from contextlib import asynccontextmanager
 from typing import AsyncContextManager
 
 import asyncpg
+
 from app.base import mcs
 from app.config import PGConfig
 from app.persistence import PoolHandlerBase

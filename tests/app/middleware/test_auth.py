@@ -2,10 +2,11 @@ from datetime import datetime
 from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 
-from app.middleware.auth import middleware
-from app.utils.security import AuthedAccount
 from fastapi import Request, Response
 from freezegun import freeze_time
+
+from app.middleware.auth import middleware
+from app.utils.security import AuthedAccount
 
 
 class TestMiddleware(AsyncTestCase):
