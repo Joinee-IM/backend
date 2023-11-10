@@ -14,7 +14,12 @@ test: # run unit tests for backend service
 install: # install dependencies
 	poetry install
 	poetry run pre-commit install
-	cp .env.example .env
+	@if [ ! -f .env ]; then\
+		cp .env.example .env;\
+	fi
+	@echo ""
+	@echo "##### install complete #####"
+	@echo "Please fill in .env file"
 
 coverage: # show coverage report
 	poetry run coverage report
