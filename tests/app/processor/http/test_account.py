@@ -41,3 +41,39 @@ class TestReadAccount(AsyncTestCase):
             await account.read_account(self.account_id)
 
         mock_context.reset_context()
+
+
+class TestEditAccount(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.happy_path_data = account.EditAccountInput(
+            nickname='nickname',
+            gender=GenderType.male,
+        )
+        self.expect_result = account.Response(data=True)
+
+    @patch('app.processor.http.account.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_edit: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+
+        result = await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+        self.assertEqual(result, self.expect_result)
+
+        mock_edit.assert_called_with(
+            account_id=self.account_id,
+            nickname=self.happy_path_data.nickname,
+            gender=self.happy_path_data.gender,
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.account.context', new_callable=MockContext)
+    async def test_no_permission(self, mock_context: MockContext):
+        mock_context._context = self.wrong_context
+
+        with self.assertRaises(exc.NoPermission):
+            await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+
+        mock_context.reset_context()

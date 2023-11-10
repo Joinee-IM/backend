@@ -4,7 +4,7 @@ import app.exceptions as exc
 from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import account
-from tests import AsyncMock, AsyncTestCase
+from tests import AsyncMock, AsyncTestCase, Mock
 
 
 class TestAddAccount(AsyncTestCase):
@@ -87,3 +87,56 @@ class TestUpdateGoogleToken(AsyncTestCase):
             refresh_token=self.refresh_token,
         )
         self.assertIsNone(result)
+
+
+class TestEdit(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.nickname = 'nickname'
+        self.gender = GenderType.male
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock())
+    async def test_happy_path(self, mock_init: Mock):
+        result = await account.edit(
+            account_id=self.account_id,
+            nickname=self.nickname,
+            gender=self.gender,
+        )
+        self.assertIsNone(result)
+
+        mock_init.assert_called_with(
+            sql='UPDATE account'
+                '   SET nickname = %(nickname)s, gender = %(gender)s'
+                ' WHERE id = %(account_id)s',
+            account_id=self.account_id, nickname=self.nickname, gender=self.gender, fetch=None,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock())
+    async def test_only_edit_one(self, mock_init: Mock):
+        result = await account.edit(
+            account_id=self.account_id,
+            nickname=self.nickname,
+            gender=None,
+        )
+        self.assertIsNone(result)
+
+        mock_init.assert_called_with(
+            sql='UPDATE account'
+                '   SET nickname = %(nickname)s'
+                ' WHERE id = %(account_id)s',
+            account_id=self.account_id, nickname=self.nickname, fetch=None,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock())
+    async def test_no_edit(self, mock_init: Mock):
+        result = await account.edit(
+            account_id=self.account_id,
+            nickname=None,
+            gender=None,
+        )
+        self.assertIsNone(result)
+
+        mock_init.assert_not_called()

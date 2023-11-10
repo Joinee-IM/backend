@@ -96,3 +96,24 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
         access_token=access_token, refresh_token=refresh_token, is_google_login=True, account_id=account_id,
         fetch=None,
     ).execute()
+
+
+async def edit(account_id: int,
+               nickname: Optional[str] = None,
+               gender: Optional[GenderType] = None) -> None:
+    to_update = {}
+    if nickname:
+        to_update['nickname'] = nickname
+    if gender:
+        to_update['gender'] = gender
+
+    if not to_update:
+        return
+
+    update_sql = ', '.join([f'{field} = %({field})s' for field in to_update])
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE account'
+            fr'   SET {update_sql}'
+            fr' WHERE id = %(account_id)s',
+        account_id=account_id, **to_update, fetch=None,
+    ).execute()
