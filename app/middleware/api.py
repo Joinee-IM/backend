@@ -312,4 +312,3 @@ class FastAPI(fastapi.FastAPI):
                 separate_input_output_schemas=self.separate_input_output_schemas,
             )
         return self.openapi_schema
-        return self.openapi_schema
