@@ -1,5 +1,6 @@
 from datetime import datetime
 
+import app.exceptions as exc
 from app.utils.context import Context
 from app.utils.security import AuthedAccount
 from tests import TestCase
@@ -40,9 +41,15 @@ class TestContext(TestCase):
         self.context.set_account(self.authed_account)
         self.assertEqual(self.context.get_account(), self.authed_account)
 
+    def test_no_account(self):
+        self.context.set_account(None)  # noqa
+        with self.assertRaises(exc.NoPermission):
+            _ = self.context.account
+
     def test_request_time(self):
         self.context.set_request_time(self.request_time)
         self.assertEqual(self.context.get_request_time(), self.request_time)
+        self.assertEqual(self.context.request_time, self.request_time)
 
     def test_request_uuid(self):
         self.context.set_request_uuid(self.request_uuid)
