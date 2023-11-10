@@ -105,7 +105,6 @@ class TestAddAccount(AsyncTestCase):
         self.data = app.processor.http.public.AddAccountInput(
             email='email@email.com',
             password='password',
-            nickname='nickname',
             gender=GenderType.male,
             role=RoleType.normal,
         )

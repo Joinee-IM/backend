@@ -77,9 +77,12 @@ class AddAccountOutput:
 class AddAccountInput(BaseModel):
     email: EmailStr
     password: str
-    nickname: str
-    gender: GenderType
+    gender: GenderType | None = GenderType.unrevealed
     role: RoleType
+
+    @property
+    def nickname(self):
+        return self.email.split('@')[0]
 
 
 @router.post('/account', tags=['Account'])
