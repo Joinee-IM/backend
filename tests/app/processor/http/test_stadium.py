@@ -1,9 +1,9 @@
-from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 
 from app.base import do
 from app.processor.http import stadium
 from app.utils import Response
+from tests import AsyncMock, AsyncTestCase
 
 
 class TestSearchStadium(AsyncTestCase):

@@ -1,9 +1,9 @@
-from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 from uuid import UUID
 
 import app.exceptions as exc
 from app.persistence.database import email_verification
+from tests import AsyncMock, AsyncTestCase
 
 
 class TestAdd(AsyncTestCase):

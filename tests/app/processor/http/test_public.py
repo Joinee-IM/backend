@@ -1,4 +1,3 @@
-from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 from uuid import UUID
 
@@ -9,6 +8,7 @@ from app import exceptions as exc
 from app.base.enums import GenderType, RoleType
 from app.processor.http import public
 from app.utils import Response
+from tests import AsyncMock, AsyncTestCase, Mock
 
 
 class TestDefaultPage(AsyncTestCase):

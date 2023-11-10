@@ -1,8 +1,8 @@
 from datetime import datetime
-from tests import TestCase
 
 from app.utils.context import Context
 from app.utils.security import AuthedAccount
+from tests import TestCase
 
 
 class MockStarletteContext:

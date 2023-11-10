@@ -1,4 +1,3 @@
-from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 
 from fastapi import Request
@@ -6,6 +5,7 @@ from starlette.responses import RedirectResponse
 
 import app.exceptions as exc
 from app.processor.http import google
+from tests import AsyncMock, AsyncTestCase, Mock
 
 
 class TestGoogleLogin(AsyncTestCase):

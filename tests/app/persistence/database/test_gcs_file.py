@@ -1,9 +1,9 @@
-from tests import AsyncMock, AsyncTestCase
 from unittest.mock import patch
 from uuid import UUID
 
 from app.base.do import GCSFile
 from app.persistence.database import gcs_file
+from tests import AsyncMock, AsyncTestCase
 
 
 class TestAdd(AsyncTestCase):

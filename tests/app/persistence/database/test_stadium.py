@@ -1,8 +1,8 @@
-from tests import AsyncMock, AsyncTestCase, Mock
 from unittest.mock import patch
 
 from app.base import do
 from app.persistence.database import stadium
+from tests import AsyncMock, AsyncTestCase, Mock
 
 
 class TestBrowse(AsyncTestCase):
