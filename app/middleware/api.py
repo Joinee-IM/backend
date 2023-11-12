@@ -11,7 +11,7 @@ def get_openapi_path(
     model_name_map: fastapi.openapi.utils.ModelNameMap,
     field_mapping: Dict[
         Tuple[fastapi.openapi.utils.ModelField, fastapi.openapi.utils.Literal['validation', 'serialization']],
-        fastapi.openapi.utils.JsonSchemaValue
+        fastapi.openapi.utils.JsonSchemaValue,
     ],
     separate_input_output_schemas: bool = True,
 ) -> Tuple[Dict[str, Any], Dict[str, Any], Dict[str, Any]]:
@@ -28,12 +28,12 @@ def get_openapi_path(
     if route.include_in_schema:
         for method in route.methods:
             operation = fastapi.openapi.utils.get_openapi_operation_metadata(
-                route=route, method=method, operation_ids=operation_ids
+                route=route, method=method, operation_ids=operation_ids,
             )
             parameters: List[Dict[str, Any]] = []
             flat_dependant = fastapi.openapi.utils.get_flat_dependant(route.dependant, skip_repeats=True)
             security_definitions, operation_security = fastapi.openapi.utils.get_openapi_security_definitions(
-                flat_dependant=flat_dependant
+                flat_dependant=flat_dependant,
             )
             if operation_security:
                 operation.setdefault('security', []).extend(operation_security)
@@ -107,7 +107,7 @@ def get_openapi_path(
                 "description"
             ] = route.response_description
             if route_response_media_type and fastapi.openapi.utils.is_body_allowed_for_status_code(
-                route.status_code
+                route.status_code,
             ):
                 response_schema = {"type": "string"}
                 if fastapi.openapi.utils.lenient_issubclass(current_response_class, fastapi.openapi.utils.JSONResponse):
@@ -122,7 +122,7 @@ def get_openapi_path(
                     else:
                         response_schema = {}
                 operation.setdefault("responses", {}).setdefault(
-                    status_code, {}
+                    status_code, {},
                 ).setdefault("content", {}).setdefault(route_response_media_type, {})[
                     "schema"
                 ] = response_schema
@@ -138,10 +138,10 @@ def get_openapi_path(
                     if status_code_key == "DEFAULT":
                         status_code_key = "default"
                     openapi_response = operation_responses.setdefault(
-                        status_code_key, {}
+                        status_code_key, {},
                     )
                     assert isinstance(
-                        process_response, dict
+                        process_response, dict,
                     ), "An additional response must be a dict"
                     field = route.response_fields.get(additional_status_code)
                     if field:
@@ -160,7 +160,7 @@ def get_openapi_path(
                         )
                         fastapi.openapi.utils.deep_dict_update(additional_schema, additional_field_schema)
                     status_text: Optional[str] = fastapi.openapi.utils.status_code_ranges.get(
-                        str(additional_status_code).upper()
+                        str(additional_status_code).upper(),
                     ) or fastapi.openapi.utils.http.client.responses.get(int(additional_status_code))
                     description = (
                         process_response.get("description")
@@ -255,7 +255,7 @@ def get_openapi(
                     paths.setdefault(route.path_format, {}).update(path)
                 if security_schemes:
                     components.setdefault("securitySchemes", {}).update(
-                        security_schemes
+                        security_schemes,
                     )
                 if path_definitions:
                     definitions.update(path_definitions)
@@ -275,7 +275,7 @@ def get_openapi(
                     webhook_paths.setdefault(webhook.path_format, {}).update(path)
                 if security_schemes:
                     components.setdefault("securitySchemes", {}).update(
-                        security_schemes
+                        security_schemes,
                     )
                 if path_definitions:
                     definitions.update(path_definitions)
@@ -288,9 +288,11 @@ def get_openapi(
         output["webhooks"] = webhook_paths
     if tags:
         output["tags"] = tags
-    return fastapi.openapi.utils.jsonable_encoder(fastapi.openapi.utils.OpenAPI(**output),
-                                                  by_alias=True,
-                                                  exclude_none=True)
+    return fastapi.openapi.utils.jsonable_encoder(
+        fastapi.openapi.utils.OpenAPI(**output),
+        by_alias=True,
+        exclude_none=True,
+    )
 
 
 class FastAPI(fastapi.FastAPI):

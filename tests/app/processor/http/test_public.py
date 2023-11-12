@@ -41,7 +41,7 @@ class TestLogin(AsyncTestCase):
         self.role = RoleType.normal
         self.expect_output = public.LoginOutput(
             account_id=self.account_id,
-            token='token'
+            token='token',
         )
 
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
@@ -56,7 +56,7 @@ class TestLogin(AsyncTestCase):
 
         mock_read.assert_called_with(email=self.login_input.email)
         mock_verify.assert_called_with(
-            self.login_input.password, self.pass_hash
+            self.login_input.password, self.pass_hash,
         )
         mock_encode.assert_called_with(
             account_id=self.account_id,
@@ -83,7 +83,7 @@ class TestLogin(AsyncTestCase):
 
         mock_read.assert_called_with(email=self.login_input.email)
         mock_verify.assert_called_with(
-            self.login_input.password, self.pass_hash
+            self.login_input.password, self.pass_hash,
         )
 
 
@@ -117,10 +117,12 @@ class TestAddAccount(AsyncTestCase):
     @patch('app.processor.http.public.hash_password', new_callable=Mock)
     @patch('app.persistence.database.email_verification.add', new_callable=AsyncMock)
     @patch('app.persistence.email.verification.send', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_send: AsyncMock,
-                              mock_add_verification: AsyncMock,
-                              mock_hash: Mock,
-                              mock_add_account: AsyncMock):
+    async def test_happy_path(
+        self, mock_send: AsyncMock,
+        mock_add_verification: AsyncMock,
+        mock_hash: Mock,
+        mock_add_account: AsyncMock,
+    ):
         mock_hash.return_value = self.hashed_password
         mock_add_account.return_value = self.account_id
         mock_add_verification.return_value = self.code
@@ -171,9 +173,11 @@ class TestResendEmailVerification(AsyncTestCase):
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.persistence.database.email_verification.read', new_callable=AsyncMock)
     @patch('app.persistence.email.verification.send', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_send: AsyncMock,
-                              mock_read_verification: AsyncMock,
-                              mock_read_by_email: AsyncMock):
+    async def test_happy_path(
+        self, mock_send: AsyncMock,
+        mock_read_verification: AsyncMock,
+        mock_read_by_email: AsyncMock,
+    ):
         mock_read_by_email.return_value = self.account_id,
         mock_read_verification.return_value = self.code
 

@@ -13,8 +13,10 @@ from . import pg_pool_handler
 class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
-    def __init__(self, sql: str, fetch: int | str | None, parameters: dict[str, any] = None,
-                 **params):
+    def __init__(
+        self, sql: str, fetch: int | str | None, parameters: dict[str, any] = None,
+        **params,
+    ):
         self.sql, self.params = self._format(sql, parameters, **params)
         self.fetch = fetch
 
@@ -24,12 +26,14 @@ class QueryExecutor:
         raise NotImplementedError
 
     async def execute(self):
-        func_map = collections.defaultdict(lambda: self.fetch_none, {
-            0: self.fetch_none,
-            1: self.fetch_one,
-            'one': self.fetch_one,
-            'all': self.fetch_all,
-        })
+        func_map = collections.defaultdict(
+            lambda: self.fetch_none, {
+                0: self.fetch_none,
+                1: self.fetch_one,
+                'one': self.fetch_one,
+                'all': self.fetch_all,
+            },
+        )
         try:
             return await func_map[self.fetch]()
         except self.UNIQUE_VIOLATION_ERROR:

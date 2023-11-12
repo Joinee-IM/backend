@@ -24,7 +24,7 @@ class PGPoolHandler(PoolHandlerBase, metaclass=mcs.Singleton):
                 password=db_config.password,
                 database=db_config.db_name,
                 max_size=db_config.max_pool_size,
-                min_size=1
+                min_size=1,
             )
 
     @asynccontextmanager

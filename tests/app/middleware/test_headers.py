@@ -10,7 +10,7 @@ class TestGetAuthToken(AsyncTestCase):
     def setUp(self) -> None:
         self.context = {
             'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4)),
-            'REQUEST_TIME': datetime(2023, 11, 4)
+            'REQUEST_TIME': datetime(2023, 11, 4),
         }
         self.auth_token = 'token'
         self.auth_account = AuthedAccount(id=1, time=datetime(2023, 10, 10))

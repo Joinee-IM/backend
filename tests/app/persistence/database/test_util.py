@@ -50,7 +50,7 @@ class TestQueryExecutor(AsyncTestCase):
         (0, 0),
         (1, 1),
         ('one', 1),
-        ('all', 2)
+        ('all', 2),
     ])
     async def test_execute(self, fetch, expect_result: int):
         executor = MockQueryExecutor(sql=self.sql, parameters=self.params, fetch=fetch)
@@ -78,7 +78,7 @@ class TestPostgresQueryExecutor(AsyncTestCase):
     async def test_execute_fetch_all(self, mock_fetch_all):
         mock_fetch_all.return_value = 'fake_result'
         result = await PostgresQueryExecutor(
-            sql=self.sql, **self.params, fetch='all'
+            sql=self.sql, **self.params, fetch='all',
         ).execute()
         mock_fetch_all.assert_called_once()
         self.assertEqual(result, 'fake_result')

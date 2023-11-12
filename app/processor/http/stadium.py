@@ -28,6 +28,6 @@ async def search_stadium(params: StadiumSearchParameters = Depends()) -> Respons
         name=params.name,
         city_id=params.city_id,
         district_id=params.district_id,
-        sport_id=params.sport_id
+        sport_id=params.sport_id,
     )
     return Response(data=stadiums)

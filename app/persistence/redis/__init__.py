@@ -16,7 +16,7 @@ class RedisPoolHandler(PoolHandlerBase):
         if self._pool is None:
             self._pool = aioredis.ConnectionPool.from_url(
                 db_config.url,
-                max_connections=db_config.max_pool_size
+                max_connections=db_config.max_pool_size,
             )
             self._redis = aioredis.Redis(connection_pool=self._pool)
 

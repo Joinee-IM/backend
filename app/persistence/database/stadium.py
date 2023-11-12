@@ -20,8 +20,10 @@ async def browse(
     }
 
     query = [q for (param_value, q) in criteria_dict.values() if param_value is not None]
-    params = {param_name: param_value for param_name, (param_value, _) in criteria_dict.items() if
-              param_value is not None}
+    params = {
+        param_name: param_value for param_name, (param_value, _) in criteria_dict.items() if
+        param_value is not None
+    }
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 
@@ -34,7 +36,7 @@ async def browse(
             fr' {where_sql}'
             fr' ORDER BY stadium.id'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
-        limit=limit, offset=offset, fetch='all', **params
+        limit=limit, offset=offset, fetch='all', **params,
     ).execute()
 
     return [
