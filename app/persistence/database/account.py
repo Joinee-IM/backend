@@ -1,4 +1,5 @@
 from typing import Optional
+from uuid import UUID
 
 import asyncpg
 
@@ -9,15 +10,16 @@ from app.persistence.database import pg_pool_handler
 from app.persistence.database.util import PostgresQueryExecutor
 
 
-async def add(email: str,
-              pass_hash: Optional[str] = None,
-              nickname: Optional[str] = None,
-              gender: GenderType = GenderType.unrevealed,
-              role: RoleType = RoleType.normal,
-              is_google_login: bool = False,
-              access_token: Optional[str] = None,
-              refresh_token: Optional[str] = None
-              ) -> int:
+async def add(
+    email: str,
+    pass_hash: Optional[str] = None,
+    nickname: Optional[str] = None,
+    gender: GenderType = GenderType.unrevealed,
+    role: RoleType = RoleType.normal,
+    is_google_login: bool = False,
+    access_token: Optional[str] = None,
+    refresh_token: Optional[str] = None,
+) -> int:
     id_, = await PostgresQueryExecutor(
         sql=r'INSERT INTO account'
             r'            (email, pass_hash, nickname, gender, role, is_google_login, access_token, refresh_token)'
@@ -98,14 +100,19 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
     ).execute()
 
 
-async def edit(account_id: int,
-               nickname: Optional[str] = None,
-               gender: Optional[GenderType] = None) -> None:
+async def edit(
+    account_id: int,
+    nickname: Optional[str] = None,
+    gender: Optional[GenderType] = None,
+    image_uuid: Optional[UUID] = None,
+) -> None:
     to_update = {}
     if nickname:
         to_update['nickname'] = nickname
     if gender:
         to_update['gender'] = gender
+    if image_uuid:
+        to_update['image_uuid'] = image_uuid
 
     if not to_update:
         return

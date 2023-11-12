@@ -1,10 +1,13 @@
 from unittest.mock import patch
+from uuid import UUID
 
 from fastapi import Request
 from starlette.responses import RedirectResponse
 
 import app.exceptions as exc
+from app.base import do
 from app.processor.http import google
+from app.utils import Response
 from tests import AsyncMock, AsyncTestCase, Mock
 
 
@@ -40,8 +43,10 @@ class TestAuth(AsyncTestCase):
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.persistence.database.account.update_google_token', new_callable=AsyncMock)
     @patch('app.processor.http.google.encode_jwt', new_callable=Mock)
-    async def test_happy_path(self, mock_encode: Mock, mock_update: AsyncMock,
-                              mock_read: AsyncMock, mock_authorize: AsyncMock):
+    async def test_happy_path(
+        self, mock_encode: Mock, mock_update: AsyncMock,
+        mock_read: AsyncMock, mock_authorize: AsyncMock,
+    ):
         mock_authorize.return_value = self.google_token
         mock_read.return_value = self.read_output
         mock_update.return_value = None
@@ -62,8 +67,10 @@ class TestAuth(AsyncTestCase):
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.persistence.database.account.add', new_callable=AsyncMock)
     @patch('app.processor.http.google.encode_jwt', new_callable=Mock)
-    async def test_account_not_found(self, mock_encode: Mock, mock_add: AsyncMock,
-                                     mock_read: AsyncMock, mock_authorize: AsyncMock):
+    async def test_account_not_found(
+        self, mock_encode: Mock, mock_add: AsyncMock,
+        mock_read: AsyncMock, mock_authorize: AsyncMock,
+    ):
         mock_authorize.return_value = self.google_token
         mock_read.side_effect = exc.NotFound
         mock_add.return_value = self.account_id
@@ -83,3 +90,32 @@ class TestAuth(AsyncTestCase):
     async def test_access_denied(self):
         result = await google.auth(request=self.access_denied_request)
         self.assertIsInstance(result, RedirectResponse)
+
+
+class TestReadFile(AsyncTestCase):
+    def setUp(self) -> None:
+        self.file_uuid = UUID('262b3702-1891-4e18-958e-82ebe758b0c9')
+        self.file = do.GCSFile(
+            filename=str(self.file_uuid),
+            key=str(self.file_uuid),
+            uuid=self.file_uuid,
+            bucket='bucket',
+        )
+        self.url = 'url'
+        self.expect_result = Response(data=self.url)
+
+    @patch('app.persistence.database.gcs_file.read', new_callable=AsyncMock)
+    @patch('app.persistence.file_storage.gcs.GCSHandler.sign_url', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_sign: AsyncMock, mock_read: AsyncMock):
+        mock_read.return_value = self.file
+        mock_sign.return_value = self.url
+
+        result = await google.read_file(file_uuid=self.file_uuid)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(
+            file_uuid=self.file_uuid,
+        )
+        mock_sign.assert_called_with(
+            filename=self.file.filename,
+        )

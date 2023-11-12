@@ -44,6 +44,11 @@ async def app_startup():
     await smtp_handler.initialize(smtp_config=smtp_config)
     log.info('initialized smtp')
 
+    log.info('initializing gcs')
+    from app.persistence.file_storage.gcs import gcs_handler
+    gcs_handler.initialize()
+    log.info('initialized gcs')
+
     log.info('initializing oauth')
     from app.client.oauth import oauth_handler
     from app.config import google_config

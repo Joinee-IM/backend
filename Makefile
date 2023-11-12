@@ -6,7 +6,7 @@ help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
 test: # run unit tests for backend service
-	poetry run isort . --src=app --src=tests
+	poetry run isort .
 	poetry run pycodestyle --ignore "E501, E402, W503, W504" app
 	poetry run coverage run --source=app -m unittest -v
 	poetry run coverage report
@@ -25,10 +25,10 @@ coverage: # show coverage report
 	poetry run coverage report
 
 run: # run service without reload flag
-	poetry run uvicorn app.main:app
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app
 
 dev: # run service with reload flag
-	poetry run uvicorn app.main:app --reload
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app --reload
 
 build: # build docker image
 	docker build -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend .

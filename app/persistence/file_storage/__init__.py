@@ -17,3 +17,6 @@ class BaseFileHandler:
     @abstractmethod
     async def sign_url(self, method, bucket_name: str, filename, expire_time):
         raise NotImplementedError
+
+
+from . import avatar

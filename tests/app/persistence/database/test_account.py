@@ -1,4 +1,5 @@
 from unittest.mock import patch
+from uuid import UUID
 
 import app.exceptions as exc
 from app.base import do
@@ -19,8 +20,10 @@ class TestAddAccount(AsyncTestCase):
         )
         self.assertEqual(result, self.happy_path_result)
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute',
-           AsyncMock(side_effect=exc.UniqueViolationError))
+    @patch(
+        'app.persistence.database.util.PostgresQueryExecutor.execute',
+        AsyncMock(side_effect=exc.UniqueViolationError),
+    )
     async def test_add_account_unique_error(self):
         with self.assertRaises(exc.UniqueViolationError):
             await account.add(
@@ -94,6 +97,7 @@ class TestEdit(AsyncTestCase):
         self.account_id = 1
         self.nickname = 'nickname'
         self.gender = GenderType.male
+        self.image_uuid = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock())
@@ -102,14 +106,16 @@ class TestEdit(AsyncTestCase):
             account_id=self.account_id,
             nickname=self.nickname,
             gender=self.gender,
+            image_uuid=self.image_uuid,
         )
         self.assertIsNone(result)
 
         mock_init.assert_called_with(
             sql='UPDATE account'
-                '   SET nickname = %(nickname)s, gender = %(gender)s'
+                '   SET nickname = %(nickname)s, gender = %(gender)s, image_uuid = %(image_uuid)s'
                 ' WHERE id = %(account_id)s',
-            account_id=self.account_id, nickname=self.nickname, gender=self.gender, fetch=None,
+            account_id=self.account_id, nickname=self.nickname, gender=self.gender, image_uuid=self.image_uuid,
+            fetch=None,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)

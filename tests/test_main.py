@@ -11,12 +11,14 @@ class TestStartUp(AsyncTestCase):
     @patch('app.persistence.database.pg_pool_handler.initialize', new_callable=AsyncMock)
     @patch('app.persistence.email.smtp_handler.initialize', new_callable=AsyncMock)
     @patch('app.client.oauth.oauth_handler.initialize', new_callable=Mock)
-    async def test_happy_path(self, mock_oauth: Mock, mock_smtp: AsyncMock, mock_pg: AsyncMock):
+    @patch('app.persistence.file_storage.gcs.gcs_handler.initialize', new_callable=Mock)
+    async def test_happy_path(self, mock_gcs: Mock, mock_oauth: Mock, mock_smtp: AsyncMock, mock_pg: AsyncMock):
         await main.app_startup()
 
         mock_pg.assert_called_once()
         mock_smtp.assert_called_once()
         mock_oauth.assert_called_once()
+        mock_gcs.assert_called_once()
 
 
 class TestShutDown(AsyncTestCase):
