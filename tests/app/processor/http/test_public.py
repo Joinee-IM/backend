@@ -90,11 +90,12 @@ class TestLogin(AsyncTestCase):
 class TestEmailVerification(AsyncTestCase):
     def setUp(self) -> None:
         self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
+        self.data = public.EmailVerificationInput(code=self.code)
         self.expect_output = Response(data=public.EmailVerificationOutput(success=True))
 
     @patch('app.persistence.database.email_verification.verify_email', new_callable=AsyncMock)
     async def test_happy_path(self, mock_verify: AsyncMock):
-        result = await public.email_verification(code=self.code)
+        result = await public.email_verification(data=self.data)
 
         mock_verify.assert_called_with(code=self.code)
         self.assertEqual(result, self.expect_output)

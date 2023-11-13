@@ -58,14 +58,18 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
     return Response(data=LoginOutput(account_id=account_id, token=token))
 
 
+class EmailVerificationInput(BaseModel):
+    code: UUID
+
+
 class EmailVerificationOutput(BaseModel):
     success: bool = True
 
 
 @router.get('/email-verification', tags=['Email Verification'])
 @router.post('/email-verification', tags=['Email Verification'])
-async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
-    await db.email_verification.verify_email(code=code)
+async def email_verification(data: EmailVerificationInput) -> Response[EmailVerificationOutput]:
+    await db.email_verification.verify_email(code=data.code)
     return Response(data=EmailVerificationOutput(success=True))
 
 
