@@ -36,3 +36,8 @@ class Stadium(BaseModel):
     description: Optional[str]
     long: float
     lat: float
+
+
+class City(BaseModel):
+    id: int
+    name: str
