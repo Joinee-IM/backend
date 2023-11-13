@@ -6,8 +6,8 @@ from app.persistence.database.util import PostgresQueryExecutor
 
 async def browse() -> Sequence[do.City]:
     results = await PostgresQueryExecutor(
-        sql=fr'SELECT city.id, city.name'
-            fr'  FROM city',
+        sql=r'SELECT city.id, city.name'
+            r'  FROM city',
         fetch='all',
     ).execute()
 

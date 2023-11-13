@@ -2,7 +2,7 @@ import fastapi
 
 
 def register_routers(app: fastapi.FastAPI):
-    from . import account, google, public, stadium, city
+    from . import account, city, google, public, stadium
 
     app.include_router(public.router)
     app.include_router(account.router)
