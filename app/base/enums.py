@@ -34,3 +34,12 @@ class TechnicalType(StrEnum):
 class RoleType(StrEnum):
     provider = 'PROVIDER'
     normal = 'NORMAL'
+
+
+class Sorter(StrEnum):
+    asc = 'ASC'
+    desc = 'DESC'
+
+
+class VenueAvailableSortBy(StrEnum):
+    current_user_count = 'CURRENT_USER_COUNT'

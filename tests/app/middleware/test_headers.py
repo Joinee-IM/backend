@@ -17,11 +17,11 @@ class TestGetAuthToken(AsyncTestCase):
 
     @patch('app.middleware.headers.context', new_callable=MockContext)
     @patch('app.middleware.headers.security.decode_jwt', new_callable=Mock)
-    async def test_happy_path(self, mock_decode: Mock, mock_context: MockContext):
+    async def test_auth_token(self, mock_decode: Mock, mock_context: MockContext):
         mock_decode.return_value = self.auth_account
         mock_context._context = self.context
 
-        await get_auth_token(self.auth_token)
+        await get_auth_token(auth_token=self.auth_token)
 
         mock_decode.assert_called_with(
             self.auth_token,
@@ -35,7 +35,21 @@ class TestGetAuthToken(AsyncTestCase):
         mock_decode.return_value = self.auth_account
         mock_context._context = self.context
 
-        await get_auth_token(None)  # noqa
+        await get_auth_token()
 
         mock_decode.assert_not_called()
         self.assertEqual(mock_context.get_account(), None)
+
+    @patch('app.middleware.headers.context', new_callable=MockContext)
+    @patch('app.middleware.headers.security.decode_jwt', new_callable=Mock)
+    async def test_cookie(self, mock_decode: Mock, mock_context: MockContext):
+        mock_decode.return_value = self.auth_account
+        mock_context._context = self.context
+
+        await get_auth_token(token=self.auth_token)
+
+        mock_decode.assert_called_with(
+            self.auth_token,
+            self.context['REQUEST_TIME'],
+        )
+        self.assertEqual(mock_context.account, self.auth_account)

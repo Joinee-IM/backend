@@ -46,4 +46,4 @@ class PGPoolHandler(PoolHandlerBase, metaclass=mcs.Singleton):
 pg_pool_handler = PGPoolHandler()
 
 # For import usage
-from . import account, city, email_verification, gcs_file, stadium
+from . import account, city, email_verification, gcs_file, stadium, venue

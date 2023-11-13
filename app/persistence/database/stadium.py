@@ -1,7 +1,10 @@
 from typing import Sequence
 
 from app.base import do
-from app.persistence.database.util import PostgresQueryExecutor
+from app.persistence.database.util import (
+    PostgresQueryExecutor,
+    generate_query_parameters,
+)
 
 
 async def browse(
@@ -13,17 +16,13 @@ async def browse(
         offset: int = 0,
 ) -> Sequence[do.Stadium]:
     criteria_dict = {
-        'name': (name, 'stadium.name LIKE %(name)s'),
+        'name': (f'%{name}%' if name else None, 'stadium.name LIKE %(name)s'),
         'city_id': (city_id, 'district.city_id = %(city_id)s'),
         'district_id': (district_id, 'district.id = %(district_id)s'),
         'sport_id': (sport_id, 'venue.sport_id = %(sport_id)s'),
     }
 
-    query = [q for (param_value, q) in criteria_dict.values() if param_value is not None]
-    params = {
-        param_name: param_value for param_name, (param_value, _) in criteria_dict.items() if
-        param_value is not None
-    }
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 

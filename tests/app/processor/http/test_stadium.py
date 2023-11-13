@@ -6,7 +6,7 @@ from app.utils import Response
 from tests import AsyncMock, AsyncTestCase
 
 
-class TestSearchStadium(AsyncTestCase):
+class TestBrowseStadium(AsyncTestCase):
     def setUp(self) -> None:
         self.params = stadium.StadiumSearchParameters(
             name='name',
@@ -42,7 +42,7 @@ class TestSearchStadium(AsyncTestCase):
     async def test_happy_path(self, mock_browse: AsyncMock):
         mock_browse.return_value = self.stadiums
 
-        result = await stadium.search_stadium(params=self.params)
+        result = await stadium.browse_stadium(params=self.params)
 
         self.assertEqual(result, self.expect_result)
         mock_browse.assert_called_with(

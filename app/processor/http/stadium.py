@@ -5,7 +5,7 @@ from pydantic import BaseModel
 
 import app.persistence.database as db
 from app.base import do
-from app.utils import Response
+from app.utils import Limit, Offset, Response
 
 router = APIRouter(
     tags=['Stadium'],
@@ -18,12 +18,12 @@ class StadiumSearchParameters(BaseModel):
     city_id: int | None = Query(default=None)
     district_id: int | None = Query(default=None)
     sport_id: int | None = Query(default=None)
-    limit: int = Query(default=10, lt=50, gt=0)
-    offset: int = Query(default=0, ge=0)
+    limit: int = Limit
+    offset: int = Offset
 
 
 @router.get('/stadium')
-async def search_stadium(params: StadiumSearchParameters = Depends()) -> Response[Sequence[do.Stadium]]:
+async def browse_stadium(params: StadiumSearchParameters = Depends()) -> Response[Sequence[do.Stadium]]:
     stadiums = await db.stadium.browse(
         name=params.name,
         city_id=params.city_id,

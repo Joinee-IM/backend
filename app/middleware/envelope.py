@@ -16,6 +16,7 @@ async def middleware(request: Request, call_next):
                 content={'data': None, 'error': e.__class__.__name__},
             )
         elif isinstance(e, ValidationError):
+            log.info(e)
             data = JSONResponse(
                 status_code=422,
                 content={'data': None, 'error': 'IllegalInput'},

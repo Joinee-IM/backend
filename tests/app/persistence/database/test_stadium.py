@@ -19,6 +19,8 @@ class TestBrowse(AsyncTestCase):
             'district_id': self.district_id,
             'sport_id': self.sport_id,
         }
+        self.query_params = self.params.copy()
+        self.query_params['name'] = f'%{self.params["name"]}%'
         self.raw_stadium = [
             (1, 'name', 1, '0800092000', 'desc', 3.14, 1.59),
             (2, 'name2', 2, '0800092001', 'desc2', 3.15, 1.58),
@@ -68,7 +70,7 @@ class TestBrowse(AsyncTestCase):
                 fr' WHERE stadium.name LIKE %(name)s AND district.city_id = %(city_id)s AND district.id = %(district_id)s AND venue.sport_id = %(sport_id)s'
                 fr' ORDER BY stadium.id'
                 fr' LIMIT %(limit)s OFFSET %(offset)s',
-            limit=self.limit, offset=self.offset, fetch='all', **self.params,
+            limit=self.limit, offset=self.offset, fetch='all', **self.query_params,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)

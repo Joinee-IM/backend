@@ -41,6 +41,7 @@ add-trailing-comma = "^3.1.0"
 
 [tool.isort]
 src_paths = ["app", "tests"]
+split_on_trailing_comma = true
 
 
 [build-system]

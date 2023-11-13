@@ -1,6 +1,7 @@
 import abc
 import collections
 import itertools
+import typing
 
 import asyncpg
 
@@ -90,3 +91,12 @@ class PostgresQueryExecutor(QueryExecutor):
         async with pg_pool_handler.cursor() as cursor:
             cursor: asyncpg.connection.Connection
             await cursor.execute(self.sql, *self.params)
+
+
+def generate_query_parameters(criteria_dict: dict[str, tuple[typing.Any, str]]) -> tuple[list, dict[str: typing.Any]]:
+    query = [q for (param_value, q) in criteria_dict.values() if param_value is not None]
+    params = {
+        param_name: param_value for param_name, (param_value, _) in criteria_dict.items() if
+        param_value is not None
+    }
+    return query, params

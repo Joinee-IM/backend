@@ -41,3 +41,23 @@ class Stadium(BaseModel):
 class City(BaseModel):
     id: int
     name: str
+
+
+class Venue(BaseModel):
+    id: int
+    stadium_id: int
+    name: str
+    floor: str
+    reservation_interval: Optional[int]
+    is_reservable: bool
+    is_chargeable: bool
+    fee_rate: Optional[float]
+    fee_type: Optional[enums.FeeType]
+    area: int
+    current_user_count: int
+    capability: int
+    sport_equipments: Optional[str]
+    facilities: Optional[str]
+    court_count: int
+    court_type: str
+    sport_id: int
