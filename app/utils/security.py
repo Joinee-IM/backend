@@ -6,7 +6,6 @@ import jwt
 from passlib.hash import argon2
 
 import app.exceptions as exc
-from app.base import enums
 from app.config import jwt_config
 
 _jwt_encoder = partial(jwt.encode, key=jwt_config.jwt_secret, algorithm=jwt_config.jwt_encode_algorithm)

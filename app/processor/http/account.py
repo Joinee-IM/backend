@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, File, UploadFile, responses
+from fastapi import APIRouter, Depends, UploadFile, responses
 from pydantic import BaseModel
 
 import app.exceptions as exc

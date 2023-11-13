@@ -67,7 +67,7 @@ class TestBrowse(AsyncTestCase):
                 fr'  FROM stadium'
                 fr' INNER JOIN district ON stadium.district_id = district.id'
                 fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-                fr' WHERE stadium.name LIKE %(name)s AND district.city_id = %(city_id)s AND district.id = %(district_id)s AND venue.sport_id = %(sport_id)s'
+                fr' WHERE stadium.name LIKE %(name)s AND district.city_id = %(city_id)s AND district.id = %(district_id)s AND venue.sport_id = %(sport_id)s'  # noqa
                 fr' ORDER BY stadium.id'
                 fr' LIMIT %(limit)s OFFSET %(offset)s',
             limit=self.limit, offset=self.offset, fetch='all', **self.query_params,
