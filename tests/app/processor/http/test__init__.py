@@ -7,4 +7,4 @@ class TestRegisterRouters(TestCase):
         app = Mock()
         app.include_router = Mock()
         register_routers(app=app)
-        self.assertEqual(app.include_router.call_count, 6)
+        self.assertEqual(app.include_router.call_count, 7)

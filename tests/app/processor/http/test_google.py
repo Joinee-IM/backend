@@ -119,3 +119,29 @@ class TestReadFile(AsyncTestCase):
         mock_sign.assert_called_with(
             filename=self.file.filename,
         )
+
+
+class TestBatchDownloadFiles(AsyncTestCase):
+    def setUp(self) -> None:
+        self.data = google.BatchDownloadInput(
+            file_uuids=[
+                UUID('262b3702-1891-4e18-958e-82ebe758b0c9'),
+            ],
+        )
+        self.sign_url = 'sign_url'
+        self.return_data = [
+            google.BatchDownloadOutput(
+                file_uuid=uuid,
+                sign_url=self.sign_url,
+            )
+            for uuid in self.data.file_uuids
+        ]
+        self.expect_result = Response(data=self.return_data)
+
+    @patch('app.persistence.file_storage.gcs.GCSHandler.sign_url', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_sign: AsyncMock):
+        mock_sign.return_value = self.sign_url
+
+        result = await google.batch_download_files(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
