@@ -74,3 +74,8 @@ class Album(BaseModel):
     place_id: int
     type: enums.PlaceType
     file_uuid: UUID
+
+
+class Sport(BaseModel):
+    id: int
+    name: str
