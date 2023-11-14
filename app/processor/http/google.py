@@ -1,6 +1,8 @@
+from typing import Sequence
 from uuid import UUID
 
 from fastapi import APIRouter, Depends, Request, responses
+from pydantic import BaseModel
 from starlette.responses import RedirectResponse
 
 import app.exceptions as exc
@@ -58,3 +60,25 @@ async def read_file(file_uuid: UUID) -> Response[str]:
     file = await db.gcs_file.read(file_uuid=file_uuid)
     url = await gcs_handler.sign_url(filename=file.filename)
     return Response(data=url)
+
+
+class BatchDownloadInput(BaseModel):
+    file_uuids: Sequence[UUID]
+
+
+class BatchDownloadOutput(BaseModel):
+    file_uuid: UUID
+    sign_url: str
+
+
+@router.get('/file/download/batch')
+async def batch_download_files(data: BatchDownloadInput) -> Response[Sequence[BatchDownloadOutput]]:
+    return Response(
+        data=[
+            BatchDownloadOutput(
+                file_uuid=file_uuid,
+                sign_url=await gcs_handler.sign_url(filename=str(file_uuid)),
+            )
+            for file_uuid in data.file_uuids
+        ]
+    )

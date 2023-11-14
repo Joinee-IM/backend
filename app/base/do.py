@@ -61,3 +61,10 @@ class Venue(BaseModel):
     court_count: int
     court_type: str
     sport_id: int
+
+
+class Album(BaseModel):
+    id: int
+    place_id: int
+    type: enums.PlaceType
+    file_uuid: UUID
