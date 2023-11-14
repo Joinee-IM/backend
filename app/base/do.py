@@ -61,3 +61,9 @@ class Venue(BaseModel):
     court_count: int
     court_type: str
     sport_id: int
+
+
+class District(BaseModel):
+    id: int
+    name: str
+    city_id: int
