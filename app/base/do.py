@@ -63,6 +63,12 @@ class Venue(BaseModel):
     sport_id: int
 
 
+class District(BaseModel):
+    id: int
+    name: str
+    city_id: int
+
+
 class Album(BaseModel):
     id: int
     place_id: int
