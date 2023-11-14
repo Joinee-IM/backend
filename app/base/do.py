@@ -67,3 +67,10 @@ class District(BaseModel):
     id: int
     name: str
     city_id: int
+
+
+class Album(BaseModel):
+    id: int
+    place_id: int
+    type: enums.PlaceType
+    file_uuid: UUID

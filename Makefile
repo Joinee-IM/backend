@@ -1,6 +1,6 @@
 default: help
 
-.PHONY: help test coverage run dev docker-build docker-build-x86 docker-run docker-stop docker-rm redis
+.PHONY: help test install coverage run dev build build-x86 docker-run docker-stop docker-rm redis helm
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
