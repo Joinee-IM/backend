@@ -4,12 +4,12 @@ with open('logging.yaml', 'r') as conf:
     import logging.config
     logging.config.dictConfig(log_config)
 
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from app import log
 from app.config import app_config
-from app.middleware.api import FastAPI
 
 app = FastAPI(
     title=app_config.title,
