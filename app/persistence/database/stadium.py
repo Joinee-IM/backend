@@ -13,6 +13,7 @@ async def browse(
         city_id: int | None = None,
         district_id: int | None = None,
         sport_id: int | None = None,
+        time_ranges: Sequence[vo.TimeRange] | None = None,
         limit: int = 10,
         offset: int = 0,
 ) -> Sequence[vo.ViewStadium]:
@@ -25,7 +26,26 @@ async def browse(
 
     query, params = generate_query_parameters(criteria_dict=criteria_dict)
 
+    raw_or_query = []
+    if time_ranges:
+        for i, time_range in enumerate(time_ranges):
+            time_range: vo.TimeRange
+            raw_or_query.append(f"""({' AND '.join([
+                f'business_hour.weekday = %(weekday_{i})s',
+                f'business_hour.start_time <= %(end_time_{i})s',
+                f'business_hour.end_time >= %(start_time_{i})s'
+            ])})""")
+            params.update({
+                f'weekday_{i}': time_range.weekday,
+                f'end_time_{i}': time_range.end_time,
+                f'start_time_{i}': time_range.start_time
+            })
+
+    or_query = ' OR '.join(raw_or_query)
+
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
+
+    where_sql += (' AND ' if where_sql else 'WHERE ') + or_query if or_query else ''
 
     results = await PostgresQueryExecutor(
         sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'

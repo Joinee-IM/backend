@@ -14,6 +14,13 @@ class TestBrowseStadium(AsyncTestCase):
             city_id=1,
             district_id=1,
             sport_id=1,
+            time_ranges=[
+                vo.TimeRange(
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(17, 27),
+                ),
+            ],
             limit=1,
             offset=1,
         )
@@ -77,6 +84,9 @@ class TestBrowseStadium(AsyncTestCase):
             city_id=self.params.city_id,
             district_id=self.params.district_id,
             sport_id=self.params.sport_id,
+            time_ranges=self.params.time_ranges,
+            limit=self.params.limit,
+            offset=self.params.offset,
         )
 
 
