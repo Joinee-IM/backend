@@ -29,16 +29,19 @@ async def browse(
     results = await PostgresQueryExecutor(
         sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
             fr'       description, long, lat,'
+            fr'       city.name,'
+            fr'       district.name,'
             fr'       array_agg(sport.name),'
             fr'       array_agg(business_hour.*)'
             fr'  FROM stadium'
             fr' INNER JOIN district ON stadium.district_id = district.id'
+            fr' INNER JOIN city ON district.city_id = city.id'
             fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
             fr' INNER JOIN sport ON venue.sport_id = sport.id'
             fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
-            fr'                         AND type = %(place_type)s'
+            fr'                         AND business_hour.type = %(place_type)s'
             fr' {where_sql}'
-            fr' GROUP BY stadium.id'
+            fr' GROUP BY stadium.id, city.id, district.id'
             fr' ORDER BY stadium.id'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
         limit=limit, offset=offset, place_type=enums.PlaceType.stadium, fetch='all', **params,
@@ -53,6 +56,8 @@ async def browse(
             description=description,
             long=long,
             lat=lat,
+            city=city,
+            district=district,
             sports=[name for name in sport_names],
             business_hours=[
                 do.BusinessHour(
@@ -61,8 +66,10 @@ async def browse(
                     type=place_type,
                     weekday=weekday,
                     start_time=start_time,
-                    end_time=end_time
+                    end_time=end_time,
                 ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
             ],
-        ) for id_, name, district_id, contact_number, description, long, lat, sport_names, business_hours in results
+        )
+        for id_, name, district_id, contact_number, description, long, lat, city, district,
+        sport_names, business_hours in results
     ]

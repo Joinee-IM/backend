@@ -26,6 +26,8 @@ class TestBrowseStadium(AsyncTestCase):
                 description='desc',
                 long=3.14,
                 lat=1.59,
+                city='city1',
+                district='district1',
                 sports=['sport1'],
                 business_hours=[
                     do.BusinessHour(
@@ -46,6 +48,8 @@ class TestBrowseStadium(AsyncTestCase):
                 description='desc2',
                 long=3.15,
                 lat=1.58,
+                city='city2',
+                district='district2',
                 sports=['sport2'],
                 business_hours=[
                     do.BusinessHour(
