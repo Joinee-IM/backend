@@ -4,7 +4,7 @@ from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
 
 import app.persistence.database as db
-from app.base import do
+from app.base import vo
 from app.utils import Limit, Offset, Response
 
 router = APIRouter(
@@ -23,7 +23,7 @@ class StadiumSearchParameters(BaseModel):
 
 
 @router.get('/stadium')
-async def browse_stadium(params: StadiumSearchParameters = Depends()) -> Response[Sequence[do.Stadium]]:
+async def browse_stadium(params: StadiumSearchParameters = Depends()) -> Response[Sequence[vo.ViewStadium]]:
     stadiums = await db.stadium.browse(
         name=params.name,
         city_id=params.city_id,

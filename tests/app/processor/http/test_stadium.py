@@ -1,6 +1,7 @@
+from datetime import time
 from unittest.mock import patch
 
-from app.base import do
+from app.base import do, enums, vo
 from app.processor.http import stadium
 from app.utils import Response
 from tests import AsyncMock, AsyncTestCase
@@ -17,7 +18,7 @@ class TestBrowseStadium(AsyncTestCase):
             offset=1,
         )
         self.stadiums = [
-            do.Stadium(
+            vo.ViewStadium(
                 id=1,
                 name='name',
                 district_id=1,
@@ -25,8 +26,19 @@ class TestBrowseStadium(AsyncTestCase):
                 description='desc',
                 long=3.14,
                 lat=1.59,
+                sports=['sport1'],
+                business_hours=[
+                    do.BusinessHour(
+                        id=1,
+                        place_id=1,
+                        type=enums.PlaceType.stadium,
+                        weekday=1,
+                        start_time=time(10, 27),
+                        end_time=time(20, 27),
+                    )
+                ]
             ),
-            do.Stadium(
+            vo.ViewStadium(
                 id=2,
                 name='name2',
                 district_id=2,
@@ -34,6 +46,17 @@ class TestBrowseStadium(AsyncTestCase):
                 description='desc2',
                 long=3.15,
                 lat=1.58,
+                sports=['sport2'],
+                business_hours=[
+                    do.BusinessHour(
+                        id=2,
+                        place_id=1,
+                        type=enums.PlaceType.stadium,
+                        weekday=1,
+                        start_time=time(10, 27),
+                        end_time=time(20, 27),
+                    )
+                ]
             ),
         ]
         self.expect_result = Response(data=self.stadiums)
