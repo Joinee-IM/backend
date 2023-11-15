@@ -77,30 +77,30 @@ async def browse(
 
 
 async def read(stadium_id: int) -> vo.ViewStadium:
+    result = await PostgresQueryExecutor(
+        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+            fr'       description, long, lat,'
+            fr'       city.name,'
+            fr'       district.name,'
+            fr'       ARRAY_AGG(DISTINCT sport.name),'
+            fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+            fr'  FROM stadium'
+            fr' INNER JOIN district ON stadium.district_id = district.id'
+            fr' INNER JOIN city ON district.city_id = city.id'
+            fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+            fr' INNER JOIN sport ON venue.sport_id = sport.id'
+            fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+            fr'                         AND business_hour.type = %(place_type)s'
+            fr' WHERE stadium.id = %(stadium_id)s'
+            fr' GROUP BY stadium.id, city.id, district.id'
+            fr' ORDER BY stadium.id',
+        fetch=1, place_type=enums.PlaceType.stadium, stadium_id=stadium_id,
+    ).execute()
+
     try:
-        result = await PostgresQueryExecutor(
-            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
-                fr'       description, long, lat,'
-                fr'       city.name,'
-                fr'       district.name,'
-                fr'       ARRAY_AGG(DISTINCT sport.name),'
-                fr'       ARRAY_AGG(DISTINCT business_hour.*)'
-                fr'  FROM stadium'
-                fr' INNER JOIN district ON stadium.district_id = district.id'
-                fr' INNER JOIN city ON district.city_id = city.id'
-                fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-                fr' INNER JOIN sport ON venue.sport_id = sport.id'
-                fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
-                fr'                         AND business_hour.type = %(place_type)s'
-                fr' WHERE stadium.id = %(stadium_id)s'
-                fr' GROUP BY stadium.id, city.id, district.id'
-                fr' ORDER BY stadium.id',
-            fetch=1, place_type=enums.PlaceType.stadium, stadium_id=stadium_id,
-        ).execute()
+        id_, name, district_id, contact_number, description, long, lat, city, district, sport_names, business_hours = result
     except TypeError:
         raise exc.NotFound
-
-    id_, name, district_id, contact_number, description, long, lat, city, district, sport_names, business_hours = result
 
     return vo.ViewStadium(
         id=id_,
