@@ -25,4 +25,4 @@ handlers:
 root:
   level: DEBUG
   handlers:
-    - console
+    - efk
