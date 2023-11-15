@@ -27,9 +27,13 @@ class TestBrowseAlbum(AsyncTestCase):
                 file_uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
             ),
         ]
-        self.expect_result = Response(data=self.albums)
+        self.urls = ['url', 'url']
+        self.expect_result = Response(
+            data=album.BrowseAlbumOutput(urls=self.urls)
+        )
 
     @patch('app.persistence.database.album.browse', new_callable=AsyncMock)
+    @patch('app.persistence.file_storage.gcs.GCSHandler.sign_url', AsyncMock(return_value='url'))
     async def test_happy_path(self, mock_browse: AsyncMock):
         mock_browse.return_value = self.albums
 
