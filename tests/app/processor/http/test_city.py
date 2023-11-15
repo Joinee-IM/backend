@@ -11,11 +11,11 @@ class TestBrowseCity(AsyncTestCase):
         self.cities = [
             do.City(
                 id=1,
-                name='台北市',
+                name='city1',
             ),
             do.City(
                 id=2,
-                name='新北市',
+                name='city2',
             ),
         ]
         self.expect_result = Response(data=self.cities)

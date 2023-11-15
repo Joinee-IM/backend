@@ -31,3 +31,9 @@ async def browse_stadium(params: StadiumSearchParameters = Depends()) -> Respons
         sport_id=params.sport_id,
     )
     return Response(data=stadiums)
+
+
+@router.get('/stadium/{stadium_id}')
+async def read_stadium(stadium_id: int) -> Response[vo.ViewStadium]:
+    stadium = await db.stadium.read(stadium_id=stadium_id)
+    return Response(data=stadium)

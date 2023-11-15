@@ -78,3 +78,42 @@ class TestBrowseStadium(AsyncTestCase):
             district_id=self.params.district_id,
             sport_id=self.params.sport_id,
         )
+
+
+class TestReadStadium(AsyncTestCase):
+    def setUp(self) -> None:
+        self.stadium_id = 1
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            long=3.14,
+            lat=1.59,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                )
+            ]
+        )
+        self.expect_result = Response(data=self.stadium)
+
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_read: AsyncMock):
+        mock_read.return_value = self.stadium
+
+        result = await stadium.read_stadium(stadium_id=self.stadium_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(
+            stadium_id=self.stadium_id
+        )

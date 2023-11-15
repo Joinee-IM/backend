@@ -1,5 +1,6 @@
 from typing import Sequence
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database.util import (
     PostgresQueryExecutor,
@@ -31,8 +32,8 @@ async def browse(
             fr'       description, long, lat,'
             fr'       city.name,'
             fr'       district.name,'
-            fr'       array_agg(sport.name),'
-            fr'       array_agg(business_hour.*)'
+            fr'       ARRAY_AGG(DISTINCT sport.name),'
+            fr'       ARRAY_AGG(DISTINCT business_hour.*)'
             fr'  FROM stadium'
             fr' INNER JOIN district ON stadium.district_id = district.id'
             fr' INNER JOIN city ON district.city_id = city.id'
@@ -73,3 +74,53 @@ async def browse(
         for id_, name, district_id, contact_number, description, long, lat, city, district,
         sport_names, business_hours in results
     ]
+
+
+async def read(stadium_id: int) -> vo.ViewStadium:
+    result = await PostgresQueryExecutor(
+        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+            fr'       description, long, lat,'
+            fr'       city.name,'
+            fr'       district.name,'
+            fr'       ARRAY_AGG(DISTINCT sport.name),'
+            fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+            fr'  FROM stadium'
+            fr' INNER JOIN district ON stadium.district_id = district.id'
+            fr' INNER JOIN city ON district.city_id = city.id'
+            fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+            fr' INNER JOIN sport ON venue.sport_id = sport.id'
+            fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+            fr'                         AND business_hour.type = %(place_type)s'
+            fr' WHERE stadium.id = %(stadium_id)s'
+            fr' GROUP BY stadium.id, city.id, district.id'
+            fr' ORDER BY stadium.id',
+        fetch=1, place_type=enums.PlaceType.stadium, stadium_id=stadium_id,
+    ).execute()
+
+    try:
+        id_, name, district_id, contact_number, description, long, lat, city, district, sport_names, business_hours = result
+    except TypeError:
+        raise exc.NotFound
+
+    return vo.ViewStadium(
+        id=id_,
+        name=name,
+        district_id=district_id,
+        contact_number=contact_number,
+        description=description,
+        long=long,
+        lat=lat,
+        city=city,
+        district=district,
+        sports=[name for name in sport_names],
+        business_hours=[
+            do.BusinessHour(
+                id=bid,
+                place_id=place_id,
+                type=place_type,
+                weekday=weekday,
+                start_time=start_time,
+                end_time=end_time,
+            ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
+        ],
+    )
