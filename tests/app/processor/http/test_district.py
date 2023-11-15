@@ -12,12 +12,12 @@ class TestBrowseDistrict(AsyncTestCase):
         self.districts = [
             do.District(
                 id=1,
-                name='大安區',
+                name='district1',
                 city_id=1,
             ),
             do.District(
                 id=2,
-                name='信義區',
+                name='district2',
                 city_id=1,
             ),
         ]
