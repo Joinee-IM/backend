@@ -2,6 +2,7 @@
 data objects
 """
 
+from datetime import time
 from typing import Optional
 from uuid import UUID
 
@@ -79,3 +80,12 @@ class Album(BaseModel):
 class Sport(BaseModel):
     id: int
     name: str
+
+
+class BusinessHour(BaseModel):
+    id: int
+    place_id: int
+    type: enums.PlaceType
+    weekday: int
+    start_time: time
+    end_time: time

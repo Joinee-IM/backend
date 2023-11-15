@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from app.base import do
+from app.base import do, enums, vo
 from app.persistence.database.util import (
     PostgresQueryExecutor,
     generate_query_parameters,
@@ -14,7 +14,7 @@ async def browse(
         sport_id: int | None = None,
         limit: int = 10,
         offset: int = 0,
-) -> Sequence[do.Stadium]:
+) -> Sequence[vo.ViewStadium]:
     criteria_dict = {
         'name': (f'%{name}%' if name else None, 'stadium.name LIKE %(name)s'),
         'city_id': (city_id, 'district.city_id = %(city_id)s'),
@@ -28,18 +28,24 @@ async def browse(
 
     results = await PostgresQueryExecutor(
         sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
-            fr'       description, long, lat'
+            fr'       description, long, lat,'
+            fr'       array_agg(sport.name),'
+            fr'       array_agg(business_hour.*)'
             fr'  FROM stadium'
             fr' INNER JOIN district ON stadium.district_id = district.id'
             fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+            fr' INNER JOIN sport ON venue.sport_id = sport.id'
+            fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+            fr'                         AND type = %(place_type)s'
             fr' {where_sql}'
+            fr' GROUP BY stadium.id'
             fr' ORDER BY stadium.id'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
-        limit=limit, offset=offset, fetch='all', **params,
+        limit=limit, offset=offset, place_type=enums.PlaceType.stadium, fetch='all', **params,
     ).execute()
 
     return [
-        do.Stadium(
+        vo.ViewStadium(
             id=id_,
             name=name,
             district_id=district_id,
@@ -47,5 +53,16 @@ async def browse(
             description=description,
             long=long,
             lat=lat,
-        ) for id_, name, district_id, contact_number, description, long, lat in results
+            sports=[name for name in sport_names],
+            business_hours=[
+                do.BusinessHour(
+                    id=bid,
+                    place_id=place_id,
+                    type=place_type,
+                    weekday=weekday,
+                    start_time=start_time,
+                    end_time=end_time
+                ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
+            ],
+        ) for id_, name, district_id, contact_number, description, long, lat, sport_names, business_hours in results
     ]
