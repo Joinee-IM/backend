@@ -24,6 +24,7 @@ class AppConfig:
     docs_url = env_values.get('APP_DOCS_URL', None)
     redoc_url = env_values.get('APP_REDOC_URL', None)
     logger_name = env_values.get('APP_LOGGER_NAME', None)
+    allow_origins = env_values.get('APP_ALLOW_ORIGINS').split(' ')
 
 
 class JWTConfig:
