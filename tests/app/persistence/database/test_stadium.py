@@ -1,6 +1,7 @@
 from datetime import time
 from unittest.mock import patch
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database import stadium
 from tests import AsyncMock, AsyncTestCase, Mock
@@ -191,6 +192,34 @@ class TestRead(AsyncTestCase):
         result = await stadium.read(stadium_id=self.stadium_id)
 
         self.assertEqual(result, self.stadium)
+        mock_init.assert_called_with(
+            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+                fr'       description, long, lat,'
+                fr'       city.name,'
+                fr'       district.name,'
+                fr'       ARRAY_AGG(DISTINCT sport.name),'
+                fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+                fr'  FROM stadium'
+                fr' INNER JOIN district ON stadium.district_id = district.id'
+                fr' INNER JOIN city ON district.city_id = city.id'
+                fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+                fr' INNER JOIN sport ON venue.sport_id = sport.id'
+                fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+                fr'                         AND business_hour.type = %(place_type)s'
+                fr' WHERE stadium.id = %(stadium_id)s'
+                fr' GROUP BY stadium.id, city.id, district.id'
+                fr' ORDER BY stadium.id',
+            fetch=1, place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await stadium.read(stadium_id=self.stadium_id)
+
         mock_init.assert_called_with(
             sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
                 fr'       description, long, lat,'
