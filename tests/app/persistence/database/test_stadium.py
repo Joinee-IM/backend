@@ -19,7 +19,17 @@ class TestBrowse(AsyncTestCase):
             'city_id': self.city_id,
             'district_id': self.district_id,
             'sport_id': self.sport_id,
+            'weekday_0': 1,
+            'start_time_0': time(10, 27),
+            'end_time_0': time(17, 27),
         }
+        self.time_ranges = [
+            vo.TimeRange(
+                weekday=1,
+                start_time=time(10, 27),
+                end_time=time(17, 27),
+            ),
+        ]
         self.query_params = self.params.copy()
         self.query_params['name'] = f'%{self.params["name"]}%'
         self.raw_stadium = [
@@ -85,6 +95,7 @@ class TestBrowse(AsyncTestCase):
             sport_id=self.sport_id,
             limit=self.limit,
             offset=self.offset,
+            time_ranges=self.time_ranges,
         )
 
         self.assertEqual(result, self.stadiums)
@@ -102,7 +113,13 @@ class TestBrowse(AsyncTestCase):
                 fr' INNER JOIN sport ON venue.sport_id = sport.id'
                 fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
                 fr'                         AND business_hour.type = %(place_type)s'
-                fr' WHERE stadium.name LIKE %(name)s AND district.city_id = %(city_id)s AND district.id = %(district_id)s AND venue.sport_id = %(sport_id)s'  # noqa
+                fr' WHERE stadium.name LIKE %(name)s'
+                fr' AND district.city_id = %(city_id)s'
+                fr' AND district.id = %(district_id)s'
+                fr' AND venue.sport_id = %(sport_id)s'
+                fr' AND (business_hour.weekday = %(weekday_0)s'
+                fr' AND business_hour.start_time <= %(end_time_0)s'
+                fr' AND business_hour.end_time >= %(start_time_0)s)'
                 fr' GROUP BY stadium.id, city.id, district.id'
                 fr' ORDER BY stadium.id'
                 fr' LIMIT %(limit)s OFFSET %(offset)s',

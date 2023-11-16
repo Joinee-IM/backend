@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from fastapi import APIRouter, Depends, Query, responses
+from fastapi import APIRouter, responses
 from pydantic import BaseModel
 
 import app.persistence.database as db
@@ -14,21 +14,26 @@ router = APIRouter(
 
 
 class StadiumSearchParameters(BaseModel):
-    name: str | None = Query(default=None)
-    city_id: int | None = Query(default=None)
-    district_id: int | None = Query(default=None)
-    sport_id: int | None = Query(default=None)
+    name: str | None = None
+    city_id: int | None = None
+    district_id: int | None = None
+    sport_id: int | None = None
+    time_ranges: Sequence[vo.TimeRange] | None
     limit: int = Limit
     offset: int = Offset
 
 
-@router.get('/stadium')
-async def browse_stadium(params: StadiumSearchParameters = Depends()) -> Response[Sequence[vo.ViewStadium]]:
+# use POST here since GET can't process request body
+@router.post('/stadium/browse')
+async def browse_stadium(params: StadiumSearchParameters) -> Response[Sequence[vo.ViewStadium]]:
     stadiums = await db.stadium.browse(
         name=params.name,
         city_id=params.city_id,
         district_id=params.district_id,
         sport_id=params.sport_id,
+        time_ranges=params.time_ranges,
+        limit=params.limit,
+        offset=params.offset,
     )
     return Response(data=stadiums)
 
