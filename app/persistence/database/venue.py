@@ -1,5 +1,6 @@
 from typing import Sequence
 
+import app.exceptions as exc
 from app.base import do, enums
 from app.persistence.database.util import (
     PostgresQueryExecutor,
@@ -49,3 +50,40 @@ async def browse(
         is_chargeable, fee_rate, fee_type, area, current_user_count, capability,
         sport_equipments, facilities, court_count, court_type, sport_id in results
     ]
+
+
+async def read(venue_id: int) -> do.Venue:
+    result = await PostgresQueryExecutor(
+        sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+            fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+            fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+            fr'  FROM venue'
+            fr' WHERE venue.id = %(venue_id)s',
+        fetch=1, venue_id=venue_id,
+    ).execute()
+
+    try:
+        id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area, \
+            current_user_count, capability, sport_equipments, facilities, court_count, court_type, sport_id = result
+    except TypeError:
+        raise exc.NotFound
+
+    return do.Venue(
+        id=id_,
+        stadium_id=stadium_id,
+        name=name,
+        floor=floor,
+        reservation_interval=reservation_interval,
+        is_reservable=is_reservable,
+        is_chargeable=is_chargeable,
+        fee_rate=fee_rate,
+        fee_type=fee_type,
+        area=area,
+        current_user_count=current_user_count,
+        capability=capability,
+        sport_equipments=sport_equipments,
+        facilities=facilities,
+        court_count=court_count,
+        court_type=court_type,
+        sport_id=sport_id,
+    )
