@@ -1,5 +1,6 @@
 from unittest.mock import patch
 
+import app.exceptions as exc
 from app.base import do, enums
 from app.persistence.database import venue
 from tests import AsyncMock, AsyncTestCase, Mock
@@ -92,4 +93,63 @@ class TestBrowse(AsyncTestCase):
                 fr' ORDER BY current_user_count DESC, venue.id'
                 fr' LIMIT %(limit)s OFFSET %(offset)s',
             limit=self.limit, offset=self.offset, fetch='all', **self.params,
+        )
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.raw_venue = (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1)
+        self.venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=True,
+            is_chargeable=True,
+            area=1,
+            capability=1,
+            current_user_count=1,
+            court_count=1,
+            court_type='場',
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = self.raw_venue
+
+        result = await venue.read(venue_id=self.venue_id)
+
+        self.assertEqual(result, self.venue)
+        mock_init.assert_called_with(
+            sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                fr'  FROM venue'
+                fr' WHERE venue.id = %(venue_id)s',
+            fetch=1, venue_id=self.venue_id,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await venue.read(venue_id=self.venue_id)
+
+        mock_init.assert_called_with(
+            sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                fr'  FROM venue'
+                fr' WHERE venue.id = %(venue_id)s',
+            fetch=1, venue_id=self.venue_id,
         )

@@ -160,7 +160,7 @@ class TestBrowse(AsyncTestCase):
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
         self.stadium_id = 1
-        self.raw_stadium = 1, 'name', 1, '0800092000', 'desc', 3.14, 1.59, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))],
+        self.raw_stadium = (1, 'name', 1, '0800092000', 'desc', 3.14, 1.59, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))])
         self.stadium = vo.ViewStadium(
             id=1,
             name='name',
