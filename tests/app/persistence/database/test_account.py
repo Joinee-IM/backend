@@ -35,8 +35,9 @@ class TestAddAccount(AsyncTestCase):
 class TestReadByEmail(AsyncTestCase):
     def setUp(self) -> None:
         self.email = 'email'
-        self.execute_result = 1, 'hash', 'NORMAL'
-        self.expect_output = 1, 'hash', RoleType.normal
+        self.execute_result = 1, 'hash', 'NORMAL', True
+        self.execute_result_not_verified = 1, 'hash', 'NORMAL', False
+        self.expect_output = 1, 'hash', RoleType.normal, True
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
     async def test_happy_path(self, mock_execute: AsyncMock):

@@ -48,7 +48,7 @@ class TestLogin(AsyncTestCase):
     @patch('app.processor.http.public.verify_password', new_callable=Mock)
     @patch('app.processor.http.public.encode_jwt', new_callable=Mock)
     async def test_happy_path(self, mock_encode: Mock, mock_verify: Mock, mock_read: AsyncMock):
-        mock_read.return_value = (self.account_id, self.pass_hash, self.role)
+        mock_read.return_value = (self.account_id, self.pass_hash, self.role, True)
         mock_verify.return_value = True
         mock_encode.return_value = 'token'
 
@@ -75,7 +75,7 @@ class TestLogin(AsyncTestCase):
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.processor.http.public.verify_password', new_callable=Mock)
     async def test_wrong_password(self, mock_verify: Mock, mock_read: AsyncMock):
-        mock_read.return_value = (self.account_id, self.pass_hash, self.role)
+        mock_read.return_value = (self.account_id, self.pass_hash, self.role, True)
         mock_verify.return_value = False
 
         with self.assertRaises(exc.LoginFailed):
@@ -85,6 +85,18 @@ class TestLogin(AsyncTestCase):
         mock_verify.assert_called_with(
             self.login_input.password, self.pass_hash,
         )
+
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.processor.http.public.verify_password', new_callable=Mock)
+    async def test_not_verified(self, mock_verify: Mock, mock_read: AsyncMock):
+        mock_read.return_value = (self.account_id, self.pass_hash, self.role, False)
+        mock_verify.return_value = False
+
+        with self.assertRaises(exc.LoginFailed):
+            await public.login(self.login_input, self.response)
+
+        mock_read.assert_called_with(email=self.login_input.email)
+        mock_verify.assert_not_called()
 
 
 class TestEmailVerification(AsyncTestCase):

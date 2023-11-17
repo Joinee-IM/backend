@@ -45,8 +45,11 @@ class LoginOutput:
 @router.post('/login', tags=['Account'])
 async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOutput]:
     try:
-        account_id, pass_hash, role = await db.account.read_by_email(email=data.email)
+        account_id, pass_hash, role, is_verified = await db.account.read_by_email(email=data.email)
     except TypeError:
+        raise exc.LoginFailed
+
+    if not is_verified:
         raise exc.LoginFailed
 
     if not verify_password(data.password, pass_hash):
