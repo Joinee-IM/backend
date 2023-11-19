@@ -2,8 +2,8 @@
 data objects
 """
 
-from datetime import time
-from typing import Optional
+from datetime import datetime, time
+from typing import Optional, Sequence
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -89,3 +89,23 @@ class BusinessHour(BaseModel):
     weekday: int
     start_time: time
     end_time: time
+
+
+class Reservation(BaseModel):
+    id: int
+    stadium_id: int
+    venue_id: int
+    court_id: int
+    start_time: datetime
+    end_time: datetime
+    member_count: int
+    vacancy: int
+    technical_level: Sequence[enums.TechnicalType]
+    remark: Optional[str]
+    invitation_code: str
+    is_cancelled: bool
+
+
+class Court(BaseModel):
+    id: int
+    venue_id: int

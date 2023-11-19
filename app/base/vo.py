@@ -5,9 +5,9 @@ view objects
 from datetime import time
 from typing import Sequence
 
-from pydantic import BaseModel
+from pydantic import BaseModel, NaiveDatetime
 
-from app.base import do, enums
+from app.base import do
 
 
 class ViewStadium(do.Stadium):
@@ -17,7 +17,12 @@ class ViewStadium(do.Stadium):
     business_hours: Sequence[do.BusinessHour]
 
 
-class TimeRange(BaseModel):
+class WeekTimeRange(BaseModel):
     weekday: int
     start_time: time
     end_time: time
+
+
+class DateTimeRange(BaseModel):
+    start_time: NaiveDatetime
+    end_time: NaiveDatetime

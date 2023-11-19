@@ -18,7 +18,7 @@ class StadiumSearchParameters(BaseModel):
     city_id: int | None = None
     district_id: int | None = None
     sport_id: int | None = None
-    time_ranges: Sequence[vo.TimeRange] | None
+    time_ranges: Sequence[vo.WeekTimeRange] | None
     limit: int = Limit
     offset: int = Offset
 

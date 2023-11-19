@@ -25,7 +25,7 @@ class TestBrowse(AsyncTestCase):
             'end_time_0': time(17, 27),
         }
         self.time_ranges = [
-            vo.TimeRange(
+            vo.WeekTimeRange(
                 weekday=1,
                 start_time=time(10, 27),
                 end_time=time(17, 27),

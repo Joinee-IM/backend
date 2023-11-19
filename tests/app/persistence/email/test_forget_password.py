@@ -22,14 +22,14 @@ class MockServiceConfig(ServiceConfig):
 
 
 class TestSend(AsyncTestCase):
-    def setUp(self) -> None:
+    async def asyncSetUp(self) -> None:
         self.to = 'to@to.com'
         self.code = 'code'
         self.smtp_handler = email.SMTPHandler()
         self.smtp_config = MockSMTPConfig()
         self.service_config = MockServiceConfig()
 
-        self.smtp_handler.initialize(smtp_config=self.smtp_config)
+        await self.smtp_handler.initialize(smtp_config=self.smtp_config)
 
     @patch('app.persistence.email.SMTPHandler.send_message', new_callable=AsyncMock)
     @patch('app.persistence.email.forget_password.service_config', MockServiceConfig())
