@@ -2,6 +2,7 @@ from unittest.mock import patch
 
 from app.base import do, enums
 from app.processor.http import venue
+from app.utils import Response
 from tests import AsyncMock, AsyncTestCase
 
 
@@ -73,4 +74,40 @@ class TestBrowseVenue(AsyncTestCase):
             order=self.params.order,
             limit=self.params.limit,
             offset=self.params.offset,
+        )
+
+
+class TestReadVenue(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=True,
+            area=1,
+            capability=1,
+            current_user_count=1,
+            court_count=1,
+            court_type='場',
+            is_chargeable=True,
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+        )
+        self.expect_result = Response(data=self.venue)
+
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_read: AsyncMock):
+        mock_read.return_value = self.venue
+
+        result = await venue.read_venue(venue_id=self.venue_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(
+            venue_id=self.venue_id
         )
