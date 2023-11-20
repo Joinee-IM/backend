@@ -1,12 +1,10 @@
-from datetime import date, datetime
 from typing import Sequence
 
 from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
 
-import app.exceptions as exc
 import app.persistence.database as db
-from app.base import do, enums, vo
+from app.base import do, enums
 from app.utils import Response
 
 router = APIRouter(

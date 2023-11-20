@@ -12,7 +12,6 @@ class TestRead(AsyncTestCase):
         self.court_id = 1
         self.court = do.Court(id=1, venue_id=1)
 
-
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
     async def test_read(self, mock_execute: AsyncMock, mock_init: Mock):

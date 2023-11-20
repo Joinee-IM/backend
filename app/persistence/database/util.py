@@ -5,7 +5,6 @@ import typing
 
 import asyncpg
 
-import app.base.vo as vo
 import app.exceptions as exc
 import app.log as log
 

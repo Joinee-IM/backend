@@ -1,9 +1,6 @@
-from typing import Sequence
-
 import app.exceptions as exc
-from app.base import do, enums, vo
-from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters)
+from app.base import do
+from app.persistence.database.util import PostgresQueryExecutor
 
 
 async def read(court_id: int) -> do.Court:
