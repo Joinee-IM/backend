@@ -15,7 +15,7 @@ class TestBrowseStadium(AsyncTestCase):
             district_id=1,
             sport_id=1,
             time_ranges=[
-                vo.TimeRange(
+                vo.WeekTimeRange(
                     weekday=1,
                     start_time=time(10, 27),
                     end_time=time(17, 27),

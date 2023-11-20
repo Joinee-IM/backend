@@ -2,6 +2,7 @@ from unittest import IsolatedAsyncioTestCase
 from unittest import TestCase as _TestCase
 from unittest.mock import AsyncMock as _AsyncMock
 from unittest.mock import Mock as _Mock
+from unittest.mock import patch  # noqa: this import is for easier import for tests
 
 from app.utils.context import Context
 from app.utils.security import AuthedAccount

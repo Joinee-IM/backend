@@ -39,6 +39,7 @@ class TestOAuthHandler(AsyncTestCase):
     async def test_login(self, mock_oauth: Mock):
         mock_oauth_return = AsyncMock()
         mock_oauth.return_value = mock_oauth_return
+        mock_oauth_return.register = Mock()
 
         oauth_handler = OAuthHandler()
         oauth_handler.initialize(self.google_config)
@@ -48,6 +49,7 @@ class TestOAuthHandler(AsyncTestCase):
     async def test_authorize(self, mock_oauth: Mock):
         mock_oauth_return = AsyncMock()
         mock_oauth.return_value = mock_oauth_return
+        mock_oauth_return.register = Mock()
 
         oauth_handler = OAuthHandler()
         oauth_handler.initialize(self.google_config)

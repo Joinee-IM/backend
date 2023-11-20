@@ -13,7 +13,7 @@ async def browse(
         city_id: int | None = None,
         district_id: int | None = None,
         sport_id: int | None = None,
-        time_ranges: Sequence[vo.TimeRange] | None = None,
+        time_ranges: Sequence[vo.WeekTimeRange] | None = None,
         limit: int = 10,
         offset: int = 0,
 ) -> Sequence[vo.ViewStadium]:
@@ -29,7 +29,7 @@ async def browse(
     raw_or_query = []
     if time_ranges:
         for i, time_range in enumerate(time_ranges):
-            time_range: vo.TimeRange
+            time_range: vo.WeekTimeRange
             raw_or_query.append(f"""({' AND '.join([
                 f'business_hour.weekday = %(weekday_{i})s',
                 f'business_hour.start_time <= %(end_time_{i})s',

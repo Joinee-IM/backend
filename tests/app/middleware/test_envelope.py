@@ -1,10 +1,8 @@
-import logging
 
 from fastapi import Request
 from pydantic import BaseModel
 
 import app.exceptions as exc
-from app.config import app_config
 from app.middleware.envelope import middleware
 from tests import AsyncMock, AsyncTestCase
 
