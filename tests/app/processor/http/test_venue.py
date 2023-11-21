@@ -111,3 +111,32 @@ class TestReadVenue(AsyncTestCase):
         mock_read.assert_called_with(
             venue_id=self.venue_id
         )
+
+
+class TestBrowseCourt(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.courts = [
+            do.Court(
+                id=1,
+                venue_id=1,
+            ),
+            do.Court(
+                id=2,
+                venue_id=1,
+            ),
+        ]
+        self.expect_result = Response(
+            data=self.courts,
+        )
+
+    @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse: AsyncMock):
+        mock_browse.return_value = self.courts
+
+        result = await venue.browse_court_by_venue_id(venue_id=self.venue_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_browse.assert_called_with(
+            venue_id=self.venue_id,
+        )

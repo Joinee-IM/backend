@@ -41,3 +41,9 @@ async def browse_venue(params: VenueSearchParameters = Depends()) -> Response[Se
 async def read_venue(venue_id: int) -> Response[do.Venue]:
     venue = await db.venue.read(venue_id=venue_id)
     return Response(data=venue)
+
+
+@router.get('/venue/{venue_id}/court')
+async def browse_court_by_venue_id(venue_id: int) -> Response[Sequence[do.Court]]:
+    courts = await db.court.browse(venue_id=venue_id)
+    return Response(data=courts)
