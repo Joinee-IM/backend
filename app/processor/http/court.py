@@ -44,7 +44,7 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
     if not params.start_date and not params.time_ranges:
         params.start_date = datetime.now().date()
 
-    reservations = await db.reservation.browse_by_court_id(
+    reservations = await db.reservation.browse(
         court_id=court_id,
         time_ranges=params.time_ranges,
         start_date=params.start_date,
@@ -73,7 +73,7 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
     if not available_date:
         raise exc.NotFound  # TODO: ask pm/designer not found's behavior
 
-    reservations = await db.reservation.browse_by_court_id(
+    reservations = await db.reservation.browse(
         court_id=court_id,
         start_date=available_date,
     )
