@@ -64,6 +64,7 @@ class GoogleConfig:
     LOGIN_REDIRECT_URI = env_values.get('GOOGLE_LOGIN_REDIRECT_URI')
     SERVER_URL = env_values.get('GOOGLE_SERVER_URL')
     CLIENT_KWARGS = env_values.get('GOOGLE_CLIENT_KWARGS')
+    SESSION_KEY = env_values.get('GOOGLE_SESSION_KEY', '')
 
 
 pg_config = PGConfig()

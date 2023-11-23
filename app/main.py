@@ -1,8 +1,8 @@
-with open('logging.yaml', 'r') as conf:
-    import yaml
-    log_config = yaml.safe_load(conf.read())
-    import logging.config
-    logging.config.dictConfig(log_config)
+# with open('logging.yaml', 'r') as conf:
+#     import yaml
+#     log_config = yaml.safe_load(conf.read())
+#     import logging.config
+#     logging.config.dictConfig(log_config)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -102,4 +102,6 @@ http.register_routers(app)
 
 from starlette.middleware.sessions import SessionMiddleware
 
-app.add_middleware(SessionMiddleware, secret_key="some-random-string")
+from app.config import google_config
+
+app.add_middleware(SessionMiddleware, secret_key=google_config.SESSION_KEY)
