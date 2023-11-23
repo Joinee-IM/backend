@@ -63,3 +63,34 @@ class TestBrowseReservation(AsyncTestCase):
             sort_by=self.params.sort_by,
             order=self.params.order,
         )
+
+
+class TestReadReservation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=0,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.expect_result = Response(data=self.reservation)
+
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_read: AsyncMock):
+        mock_read.return_value = self.reservation
+
+        result = await reservation.read_reservation(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(
+            reservation_id=self.reservation_id,
+        )

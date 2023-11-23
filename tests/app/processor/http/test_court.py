@@ -236,7 +236,7 @@ class TestAddReservation(AsyncTestCase):
 
     @freeze_time('2023-10-10')
     @patch('app.processor.http.court.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.processor.http.court.invitation_code.generate', new_callable=Mock)
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
@@ -279,7 +279,7 @@ class TestAddReservation(AsyncTestCase):
 
     @freeze_time('2023-11-27')
     @patch('app.processor.http.court.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_illegal_time(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_browse_reservation.return_value = None
@@ -299,7 +299,7 @@ class TestAddReservation(AsyncTestCase):
 
     @freeze_time('2023-11-27')
     @patch('app.processor.http.court.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_court(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_browse_reservation.return_value = self.reservations

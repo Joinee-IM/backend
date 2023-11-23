@@ -44,3 +44,9 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Se
     return Response(
         data=reservations,
     )
+
+
+@router.get('/reservation/{reservation_id}')
+async def read_reservation(reservation_id: int) -> Response[do.Reservation]:
+    reservation = await db.reservation.read(reservation_id=reservation_id)
+    return Response(data=reservation)

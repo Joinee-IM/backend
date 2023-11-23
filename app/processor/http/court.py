@@ -108,7 +108,7 @@ async def add_reservation(data: AddReservationInput, _=Depends(get_auth_token)) 
     if context.account.id not in data.member_id:
         raise exc.NoPermission
 
-    reservations = await db.reservation.browse_by_court_id(
+    reservations = await db.reservation.browse(
         court_id=data.court_id,
         time_ranges=[vo.DateTimeRange(
             start_time=data.start_time,
