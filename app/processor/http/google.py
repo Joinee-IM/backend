@@ -17,7 +17,6 @@ from app.utils.security import encode_jwt
 router = APIRouter(
     tags=['Google'],
     default_response_class=responses.JSONResponse,
-    dependencies=[Depends(get_auth_token)],
 )
 
 
@@ -56,7 +55,7 @@ async def auth(request: Request):
 
 
 @router.get('/file/download')
-async def read_file(file_uuid: UUID) -> Response[str]:
+async def read_file(file_uuid: UUID, _=Depends(get_auth_token)) -> Response[str]:
     file = await db.gcs_file.read(file_uuid=file_uuid)
     url = await gcs_handler.sign_url(filename=file.filename)
     return Response(data=url)
@@ -72,7 +71,7 @@ class BatchDownloadOutput(BaseModel):
 
 
 @router.get('/file/download/batch')
-async def batch_download_files(data: BatchDownloadInput) -> Response[Sequence[BatchDownloadOutput]]:
+async def batch_download_files(data: BatchDownloadInput, _=Depends(get_auth_token)) -> Response[Sequence[BatchDownloadOutput]]:
     return Response(
         data=[
             BatchDownloadOutput(
