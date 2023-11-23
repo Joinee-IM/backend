@@ -1,5 +1,6 @@
 from datetime import date, datetime
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database import reservation
 from tests import AsyncMock, AsyncTestCase, Mock, patch
@@ -152,4 +153,56 @@ class TestAdd(AsyncTestCase):
             stadium_id=self.stadium_id, venue_id=self.venue_id, court_id=self.court_id, start_time=self.start_time,
             end_time=self.end_time, member_count=self.member_count, vacancy=self.vacancy,
             technical_level=self.technical_level, remark=self.remark, invitation_code=self.invitaion_code, fetch=1,
+        )
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False  # noqa
+        self.reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17),
+            end_time=datetime(2023, 11, 17),
+            member_count=1,
+            vacancy=1,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='',
+            invitation_code='',
+            is_cancelled=False,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_reservation
+
+        result = await reservation.read(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.reservation)
+        mock_init.assert_called_with(
+            sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'  FROM reservation'
+                r' WHERE id = %(reservation_id)s',
+            reservation_id=self.reservation_id, fetch=1,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await reservation.read(reservation_id=self.reservation_id)
+
+        mock_init.assert_called_with(
+            sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'  FROM reservation'
+                r' WHERE id = %(reservation_id)s',
+            reservation_id=self.reservation_id, fetch=1,
         )

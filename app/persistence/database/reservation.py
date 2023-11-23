@@ -1,6 +1,7 @@
 from datetime import date, datetime, timedelta
 from typing import Optional, Sequence
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database.util import (PostgresQueryExecutor,
                                            generate_query_parameters)
@@ -117,3 +118,34 @@ async def add(
         invitation_code=invitation_code, fetch=1,
     ).fetch_one()
     return id_
+
+
+async def read(reservation_id: int) -> do.Reservation:
+    reservation = await PostgresQueryExecutor(
+        sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+            r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+            r'  FROM reservation'
+            r' WHERE id = %(reservation_id)s',
+        reservation_id=reservation_id, fetch=1,
+    ).fetch_one()
+
+    try:
+        id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level, \
+            remark, invitation_code, is_cancelled = reservation
+    except TypeError:
+        raise exc.NotFound
+
+    return do.Reservation(
+        id=id_,
+        stadium_id=stadium_id,
+        venue_id=venue_id,
+        court_id=court_id,
+        start_time=start_time,
+        end_time=end_time,
+        member_count=member_count,
+        vacancy=vacancy,
+        technical_level=[enums.TechnicalType(t) for t in technical_level],
+        remark=remark,
+        invitation_code=invitation_code,
+        is_cancelled=is_cancelled,
+    )
