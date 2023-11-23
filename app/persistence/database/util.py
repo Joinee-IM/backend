@@ -35,7 +35,6 @@ class QueryExecutor:
                 'all': self.fetch_all,
             },
         )
-        print(func_map[self.fetch])
         try:
             return await func_map[self.fetch]()
         except self.UNIQUE_VIOLATION_ERROR:

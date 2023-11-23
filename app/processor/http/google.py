@@ -48,7 +48,7 @@ async def auth(request: Request):
                 refresh_token=token_google['refresh_token'],
             )
         token = encode_jwt(account_id=account_id)
-        response = RedirectResponse(url=f"{service_config.url}/login")
+        response = RedirectResponse(url=f"{service_config.url}/")
         response.set_cookie(key="account_id", value=str(account_id))
         response.set_cookie(key="token", value=str(token))
         return response
