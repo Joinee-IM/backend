@@ -75,7 +75,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
 
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_happy_path(
             self,
             mock_browse_reservation: AsyncMock,
@@ -97,7 +97,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
 
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_no_available_date(
             self,
             mock_browse_reservation: AsyncMock,
@@ -118,7 +118,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
 
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_query_with_start_date(
             self,
             mock_browse_reservation: AsyncMock,
@@ -141,7 +141,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     @freeze_time('2023-11-11 11:11:11')
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_query_with_start_date(
             self,
             mock_browse_reservation: AsyncMock,
@@ -162,7 +162,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     @freeze_time('2023-11-11 11:11:11')
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation.browse_by_court_id', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_no_business_hour(
             self,
             mock_browse_reservation: AsyncMock,

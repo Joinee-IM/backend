@@ -43,3 +43,8 @@ class Sorter(StrEnum):
 
 class VenueAvailableSortBy(StrEnum):
     current_user_count = 'CURRENT_USER_COUNT'
+
+
+class BrowseReservationSortBy(StrEnum):
+    vacancy = 'vacancy'
+    time = 'time'

@@ -5,7 +5,7 @@ from app.persistence.database import reservation
 from tests import AsyncMock, AsyncTestCase, Mock, patch
 
 
-class TestBrowseByCourtId(AsyncTestCase):
+class TestBrowse(AsyncTestCase):
     def setUp(self) -> None:
         self.court_id = 1
         self.time_ranges = [
@@ -56,7 +56,7 @@ class TestBrowseByCourtId(AsyncTestCase):
     async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_reservations
 
-        result = await reservation.browse_by_court_id(
+        result = await reservation.browse(
             court_id=self.court_id,
             time_ranges=self.time_ranges,
             start_date=self.start_date,
@@ -66,14 +66,20 @@ class TestBrowseByCourtId(AsyncTestCase):
 
         self.assertEqual(result, self.reservations)
         mock_init.assert_called_with(
-            sql='SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+            sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
                 '       vacancy, technical_level, remark, invitation_code, is_cancelled'
                 '  FROM reservation'
+                ' INNER JOIN stadium'
+                '         ON stadium.id = reservation.stadium_id'
+                ' INNER JOIN district'
+                '         ON stadium.district_id = district.id'
+                ' INNER JOIN venue'
+                '         ON venue.id = reservation.venue_id'
                 ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                 ' AND is_cancelled = %(is_cancelled)s'
                 ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                 ' ORDER BY start_time',
-            fetch='all', **self.params,
+            fetch='all', **self.params, limit=None, offset=None
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -81,7 +87,7 @@ class TestBrowseByCourtId(AsyncTestCase):
     async def test_no_end_date(self, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_reservations
 
-        result = await reservation.browse_by_court_id(
+        result = await reservation.browse(
             court_id=self.court_id,
             time_ranges=self.time_ranges,
             start_date=self.start_date,
@@ -90,14 +96,20 @@ class TestBrowseByCourtId(AsyncTestCase):
 
         self.assertEqual(result, self.reservations)
         mock_init.assert_called_with(
-            sql='SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+            sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
                 '       vacancy, technical_level, remark, invitation_code, is_cancelled'
                 '  FROM reservation'
+                ' INNER JOIN stadium'
+                '         ON stadium.id = reservation.stadium_id'
+                ' INNER JOIN district'
+                '         ON stadium.district_id = district.id'
+                ' INNER JOIN venue'
+                '         ON venue.id = reservation.venue_id'
                 ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                 ' AND is_cancelled = %(is_cancelled)s'
                 ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                 ' ORDER BY start_time',
-            fetch='all', **self.params,
+            fetch='all', **self.params, limit=None, offset=None,
         )
 
 
