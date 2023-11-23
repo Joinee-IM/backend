@@ -52,3 +52,9 @@ class IllegalInput(AckException):
     Input is not legal
     """
     status_code = 422
+
+
+class CourtReserved(AckException):
+    """
+    Court is already reserved
+    """

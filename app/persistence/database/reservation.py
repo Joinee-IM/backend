@@ -1,4 +1,4 @@
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta
 from typing import Optional, Sequence
 
 from app.base import do, enums, vo
@@ -69,3 +69,22 @@ async def browse_by_court_id(
         for id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level,
         remark, invitation_code, is_cancelled in results
     ]
+
+
+async def add(
+        stadium_id: int, venue_id: int, court_id: int, start_time: datetime, end_time: datetime,
+        technical_level: Sequence[enums.TechnicalType], invitation_code: str, remark: str = None,
+        member_count: int = 0, vacancy: int = -1,
+) -> int:
+    id_, = await PostgresQueryExecutor(
+        sql=r'INSERT INTO reservation(stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy,'
+            r'                        technical_level, remark, invitation_code)'
+            r'                 VALUES(%(stadium_id)s, %(venue_id)s, %(court_id)s, %(start_time)s, %(end_time)s,'
+            r'                        %(member_count)s, %(vacancy)s, %(technical_level)s, %(remark)s,'
+            r'                        %(invitation_code)s)'
+            r'  RETURNING id',
+        stadium_id=stadium_id, venue_id=venue_id, court_id=court_id, start_time=start_time, end_time=end_time,
+        member_count=member_count, vacancy=vacancy, technical_level=technical_level, remark=remark,
+        invitation_code=invitation_code, fetch=1,
+    ).fetch_one()
+    return id_
