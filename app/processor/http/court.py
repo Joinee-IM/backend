@@ -1,13 +1,16 @@
+import random
 from datetime import date, datetime
-from typing import Sequence
+from typing import Optional, Sequence
 
-from fastapi import APIRouter, responses
-from pydantic import BaseModel
+from fastapi import APIRouter, Depends, responses
+from pydantic import BaseModel, NaiveDatetime
 
+import app.const as const
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
-from app.utils import Response
+from app.middleware.headers import get_auth_token
+from app.utils import Response, context, invitation_code
 
 router = APIRouter(
     tags=['Court'],
@@ -83,3 +86,56 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
             start_date=available_date,
         ),
     )
+
+
+class AddReservationInput(BaseModel):
+    court_id: int
+    start_time: NaiveDatetime
+    end_time: NaiveDatetime
+    technical_level: Sequence[enums.TechnicalType] = []
+    remark: Optional[str]
+    member_count: int
+    vacancy: int = -1
+    member_id: Sequence[int] = []
+
+
+class AddReservationOutput(BaseModel):
+    id: int
+
+
+@router.post('/court/{court_id}/reservation')
+async def add_reservation(data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
+    if context.account.id not in data.member_id:
+        raise exc.NoPermission
+
+    reservations = await db.reservation.browse_by_court_id(
+        court_id=data.court_id,
+        time_ranges=[vo.DateTimeRange(
+            start_time=data.start_time,
+            end_time=data.end_time,
+        )],
+    )
+
+    if reservations:
+        raise exc.CourtReserved
+
+    if data.start_time < datetime.now() or data.start_time >= data.end_time:
+        raise exc.IllegalInput
+
+    invite_code = invitation_code.generate()
+    court = await db.court.read(court_id=data.court_id)
+    venue = await db.venue.read(venue_id=court.venue_id)
+
+    reservation_id = await db.reservation.add(
+        court_id=data.court_id,
+        venue_id=venue.id,
+        stadium_id=venue.stadium_id,
+        start_time=data.start_time,
+        end_time=data.end_time,
+        technical_level=data.technical_level,
+        invitation_code=invite_code,
+        remark=data.remark,
+        member_count=data.member_count,
+        vacancy=data.vacancy,
+    )
+    return Response(data=AddReservationOutput(id=reservation_id))
