@@ -11,7 +11,7 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "master" ]
+    branches: [ "*" ]
 
 env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -55,4 +55,4 @@ jobs:
         --install \
         --namespace=prod  \
         --values deploy/helm/production/values.yaml \
-        --set image.tag=x86-${{ github.run_id }}
+        --set image.tag=${{ github.run_id }}
