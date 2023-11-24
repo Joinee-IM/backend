@@ -34,12 +34,14 @@ jobs:
       with:
         service_account_key: ${{ secrets.GKE_SA_KEY }}
         project_id: ${{ env.PROJECT_ID }}
+        install_components: 'gke-gcloud-auth-plugin'
+        export_default_credentials: true
 
     # Configure Docker to use the gcloud command-line tool as a credential
     # helper for authentication
-    - run: |-
-        gcloud auth application-default login
-        gcloud --quiet auth configure-docker
+    # - run: |-
+    #     gcloud auth application-default login 
+    #     gcloud --quiet auth configure-docker
 
     # Get the GKE credentials so we can deploy to the cluster
     - uses: google-github-actions/get-gke-credentials@v1
