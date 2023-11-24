@@ -17,6 +17,8 @@ env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
   GKE_CLUSTER: ${{ secrets.CLUSTER_NAME }}    # Add your cluster name here.
   GKE_REGION: ${{ secrets.CLUSTER_ZONE }}   # Add your cluster zone here.
+  ENV: ${{ secrets.ENV }}
+  GCP_SERVICE_ACCOUNT: ${{ secrets.GCP_SERVICE_ACCOUNT }}
 
 jobs:
   setup-build-publish-deploy:
@@ -51,8 +53,8 @@ jobs:
 
     - name: Deploy
       run: |-
-        echo "${{ secrets.ENV }}" > deploy/helm/charts/.env
-        echo "${{ secrets.GCP_SERVICE_ACCOUNT }}" > deploy/helm/charts/gcp-service-account.json
+        echo "${{env.ENV}}" > deploy/helm/charts/.env
+        echo "${{env.GCP_SERVICE_ACCOUNT}}" > deploy/helm/charts/gcp-service-account.json
         helm upgrade cloud-native-backend deploy/helm/charts \
         --install \
         --namespace=prod  \
