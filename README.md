@@ -1,15 +1,15 @@
-```shell
-conda create --name backend python=3.11
-conda activate backend
-pip install -r requirements.txt
-cp .env.example .env
-```
+# Cloud Native Backend
+## Setup
+1. Python environment
+   ```shell
+   make install
+   ```
+   and paste environment variables
+2. Run backend service
+    ```shell
+    make run
+    ```
 
-paste environment variables
+3. Backend openapi documents should be accessed through http://localhost:8000/docs
 
-```shell
-pip install uvicorn
-uvicorn main:app --reload
-```
-
-go to localhost:8000/docs and you will see backend swagger
+Note: you may check other usages through `make help` command.
