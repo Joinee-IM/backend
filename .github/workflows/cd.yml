@@ -45,8 +45,13 @@ jobs:
     # Build the Docker image
     - name: Build
       run: |-
-        make build-x86 
+        docker build --platform=linux/amd64 -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }} .
+        docker push asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }}
 
     - name: Deploy
       run: |-
-        make helm
+        helm upgrade cloud-native-backend deploy/helm/charts \
+        --install \
+        --namespace=prod  \
+        --values deploy/helm/production/values.yaml \
+        --set image.tag=x86-${{ github.run_id }}
