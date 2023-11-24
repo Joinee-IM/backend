@@ -60,5 +60,5 @@ jobs:
         --namespace=prod  \
         --values deploy/helm/production/values.yaml \
         --set image.tag=${{ github.run_id }}
-        --set-string envFile=.env
-        --set-string gcpServiceAccount=gcp-service-account.json
+        --set-string envFile=$(cat deploy/helm/charts/.env)
+        --set-string gcpServiceAccount=$(cat deploy/helm/charts/gcp-service-account.json)
