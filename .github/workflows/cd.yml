@@ -11,7 +11,7 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "master" ]
 
 env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -45,7 +45,7 @@ jobs:
     # Build the Docker image
     - name: Build
       run: |-
-        make build-x86 
+        make build-x86
 
     - name: Deploy
       run: |-
