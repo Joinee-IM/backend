@@ -20,10 +20,11 @@ class PGConfig:
 
 
 class AppConfig:
-    title = env_values.get('APP_TITLE')
+    title = env_values.get('APP_TITLE', 'APP_TITLE')
     docs_url = env_values.get('APP_DOCS_URL', None)
     redoc_url = env_values.get('APP_REDOC_URL', None)
     logger_name = env_values.get('APP_LOGGER_NAME', None)
+    allow_origins = env_values.get('APP_ALLOW_ORIGINS', '').split(' ')
 
 
 class JWTConfig:
@@ -57,9 +58,19 @@ class ServiceConfig:
         return f'{protocol}://{self.domain}{port_postfix}'
 
 
+class GoogleConfig:
+    CLIENT_ID = env_values.get('GOOGLE_CLIENT_ID')
+    CLIENT_SECRET = env_values.get('GOOGLE_CLIENT_SECRET')
+    LOGIN_REDIRECT_URI = env_values.get('GOOGLE_LOGIN_REDIRECT_URI')
+    SERVER_URL = env_values.get('GOOGLE_SERVER_URL')
+    CLIENT_KWARGS = env_values.get('GOOGLE_CLIENT_KWARGS')
+    SESSION_KEY = env_values.get('GOOGLE_SESSION_KEY', '')
+
+
 pg_config = PGConfig()
 app_config = AppConfig()
 jwt_config = JWTConfig()
 redis_config = RedisConfig()
 smtp_config = SMTPConfig()
 service_config = ServiceConfig()
+google_config = GoogleConfig()

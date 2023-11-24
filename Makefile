@@ -1,29 +1,35 @@
 default: help
 
-.PHONY: help test coverage run dev docker-build docker-build-x86 docker-run docker-stop docker-rm redis
+.PHONY: help test install coverage run dev build build-x86 docker-run docker-stop docker-rm redis helm
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
 
-test: # run unit test for backend service
+test: # run unit tests for backend service
 	poetry run isort .
+	poetry run pre-commit run --all-files
 	poetry run pycodestyle --ignore "E501, E402, W503, W504" app
 	poetry run coverage run --source=app -m unittest -v
 	poetry run coverage report
 
 install: # install dependencies
 	poetry install
-	pre-commit install
-	cp .env.example .env
+	poetry run pre-commit install
+	@if [ ! -f .env ]; then\
+		cp .env.example .env;\
+	fi
+	@echo ""
+	@echo "##### install complete #####"
+	@echo "Please fill in .env file"
 
 coverage: # show coverage report
 	poetry run coverage report
 
 run: # run service without reload flag
-	poetry run uvicorn app.main:app
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app
 
 dev: # run service with reload flag
-	poetry run uvicorn app.main:app --reload
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app --reload
 
 build: # build docker image
 	docker build -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend .

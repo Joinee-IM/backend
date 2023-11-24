@@ -1,15 +1,15 @@
-with open('logging.yaml', 'r') as conf:
-    import yaml
-    log_config = yaml.safe_load(conf.read())
-    import logging.config
-    logging.config.dictConfig(log_config)
+# with open('logging.yaml', 'r') as conf:
+#     import yaml
+#     log_config = yaml.safe_load(conf.read())
+#     import logging.config
+#     logging.config.dictConfig(log_config)
 
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 
 from app import log
 from app.config import app_config
-from app.middleware.api import FastAPI
 
 app = FastAPI(
     title=app_config.title,
@@ -19,7 +19,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=['*'],
+    allow_origins=app_config.allow_origins,  # don't use '*' in allow origins
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],
@@ -43,6 +43,17 @@ async def app_startup():
     from app.persistence.email import smtp_handler
     await smtp_handler.initialize(smtp_config=smtp_config)
     log.info('initialized smtp')
+
+    log.info('initializing gcs')
+    from app.persistence.file_storage.gcs import gcs_handler
+    gcs_handler.initialize()
+    log.info('initialized gcs')
+
+    log.info('initializing oauth')
+    from app.client.oauth import oauth_handler
+    from app.config import google_config
+    oauth_handler.initialize(google_config=google_config)
+    log.info('initialized oauth')
 
     # if redis needed
     # from app.config import redis_config
@@ -88,3 +99,9 @@ app.add_middleware(starlette_context.middleware.RawContextMiddleware)
 from app.processor import http
 
 http.register_routers(app)
+
+from starlette.middleware.sessions import SessionMiddleware
+
+from app.config import google_config
+
+app.add_middleware(SessionMiddleware, secret_key=google_config.SESSION_KEY)

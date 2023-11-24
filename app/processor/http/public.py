@@ -2,7 +2,9 @@ from dataclasses import dataclass
 from typing import Optional
 from uuid import UUID
 
-from fastapi import APIRouter, responses
+from fastapi import APIRouter
+from fastapi import Response as FastAPIResponse
+from fastapi import responses
 from pydantic import BaseModel, EmailStr
 
 import app.exceptions as exc
@@ -41,17 +43,26 @@ class LoginOutput:
 
 
 @router.post('/login', tags=['Account'])
-async def login(data: LoginInput) -> Response[LoginOutput]:
+async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOutput]:
     try:
-        account_id, pass_hash, role = await db.account.read_by_email(email=data.email)
+        account_id, pass_hash, role, is_verified = await db.account.read_by_email(email=data.email)
     except TypeError:
+        raise exc.LoginFailed
+
+    if not is_verified:
         raise exc.LoginFailed
 
     if not verify_password(data.password, pass_hash):
         raise exc.LoginFailed
 
-    token = encode_jwt(account_id=account_id, role=role)
+    token = encode_jwt(account_id=account_id)
+    response.set_cookie(key="account_id", value=str(account_id), httponly=True)
+    response.set_cookie(key="token", value=str(token), httponly=True)
     return Response(data=LoginOutput(account_id=account_id, token=token))
+
+
+class EmailVerificationInput(BaseModel):
+    code: UUID
 
 
 class EmailVerificationOutput(BaseModel):
@@ -60,8 +71,8 @@ class EmailVerificationOutput(BaseModel):
 
 @router.get('/email-verification', tags=['Email Verification'])
 @router.post('/email-verification', tags=['Email Verification'])
-async def email_verification(code: UUID) -> Response[EmailVerificationOutput]:
-    await db.email_verification.verify_email(code=code)
+async def email_verification(data: EmailVerificationInput) -> Response[EmailVerificationOutput]:
+    await db.email_verification.verify_email(code=data.code)
     return Response(data=EmailVerificationOutput(success=True))
 
 
@@ -73,9 +84,12 @@ class AddAccountOutput:
 class AddAccountInput(BaseModel):
     email: EmailStr
     password: str
-    nickname: str
-    gender: GenderType
+    gender: GenderType | None = GenderType.unrevealed
     role: RoleType
+
+    @property
+    def nickname(self):
+        return self.email.split('@')[0]
 
 
 @router.post('/account', tags=['Account'])

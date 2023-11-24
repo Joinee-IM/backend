@@ -51,8 +51,13 @@ jobs:
 
     - name: Deploy
       run: |-
+
+        echo "${{ secrets.ENV }}" > deploy/helm/charts/.env
+        echo "${{ secrets.GCP_SERVICE_ACCOUNT }}" > deploy/helm/charts/gcp-service-account.json
         helm upgrade cloud-native-backend deploy/helm/charts \
         --install \
         --namespace=prod  \
         --values deploy/helm/production/values.yaml \
         --set image.tag=${{ github.run_id }}
+        --set envFile=.env
+        --set gcpServiceAccount=gcp-service-account.json

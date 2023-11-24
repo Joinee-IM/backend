@@ -1,6 +1,7 @@
 import abc
 import collections
 import itertools
+import typing
 
 import asyncpg
 
@@ -13,8 +14,10 @@ from . import pg_pool_handler
 class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
-    def __init__(self, sql: str, fetch: int | str, parameters: dict[str, any] = None,
-                 **params):
+    def __init__(
+        self, sql: str, fetch: int | str | None, parameters: dict[str, any] = None,
+        **params,
+    ):
         self.sql, self.params = self._format(sql, parameters, **params)
         self.fetch = fetch
 
@@ -24,12 +27,14 @@ class QueryExecutor:
         raise NotImplementedError
 
     async def execute(self):
-        func_map = collections.defaultdict(lambda: self.fetch_none, {
-            0: self.fetch_none,
-            1: self.fetch_one,
-            'one': self.fetch_one,
-            'all': self.fetch_all,
-        })
+        func_map = collections.defaultdict(
+            lambda: self.fetch_none, {
+                0: self.fetch_none,
+                1: self.fetch_one,
+                'one': self.fetch_one,
+                'all': self.fetch_all,
+            },
+        )
         try:
             return await func_map[self.fetch]()
         except self.UNIQUE_VIOLATION_ERROR:
@@ -86,3 +91,12 @@ class PostgresQueryExecutor(QueryExecutor):
         async with pg_pool_handler.cursor() as cursor:
             cursor: asyncpg.connection.Connection
             await cursor.execute(self.sql, *self.params)
+
+
+def generate_query_parameters(criteria_dict: dict[str, tuple[typing.Any, str]]) -> tuple[list, dict[str: typing.Any]]:
+    query = [q for (param_value, q) in criteria_dict.values() if param_value is not None]
+    params = {
+        param_name: param_value for param_name, (param_value, _) in criteria_dict.items() if
+        param_value is not None
+    }
+    return query, params

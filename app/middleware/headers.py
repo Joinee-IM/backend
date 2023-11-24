@@ -1,11 +1,16 @@
-from fastapi import Header
+from typing import Annotated
+
+from fastapi import Cookie, Header
 
 from app.utils import security
 from app.utils.context import context
 
 
-async def get_auth_token(auth_token: str = Header(None, convert_underscores=True)):
+async def get_auth_token(
+    token: Annotated[str | None, Cookie()] = None,
+    auth_token: Annotated[str | None, Header(convert_underscores=True)] = None,
+):
     account = None
-    if auth_token:
-        account = security.decode_jwt(auth_token, context.request_time)
+    if token or auth_token:
+        account = security.decode_jwt(token or auth_token, context.request_time)
     context.set_account(account)

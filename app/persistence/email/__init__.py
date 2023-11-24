@@ -25,19 +25,24 @@ class SMTPHandler(metaclass=mcs.Singleton):
 
     async def send_message(
             self,
-            message: aiosmtplib.smtp.Union[aiosmtplib.smtp.email.message.EmailMessage,
-                                           aiosmtplib.smtp.email.message.Message],
+            message: aiosmtplib.smtp.Union[
+                aiosmtplib.smtp.email.message.EmailMessage,
+                aiosmtplib.smtp.email.message.Message,
+            ],
             sender: aiosmtplib.smtp.Optional[str] = None,
             recipients: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Union[str, aiosmtplib.smtp.Sequence[str]]] = None,
             mail_options: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Iterable[str]] = None,
             rcpt_options: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Iterable[str]] = None,
             timeout: aiosmtplib.smtp.Optional[
-                aiosmtplib.smtp.Union[float, aiosmtplib.smtp.Default]] = aiosmtplib.smtp._default,  # noqa
+                aiosmtplib.smtp.Union[float, aiosmtplib.smtp.Default]
+            ] = aiosmtplib.smtp._default,  # noqa
     ):
         client = await self.get_client()
-        responses, data_log = await client.send_message(message, sender=sender, recipients=recipients,
-                                                        mail_options=mail_options, rcpt_options=rcpt_options,
-                                                        timeout=timeout)
+        responses, data_log = await client.send_message(
+            message, sender=sender, recipients=recipients,
+            mail_options=mail_options, rcpt_options=rcpt_options,
+            timeout=timeout,
+        )
         for address, (code, resp) in responses.items():
             if code != 200:
                 print(f'{address=} failed with {code=} {resp=}')  # experimental, info level only
