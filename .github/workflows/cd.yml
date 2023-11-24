@@ -11,7 +11,7 @@ name: Build and Deploy to GKE
 
 on:
   push:
-    branches: [ "*" ]
+    branches: [ "master" ]
 
 env:
   PROJECT_ID: ${{ secrets.PROJECT_ID }}
@@ -53,12 +53,12 @@ jobs:
 
     - name: Deploy
       run: |-
-        echo "${{env.ENV}}" > deploy/helm/charts/.env
-        echo "${{env.GCP_SERVICE_ACCOUNT}}" > deploy/helm/charts/gcp-service-account.json
+        echo "$ENV" > deploy/helm/charts/.env
+        echo "$GCP_SERVICE_ACCOUNT" > deploy/helm/charts/gcp-service-account.json
         helm upgrade cloud-native-backend deploy/helm/charts \
         --install \
         --namespace=prod  \
         --values deploy/helm/production/values.yaml \
-        --set image.tag=${{ github.run_id }}
-        --set-string envFile=$(cat deploy/helm/charts/.env)
-        --set-string gcpServiceAccount=$(cat deploy/helm/charts/gcp-service-account.json)
+        --set image.tag=${{ github.run_id }} \
+        --set envFile=.env \
+        --set gcpServiceAccount=gcp-service-account.json
