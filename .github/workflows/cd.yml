@@ -1,0 +1,56 @@
+# This workflow uses actions that are not certified by GitHub.
+# They are provided by a third-party and are governed by
+# separate terms of service, privacy policy, and support
+# documentation.
+
+# GitHub recommends pinning actions to a commit SHA.
+# To get a newer version, you will need to update the SHA.
+# You can also reference a tag or branch, but the action may change without warning.
+
+name: Build and Deploy to GKE
+
+on:
+  push:
+    branches:
+      - lichi-cicd
+
+env:
+  PROJECT_ID: ${{ secrets.PROJECT_ID }}
+  GKE_CLUSTER: ${{ secrets.CLUSTER_NAME }}    # Add your cluster name here.
+  GKE_ZONE: ${{ secrets.CLUSTER_ZONE }}   # Add your cluster zone here.
+
+jobs:
+  setup-build-publish-deploy:
+    name: Setup, Build, Publish, and Deploy
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    # Setup gcloud CLI
+    #1bee7de035d65ec5da40a31f8589e240eba8fde5
+    - uses: google-github-actions/setup-gcloud@v0
+      with:
+        service_account_key: ${{ secrets.GKE_SA_KEY }}
+        project_id: ${{ env.PROJECT_ID }}
+
+    # Configure Docker to use the gcloud command-line tool as a credential
+    # helper for authentication
+    - run: |-
+        gcloud --quiet auth configure-docker
+
+    # Get the GKE credentials so we can deploy to the cluster
+    - uses: google-github-actions/get-gke-credentials@v1
+      with:
+        cluster_name: ${{ env.GKE_CLUSTER }}
+        location: ${{ env.GKE_ZONE }}
+
+    # Build the Docker image
+    - name: Build
+      run: |-
+        make build-x86 
+
+    - name: Deploy
+      run: |-
+        make helm
