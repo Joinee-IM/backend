@@ -3,7 +3,7 @@ import fastapi
 
 def register_routers(app: fastapi.FastAPI):
     from . import (account, album, business_hour, city, court, district,
-                   google, public, reservation, sport, stadium, venue)
+                   google, public, reservation, sport, stadium, venue, view)
 
     app.include_router(public.router)
     app.include_router(account.router)
@@ -17,3 +17,4 @@ def register_routers(app: fastapi.FastAPI):
     app.include_router(reservation.router)
     app.include_router(court.router)
     app.include_router(business_hour.router)
+    app.include_router(view.router)

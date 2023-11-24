@@ -1,8 +1,8 @@
-# with open('logging.yaml', 'r') as conf:
-#     import yaml
-#     log_config = yaml.safe_load(conf.read())
-#     import logging.config
-#     logging.config.dictConfig(log_config)
+with open('logging.yaml', 'r') as conf:
+    import yaml
+    log_config = yaml.safe_load(conf.read())
+    import logging.config
+    logging.config.dictConfig(log_config)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
