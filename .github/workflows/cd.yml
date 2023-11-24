@@ -42,7 +42,7 @@ jobs:
         location: ${{ env.GKE_REGION }}
         project_id: ${{ env.PROJECT_ID }}
 
-    # Build the Docker image
+    # Build and push the Docker image
     - name: Build
       run: |-
         docker build --platform=linux/amd64 -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }} .
