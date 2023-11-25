@@ -1,0 +1,51 @@
+from typing import Sequence
+
+from app.base import enums, vo
+from app.persistence.database.util import PostgresQueryExecutor
+from app.utils.reservation_status import compose_reservation_status
+
+
+async def browse_my_reservation(
+        account_id: int,
+        sort_by: enums.ViewMyReservationSortBy,
+        order: enums.Sorter,
+        limit: int,
+        offset: int,
+) -> Sequence[vo.ViewMyReservation]:
+
+    if sort_by is enums.ViewMyReservationSortBy.status:
+        sort_by = '(start_time, is_cancelled)'
+    if sort_by is enums.ViewMyReservationSortBy.time:
+        sort_by = 'start_time'
+
+    results = await PostgresQueryExecutor(
+        sql=r'SELECT start_time,'
+            r'       end_time,'
+            r'       stadium.name AS stadium_name,'
+            r'       venue.name AS venue_name,'
+            r'       is_manager,'
+            r'       vacancy,'
+            r'       is_cancelled'
+            r'  FROM reservation'
+            r' INNER JOIN venue ON venue.id = reservation.venue_id'
+            r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
+            r' INNER JOIN reservation_member'
+            r'         ON reservation_member.reservation_id = reservation.id'
+            r'        AND reservation_member.account_id = %(account_id)s'
+            fr' ORDER BY {sort_by} {order}'
+            fr' LIMIT %(limit)s OFFSET %(offset)s',
+        account_id=account_id, fetch='all', limit=limit, offset=offset,
+    ).fetch_all()
+
+    return [
+        vo.ViewMyReservation(
+            start_time=start_time,
+            end_time=end_time,
+            stadium_name=stadium_name,
+            venue_name=venue_name,
+            is_manager=is_manager,
+            vacancy=vacancy,
+            status=compose_reservation_status(end_time=end_time, is_cancelled=is_cancelled),
+        )
+        for start_time, end_time, stadium_name, venue_name, is_manager, vacancy, is_cancelled in results
+    ]

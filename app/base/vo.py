@@ -7,7 +7,7 @@ from typing import Sequence
 
 from pydantic import BaseModel, NaiveDatetime
 
-from app.base import do
+from app.base import do, enums
 
 
 class ViewStadium(do.Stadium):
@@ -26,3 +26,13 @@ class WeekTimeRange(BaseModel):
 class DateTimeRange(BaseModel):
     start_time: NaiveDatetime
     end_time: NaiveDatetime
+
+
+class ViewMyReservation(BaseModel):
+    start_time: NaiveDatetime
+    end_time: NaiveDatetime
+    stadium_name: str
+    venue_name: str
+    is_manager: bool
+    vacancy: int
+    status: enums.ReservationStatus

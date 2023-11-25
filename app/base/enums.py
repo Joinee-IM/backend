@@ -48,3 +48,22 @@ class VenueAvailableSortBy(StrEnum):
 class BrowseReservationSortBy(StrEnum):
     vacancy = 'vacancy'
     time = 'time'
+
+
+class ReservationStatus(StrEnum):
+    """
+    This status is NOT stored in db,
+    instead, it's derived from reservation's `start time`, `end time`, and `is_cancelled`.
+    """
+    in_progress = 'IN_PROGRESS'
+    cancelled = 'CANCELLED'
+    finished = 'FINISHED'
+
+
+class ViewMyReservationSortBy(StrEnum):
+    time = 'time'
+    stadium_name = 'stadium_name'
+    venue_name = 'venue_name'
+    is_manager = 'is_manager'
+    vacancy = 'vacancy'
+    status = 'status'

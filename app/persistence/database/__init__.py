@@ -48,4 +48,4 @@ pg_pool_handler = PGPoolHandler()
 # For import usage
 from . import (account, album, business_hour, city, court, district,
                email_verification, gcs_file, reservation, sport, stadium,
-               venue)
+               venue, view)
