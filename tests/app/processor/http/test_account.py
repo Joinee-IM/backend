@@ -22,15 +22,22 @@ class TestReadAccount(AsyncTestCase):
             id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
             role=RoleType.normal, is_verified=True, is_google_login=False,
         )
+        self.image_url = 'image_url'
+        self.account_output = account.ReadAccountOutput(
+            **self.account.model_dump(),
+            image_url=self.image_url,
+        )
         self.expect_output = account.Response(
-            data=self.account,
+            data=self.account_output,
         )
 
     @patch('app.processor.http.account.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read: AsyncMock, mock_context: MockContext):
+    @patch('app.processor.http.account.gcs_handler.sign_url', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_sign: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_read.return_value = self.account
+        mock_sign.return_value = self.image_url
 
         result = await account.read_account(self.account_id)
 
