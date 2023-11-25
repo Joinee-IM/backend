@@ -7,6 +7,7 @@ import app.persistence.database as db
 import app.persistence.file_storage as fs
 from app.base import do, enums
 from app.middleware.headers import get_auth_token
+from app.persistence.file_storage.gcs import gcs_handler
 from app.utils import Response, context
 
 router = APIRouter(
@@ -16,13 +17,21 @@ router = APIRouter(
 )
 
 
+class ReadAccountOutput(do.Account):
+    image_url: str | None
+
+
 @router.get('/account/{account_id}')
-async def read_account(account_id: int) -> Response[do.Account]:
+async def read_account(account_id: int) -> Response[ReadAccountOutput]:
     if account_id != context.account.id:
         raise exc.NoPermission
 
     account = await db.account.read(account_id=account_id)
-    return Response(data=account)
+    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid))
+    return Response(data=ReadAccountOutput(
+        **account.model_dump(),
+        image_url=image_url,
+    ))
 
 
 class EditAccountInput(BaseModel):
