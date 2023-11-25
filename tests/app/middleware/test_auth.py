@@ -4,9 +4,19 @@ from unittest.mock import patch
 from fastapi import Request, Response
 from freezegun import freeze_time
 
+from app.config import AppConfig
 from app.middleware.auth import middleware
 from app.utils.security import AuthedAccount
 from tests import AsyncMock, AsyncTestCase, Mock
+
+
+class MockAppConfig(AppConfig):
+    def __init__(self):
+        self.title = 'title'
+        self.docs_url = 'docs'
+        self.redoc_url = None
+        self.logger_name = None
+        self.allow_origins = ['abc', 'cde']
 
 
 class TestMiddleware(AsyncTestCase):
@@ -14,15 +24,17 @@ class TestMiddleware(AsyncTestCase):
         self.uuid = 'fad08f83-6ad7-429f-baa6-b1c3abf4991c'
         self.context = AsyncTestCase.context
         self.now = datetime(2023, 10, 18)
-        self.request = Request({'type': 'http', 'method': 'GET', 'headers': []})
+        self.request = Request({'type': 'http', 'method': 'GET', 'headers': [(b'origin', b'http://localhost:3000')]})
         self.expect_result = Response(headers={
             'X-Request-UUID': 'fad08f83-6ad7-429f-baa6-b1c3abf4991c',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': 'http://localhost:3000',
+            'Access-Control-Allow-Credentials': 'true',
         })
         self.context_expect_result = {'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
 
         self.request_with_auth_token = Request(
-            {'type': 'http', 'method': 'GET', 'headers': [(b'auth-token', b'token')]},
+            {'type': 'http', 'method': 'GET',
+             'headers': [(b'auth-token', b'token'), (b'origin', b'http://localhost:3000')]},
         )
         self.jwt_result = AuthedAccount(id=1, time=datetime(2023, 10, 18))
         self.context_expect_result_with_auth_token = {
