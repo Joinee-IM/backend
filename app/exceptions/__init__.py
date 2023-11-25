@@ -58,3 +58,11 @@ class CourtReserved(AckException):
     """
     Court is already reserved
     """
+    status_code = 200
+
+
+class ReservationFull(AckException):
+    """
+    Reservation's vacancy <= 0
+    """
+    status_code = 200

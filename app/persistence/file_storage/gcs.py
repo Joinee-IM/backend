@@ -16,9 +16,9 @@ class GCSHandler(BaseFileHandler, metaclass=mcs.Singleton):
     def initialize(self):
         self.client = storage.Client()
 
-    async def upload(self, file: typing.IO, key: UUID = uuid4(), bucket_name: str = 'temp'):
+    async def upload(self, file: typing.IO, key: UUID = uuid4(), bucket_name: str = 'temp', content_type: str = None):
         blob = await self.get_blob(bucket_name=bucket_name, filename=str(key))
-        blob.upload_from_file(file)
+        blob.upload_from_file(file, content_type=content_type)
         return key
 
     async def get_blob(self, bucket_name: str, filename: str) -> storage.blob.Blob:

@@ -26,6 +26,7 @@ pydantic = {extras = ["email"], version = "^2.4.2"}
 Authlib = "^1.2.1"
 httpx = "^0.25.1"
 starlette-session = "^0.4.3"
+requests = "2.30.0"  # need to fix version, since 2.31.0 will fail while uploading image to gcs
 
 [tool.poetry.group.dev.dependencies]
 responses = "^0.23.3"

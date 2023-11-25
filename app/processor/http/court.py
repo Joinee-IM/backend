@@ -1,11 +1,9 @@
-import random
 from datetime import date, datetime
 from typing import Optional, Sequence
 
 from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel, NaiveDatetime
 
-import app.const as const
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
@@ -89,14 +87,13 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
 
 
 class AddReservationInput(BaseModel):
-    court_id: int
     start_time: NaiveDatetime
     end_time: NaiveDatetime
     technical_level: Sequence[enums.TechnicalType] = []
     remark: Optional[str]
     member_count: int
     vacancy: int = -1
-    member_id: Sequence[int] = []
+    member_ids: Sequence[int] = []
 
 
 class AddReservationOutput(BaseModel):
@@ -104,12 +101,12 @@ class AddReservationOutput(BaseModel):
 
 
 @router.post('/court/{court_id}/reservation')
-async def add_reservation(data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
-    if context.account.id not in data.member_id:
+async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
+    if context.account.id not in data.member_ids:
         raise exc.NoPermission
 
     reservations = await db.reservation.browse(
-        court_id=data.court_id,
+        court_id=court_id,
         time_ranges=[vo.DateTimeRange(
             start_time=data.start_time,
             end_time=data.end_time,
@@ -123,11 +120,11 @@ async def add_reservation(data: AddReservationInput, _=Depends(get_auth_token)) 
         raise exc.IllegalInput
 
     invite_code = invitation_code.generate()
-    court = await db.court.read(court_id=data.court_id)
+    court = await db.court.read(court_id=court_id)
     venue = await db.venue.read(venue_id=court.venue_id)
 
     reservation_id = await db.reservation.add(
-        court_id=data.court_id,
+        court_id=court_id,
         venue_id=venue.id,
         stadium_id=venue.stadium_id,
         start_time=data.start_time,
@@ -137,5 +134,10 @@ async def add_reservation(data: AddReservationInput, _=Depends(get_auth_token)) 
         remark=data.remark,
         member_count=data.member_count,
         vacancy=data.vacancy,
+    )
+    await db.reservation_member.batch_add(
+        reservation_id=reservation_id,
+        member_ids=data.member_ids,
+        manager_id=context.account.id,
     )
     return Response(data=AddReservationOutput(id=reservation_id))

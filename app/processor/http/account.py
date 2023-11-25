@@ -1,3 +1,6 @@
+from typing import Sequence
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, UploadFile, responses
 from pydantic import BaseModel
 
@@ -57,12 +60,19 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     if context.account.id != account_id:
         raise exc.NoPermission
 
-    if image.content_type not in ['image/jpeg']:
+    if image.content_type not in ['image/jpeg', 'image/png']:
         log.info(f'received content_type {image.content_type}, denied.')
         raise exc.IllegalInput
 
-    file_uuid, bucket = await fs.avatar.upload(image.file)
+    file_uuid = uuid4()
+    file_uuid, bucket = await fs.avatar.upload(image.file, file_uuid=file_uuid, content_type=image.content_type)
     await db.gcs_file.add(file_uuid=file_uuid, key=str(file_uuid), bucket=bucket, filename=str(file_uuid))
     await db.account.edit(account_id=account_id, image_uuid=file_uuid)
 
     return Response(data=True)
+
+
+@router.get('/account/search')
+async def search_account(query: str) -> Response[Sequence[do.Account]]:
+    accounts = await db.account.search(query=query)
+    return Response(data=accounts)

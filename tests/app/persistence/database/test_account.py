@@ -147,3 +147,20 @@ class TestEdit(AsyncTestCase):
         self.assertIsNone(result)
 
         mock_init.assert_not_called()
+
+
+class TestSearch(AsyncTestCase):
+    def setUp(self) -> None:
+        self.query = 'query'
+        self.raw_accounts = [
+            (1, 'email@email.com', 'nickname', 'MALE', None, 'NORMAL', True, False),
+        ]
+        self.accounts = [
+            do.Account(
+                id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
+                role=RoleType.normal, is_verified=True, is_google_login=False,
+            ),
+        ]
+
+    async def test_happy_path(self):
+        pass

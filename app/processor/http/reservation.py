@@ -3,9 +3,10 @@ from typing import Sequence
 from fastapi import APIRouter, responses
 from pydantic import BaseModel
 
+import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
-from app.utils import Limit, Offset, Response
+from app.utils import Limit, Offset, Response, context
 
 router = APIRouter(
     tags=['Reservation'],
@@ -50,3 +51,18 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Se
 async def read_reservation(reservation_id: int) -> Response[do.Reservation]:
     reservation = await db.reservation.read(reservation_id=reservation_id)
     return Response(data=reservation)
+
+
+@router.post('/reservation/code/{invitation_code}')
+async def join_reservation(invitation_code: str) -> Response[bool]:
+    account_id = context.account.id
+    reservation = await db.reservation.read_by_code(invitation_code=invitation_code)
+
+    if reservation.vacancy <= 0:
+        raise exc.ReservationFull
+
+    await db.reservation_member.batch_add(
+        reservation_id=reservation.id,
+        member_ids=[account_id],
+    )
+    return Response(data=True)
