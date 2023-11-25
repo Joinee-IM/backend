@@ -28,7 +28,7 @@ class TestMiddleware(AsyncTestCase):
         self.expect_result = Response(headers={
             'X-Request-UUID': 'fad08f83-6ad7-429f-baa6-b1c3abf4991c',
             'Access-Control-Allow-Origin': 'http://localhost:3000',
-            'Access-Control-Allow-Credentials': 'True',
+            'Access-Control-Allow-Credentials': 'true',
         })
         self.context_expect_result = {'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
 
