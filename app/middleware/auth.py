@@ -13,4 +13,5 @@ async def middleware(request: Request, call_next):
     response = await call_next(request)
     response.headers['X-Request-UUID'] = str(request_uuid)
     response.headers['Access-Control-Allow-Origin'] = request.headers.get('origin') or '*'
+    response.headers['Access-Control-Allow-Credentials'] = 'True'
     return response
