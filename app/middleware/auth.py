@@ -3,7 +3,6 @@ import uuid
 
 from fastapi import Request
 
-from app.config import app_config
 from app.utils.context import context
 
 
@@ -13,5 +12,5 @@ async def middleware(request: Request, call_next):
     context.set_request_uuid(request_uuid)
     response = await call_next(request)
     response.headers['X-Request-UUID'] = str(request_uuid)
-    response.headers['Access-Control-Allow-Origin'] = '*'
+    response.headers['Access-Control-Allow-Origin'] = request.headers['origin']
     return response
