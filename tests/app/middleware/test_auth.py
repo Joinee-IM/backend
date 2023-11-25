@@ -4,6 +4,7 @@ from unittest.mock import patch
 from fastapi import Request, Response
 from freezegun import freeze_time
 
+from app.config import AppConfig
 from app.middleware.auth import middleware
 from app.utils.security import AuthedAccount
 from app.config import AppConfig
@@ -56,6 +57,7 @@ class TestMiddleware(AsyncTestCase):
         self.assertDictEqual(dict(result.headers), dict(self.expect_result.headers))
 
     @freeze_time('2023-10-18')
+    @patch('app.middleware.auth.app_config', MockAppConfig())
     async def test_with_auth_token(self):
         with (
             patch('app.middleware.auth.context', self.context) as context,
