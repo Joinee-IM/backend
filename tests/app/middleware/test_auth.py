@@ -6,7 +6,17 @@ from freezegun import freeze_time
 
 from app.middleware.auth import middleware
 from app.utils.security import AuthedAccount
+from app.config import AppConfig
 from tests import AsyncMock, AsyncTestCase, Mock
+
+
+class MockAppConfig(AppConfig):
+    def __init__(self):
+        self.title = 'title'
+        self.docs_url = 'docs'
+        self.redoc_url = None
+        self.logger_name = None
+        self.allow_origins = ['abc', 'cde']
 
 
 class TestMiddleware(AsyncTestCase):
@@ -17,7 +27,7 @@ class TestMiddleware(AsyncTestCase):
         self.request = Request({'type': 'http', 'method': 'GET', 'headers': []})
         self.expect_result = Response(headers={
             'X-Request-UUID': 'fad08f83-6ad7-429f-baa6-b1c3abf4991c',
-            'Access-Control-Allow-Origin': '*',
+            'Access-Control-Allow-Origin': 'abc, cde',
         })
         self.context_expect_result = {'REQUEST_TIME': self.now, 'REQUEST_UUID': self.uuid}
 
@@ -33,6 +43,7 @@ class TestMiddleware(AsyncTestCase):
         self.call_next = AsyncMock(return_value=Response())
 
     @freeze_time('2023-10-18')
+    @patch('app.middleware.auth.app_config', MockAppConfig())
     async def test_without_auth_token(self):
         with (
             patch('app.middleware.auth.context', self.context) as context,
