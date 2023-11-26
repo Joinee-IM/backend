@@ -7,7 +7,7 @@ from pydantic import BaseModel, NaiveDatetime
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
-from app.client.google_calendar import add_google_calendar_event
+from app.client import google_calendar
 from app.middleware.headers import get_auth_token
 from app.utils import Response, context, invitation_code
 
@@ -138,7 +138,7 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
         member_ids=data.member_ids,
         manager_id=context.account.id,
     )
-    await add_google_calendar_event(
+    await google_calendar.add_google_calendar_event(
         start_time=data.start_time,
         end_time=data.end_time,
         account_id=context.account.id,

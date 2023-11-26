@@ -29,11 +29,11 @@ class GoogleCalendar:
             'summary': data.summary,
             'location': data.stadium_name,
             'start': {
-                'dateTime': str(data.start_time),
+                'dateTime': data.start_time.isoformat(),
                 'timeZone': 'Asia/Taipei',
             },
             'end': {
-                'dateTime': str(data.end_time),
+                'dateTime': data.end_time.isoformat(),
                 'timeZone': 'Asia/Taipei',
             },
             'attendees': [email.dict() for email in data.member_emails],
@@ -46,8 +46,7 @@ class GoogleCalendar:
             },
         }
 
-        event = self.service.events().insert(calendarId='primary', body=event, sendUpdates="all").execute()
-        # print('Event created: %s' % (event.get('htmlLink')))
+        self.service.events().insert(calendarId='primary', body=event, sendUpdates="all").execute()
 
 
 class Email(BaseModel):

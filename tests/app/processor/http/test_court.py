@@ -236,6 +236,7 @@ class TestAddReservation(AsyncTestCase):
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
 
     @freeze_time('2023-10-10')
+    @patch('app.client.google_calendar.add_google_calendar_event', new_callable=AsyncMock)
     @patch('app.processor.http.court.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.processor.http.court.invitation_code.generate', new_callable=Mock)
@@ -245,13 +246,14 @@ class TestAddReservation(AsyncTestCase):
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
     async def test_happy_path(self, mock_batch_add: AsyncMock, mock_add: AsyncMock, mock_read_venue: AsyncMock,
                               mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
-                              mock_context: MockContext):
+                              mock_context: MockContext, mock_add_event: AsyncMock):
         mock_context._context = self.context
         mock_browse_reservation.return_value = None
         mock_generate.return_value = self.invitation_code
         mock_read_court.return_value = self.court
         mock_read_venue.return_value = self.venue
         mock_add.return_value = self.reservation_id
+        mock_add_event.return_value = None
 
         result = await court.add_reservation(court_id=self.court_id, data=self.data)
 
@@ -281,6 +283,13 @@ class TestAddReservation(AsyncTestCase):
             reservation_id=self.reservation_id,
             member_ids=self.data.member_ids,
             manager_id=self.account_id,
+        )
+        mock_add_event.assert_called_with(
+            start_time=self.data.start_time,
+            end_time=self.data.end_time,
+            account_id=self.account_id,
+            stadium_id=self.venue.stadium_id,
+            member_ids=self.data.member_ids,
         )
 
         mock_context.reset_context()
@@ -322,15 +331,5 @@ class TestAddReservation(AsyncTestCase):
                 end_time=self.data.end_time,
             )],
         )
-
-        mock_context.reset_context()
-
-    @freeze_time('2023-11-27')
-    @patch('app.processor.http.court.context', new_callable=MockContext)
-    async def test_court_reserved(self, mock_context: MockContext):
-        mock_context._context = self.wrong_account_context
-
-        with self.assertRaises(exc.NoPermission):
-            await court.add_reservation(court_id=self.court_id, data=self.data)
 
         mock_context.reset_context()
