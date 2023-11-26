@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from fastapi import APIRouter, responses
+from fastapi import APIRouter, Query, responses
 from pydantic import BaseModel
 
 import app.persistence.database as db
@@ -15,8 +15,8 @@ router = APIRouter(
 
 
 class BrowseAlbumInput(BaseModel):
-    place_id: int
-    place_type: enums.PlaceType
+    place_id: int = Query()
+    place_type: enums.PlaceType = Query()
 
 
 class BrowseAlbumOutput(BaseModel):
