@@ -3,9 +3,10 @@ from typing import Sequence
 from fastapi import APIRouter, responses
 from pydantic import BaseModel
 
+import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
-from app.utils import Limit, Offset, Response
+from app.utils import Limit, Offset, Response, context
 
 router = APIRouter(
     tags=['Reservation'],
@@ -26,9 +27,15 @@ class BrowseReservationParameters(BaseModel):
     order: enums.Sorter = enums.Sorter.desc
 
 
+class BrowseReservationOutput(BaseModel):
+    data: Sequence[do.Reservation]
+    total_count: int
+
+
+# use POST here since GET can't process request body
 @router.post('/view/reservation')
-async def browse_reservation(params: BrowseReservationParameters) -> Response[Sequence[do.Reservation]]:
-    reservations = await db.reservation.browse(
+async def browse_reservation(params: BrowseReservationParameters) -> Response[BrowseReservationOutput]:
+    reservations, total_count = await db.reservation.browse(
         city_id=params.city_id,
         district_id=params.district_id,
         sport_id=params.sport_id,
@@ -42,7 +49,10 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Se
     )
 
     return Response(
-        data=reservations,
+        data=BrowseReservationOutput(
+            data=reservations,
+            total_count=total_count,
+        ),
     )
 
 
@@ -50,3 +60,18 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Se
 async def read_reservation(reservation_id: int) -> Response[do.Reservation]:
     reservation = await db.reservation.read(reservation_id=reservation_id)
     return Response(data=reservation)
+
+
+@router.post('/reservation/code/{invitation_code}')
+async def join_reservation(invitation_code: str) -> Response[bool]:
+    account_id = context.account.id
+    reservation = await db.reservation.read_by_code(invitation_code=invitation_code)
+
+    if reservation.vacancy <= 0:
+        raise exc.ReservationFull
+
+    await db.reservation_member.batch_add(
+        reservation_id=reservation.id,
+        member_ids=[account_id],
+    )
+    return Response(data=True)

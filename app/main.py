@@ -1,8 +1,8 @@
-# with open('logging.yaml', 'r') as conf:
-#     import yaml
-#     log_config = yaml.safe_load(conf.read())
-#     import logging.config
-#     logging.config.dictConfig(log_config)
+with open('logging.yaml', 'r') as conf:
+    import yaml
+    log_config = yaml.safe_load(conf.read())
+    import logging.config
+    logging.config.dictConfig(log_config)
 
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
@@ -19,7 +19,7 @@ app = FastAPI(
 
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=app_config.allow_origins,  # don't use '*' in allow origins
+    allow_origins=['*'],  # don't use '*' in allow origins
     allow_credentials=True,
     allow_methods=['*'],
     allow_headers=['*'],

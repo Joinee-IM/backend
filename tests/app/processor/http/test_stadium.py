@@ -70,11 +70,15 @@ class TestBrowseStadium(AsyncTestCase):
                 ]
             ),
         ]
-        self.expect_result = Response(data=self.stadiums)
+        self.total_count = 1
+        self.expect_result = Response(data=stadium.BrowseStadiumOutput(
+            data=self.stadiums,
+            total_count=self.total_count
+        ))
 
     @patch('app.persistence.database.stadium.browse', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock):
-        mock_browse.return_value = self.stadiums
+        mock_browse.return_value = self.stadiums, self.total_count
 
         result = await stadium.browse_stadium(params=self.params)
 

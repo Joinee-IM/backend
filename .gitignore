@@ -162,3 +162,4 @@ cython_debug/
 config/
 
 .DS_Store
+gcp-service-account.json

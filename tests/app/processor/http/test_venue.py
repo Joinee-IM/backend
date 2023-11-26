@@ -17,6 +17,7 @@ class TestBrowseVenue(AsyncTestCase):
             limit=10,
             offset=0,
         )
+        self.total_count = 1
         self.venues = [
             do.Venue(
                 id=1,
@@ -57,11 +58,13 @@ class TestBrowseVenue(AsyncTestCase):
                 facilities='facility1',
             ),
         ]
-        self.expect_result = venue.Response(data=self.venues)
+        self.expect_result = venue.Response(
+            data=venue.BrowseVenueOutput(data=self.venues, total_count=self.total_count)
+        )
 
     @patch('app.persistence.database.venue.browse', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock):
-        mock_browse.return_value = self.venues
+        mock_browse.return_value = self.venues, self.total_count
 
         result = await venue.browse_venue(params=self.params)
 

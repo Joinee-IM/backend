@@ -1,4 +1,4 @@
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import app.exceptions as exc
 from app.base import do, enums
@@ -26,6 +26,7 @@ class TestBrowse(AsyncTestCase):
             (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1),
             (2, 2, 'name2', 'floor2', 2, False, False, 2, 'PER_PERSON', 2, 2, 2, 'equipment1', 'facility1', 2, '場', 2),
         ]
+        self.total_count = 1
 
         self.venues = [
             do.Venue(
@@ -66,13 +67,14 @@ class TestBrowse(AsyncTestCase):
                 sport_equipments='equipment1',
                 facilities='facility1',
             ),
-        ]
+        ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_venue
-
+        mock_fetch.return_value = self.total_count,
         result = await venue.browse(
             name=self.name,
             sport_id=self.sport_id,
@@ -84,16 +86,29 @@ class TestBrowse(AsyncTestCase):
         )
 
         self.assertEqual(result, self.venues)
-        mock_init.assert_called_with(
-            sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-                fr'       sport_equipments, facilities, court_count, court_type, sport_id'
-                fr'  FROM venue'
-                fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
-                fr' ORDER BY current_user_count DESC, venue.id'
-                fr' LIMIT %(limit)s OFFSET %(offset)s',
-            limit=self.limit, offset=self.offset, fetch='all', **self.params,
-        )
+        mock_init.assert_has_calls([
+            call(
+                sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                    fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                    fr'  FROM venue'
+                    fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    fr' ORDER BY current_user_count DESC, venue.id'
+                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                limit=self.limit, offset=self.offset, fetch='all', **self.params,
+            ),
+            call(
+                sql=fr'SELECT COUNT(*)'
+                    fr'  FROM ('
+                    fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                    fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                    fr'  FROM venue'
+                    fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    fr' ORDER BY current_user_count DESC, venue.id) AS tbl',
+                fetch=1, **self.params,
+            )
+        ])
 
 
 class TestRead(AsyncTestCase):

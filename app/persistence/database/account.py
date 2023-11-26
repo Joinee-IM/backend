@@ -1,4 +1,4 @@
-from typing import Optional
+from typing import Optional, Sequence
 from uuid import UUID
 
 import asyncpg
@@ -124,3 +124,22 @@ async def edit(
             fr' WHERE id = %(account_id)s',
         account_id=account_id, **to_update, fetch=None,
     ).execute()
+
+
+async def search(query: str) -> Sequence[do.Account]:
+    results = await PostgresQueryExecutor(
+        r'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
+        r'  FROM account'
+        r' WHERE (email LIKE %(query)s'
+        r'    OR nickname LIKE %(query)s)'
+        r'   AND is_verified = %(is_verified)s',
+        query=query, is_verified=True, fetch='all',
+    ).fetch_all()
+
+    return [
+        do.Account(
+            id=id_, email=email, nickname=nickname, gender=GenderType(gender), image_uuid=image_uuid,
+            role=RoleType(role), is_verified=is_verified, is_google_login=is_google_login,
+        )
+        for id_, email, nickname, gender, image_uuid, role, is_verified, is_google_login in results
+    ]

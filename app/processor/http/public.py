@@ -56,8 +56,8 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
         raise exc.LoginFailed
 
     token = encode_jwt(account_id=account_id)
-    response.set_cookie(key="account_id", value=str(account_id), httponly=True)
-    response.set_cookie(key="token", value=str(token), httponly=True)
+    response.set_cookie(key="account_id", value=str(account_id), httponly=True, samesite='none', secure=True)
+    response.set_cookie(key="token", value=str(token), httponly=True, samesite='none', secure=True)
     return Response(data=LoginOutput(account_id=account_id, token=token))
 
 

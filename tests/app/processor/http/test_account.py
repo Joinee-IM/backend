@@ -10,7 +10,7 @@ from app.base import do
 from app.base.enums import GenderType, RoleType
 from app.processor.http import account
 from app.utils.security import AuthedAccount
-from tests import AsyncMock, AsyncTestCase, MockContext
+from tests import AsyncMock, AsyncTestCase, Mock, MockContext
 
 
 class TestReadAccount(AsyncTestCase):
@@ -22,15 +22,22 @@ class TestReadAccount(AsyncTestCase):
             id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
             role=RoleType.normal, is_verified=True, is_google_login=False,
         )
+        self.image_url = 'image_url'
+        self.account_output = account.ReadAccountOutput(
+            **self.account.model_dump(),
+            image_url=self.image_url,
+        )
         self.expect_output = account.Response(
-            data=self.account,
+            data=self.account_output,
         )
 
     @patch('app.processor.http.account.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read: AsyncMock, mock_context: MockContext):
+    @patch('app.processor.http.account.gcs_handler.sign_url', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_sign: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_read.return_value = self.account
+        mock_sign.return_value = self.image_url
 
         result = await account.read_account(self.account_id)
 
@@ -107,15 +114,16 @@ class TestUploadAccountImage(AsyncTestCase):
         self.expect_result = account.Response(data=True)
 
     @patch('app.processor.http.account.context', new_callable=MockContext)
+    @patch('app.processor.http.account.uuid4', new_callable=Mock)
     @patch('app.persistence.file_storage.avatar.upload', new_callable=AsyncMock)
     @patch('app.persistence.database.gcs_file.add', new_callable=AsyncMock)
     @patch('app.persistence.database.account.edit', new_callable=AsyncMock)
     async def test_happy_path(
         self, mock_edit: AsyncMock, mock_add: AsyncMock,
-        mock_upload: AsyncMock, mock_context: MockContext,
+        mock_upload: AsyncMock, mock_uuid: Mock, mock_context: MockContext,
     ):
         mock_context._context = self.context
-
+        mock_uuid.return_value = self.file_uuid
         mock_upload.return_value = self.file_uuid, self.bucket_name
 
         result = await account.upload_account_image(account_id=self.account_id, image=self.accept_image)
@@ -123,6 +131,8 @@ class TestUploadAccountImage(AsyncTestCase):
         self.assertEqual(result, self.expect_result)
         mock_upload.assert_called_with(
             self.accept_image.file,
+            file_uuid=self.file_uuid,
+            content_type=self.accept_image.content_type,
         )
         mock_add.assert_called_with(
             file_uuid=self.file_uuid, key=str(self.file_uuid),
@@ -171,3 +181,28 @@ class TestUploadAccountImage(AsyncTestCase):
         mock_add.assert_not_called()
         mock_edit.assert_not_called()
         mock_context.reset_context()
+
+
+class TestSearchAccount(AsyncTestCase):
+    def setUp(self) -> None:
+        self.query = 'query'
+        self.accounts = [
+            do.Account(
+                id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
+                role=RoleType.normal, is_verified=True, is_google_login=False,
+            ),
+        ]
+        self.expect_result = account.Response(
+            data=self.accounts,
+        )
+
+    @patch('app.persistence.database.account.search', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_search: AsyncMock):
+        mock_search.return_value = self.accounts
+
+        result = await account.search_account(query=self.query)
+
+        self.assertEqual(result, self.expect_result)
+        mock_search.assert_called_with(
+            query=self.query,
+        )

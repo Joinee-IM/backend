@@ -1,3 +1,6 @@
+from typing import Sequence
+from uuid import uuid4
+
 from fastapi import APIRouter, Depends, UploadFile, responses
 from pydantic import BaseModel
 
@@ -7,6 +10,7 @@ import app.persistence.database as db
 import app.persistence.file_storage as fs
 from app.base import do, enums
 from app.middleware.headers import get_auth_token
+from app.persistence.file_storage.gcs import gcs_handler
 from app.utils import Response, context
 
 router = APIRouter(
@@ -16,13 +20,21 @@ router = APIRouter(
 )
 
 
+class ReadAccountOutput(do.Account):
+    image_url: str | None
+
+
 @router.get('/account/{account_id}')
-async def read_account(account_id: int) -> Response[do.Account]:
+async def read_account(account_id: int) -> Response[ReadAccountOutput]:
     if account_id != context.account.id:
         raise exc.NoPermission
 
     account = await db.account.read(account_id=account_id)
-    return Response(data=account)
+    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid))
+    return Response(data=ReadAccountOutput(
+        **account.model_dump(),
+        image_url=image_url,
+    ))
 
 
 class EditAccountInput(BaseModel):
@@ -48,12 +60,19 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     if context.account.id != account_id:
         raise exc.NoPermission
 
-    if image.content_type not in ['image/jpeg']:
+    if image.content_type not in ['image/jpeg', 'image/png']:
         log.info(f'received content_type {image.content_type}, denied.')
         raise exc.IllegalInput
 
-    file_uuid, bucket = await fs.avatar.upload(image.file)
+    file_uuid = uuid4()
+    file_uuid, bucket = await fs.avatar.upload(image.file, file_uuid=file_uuid, content_type=image.content_type)
     await db.gcs_file.add(file_uuid=file_uuid, key=str(file_uuid), bucket=bucket, filename=str(file_uuid))
     await db.account.edit(account_id=account_id, image_uuid=file_uuid)
 
     return Response(data=True)
+
+
+@router.get('/account/search')
+async def search_account(query: str) -> Response[Sequence[do.Account]]:
+    accounts = await db.account.search(query=query)
+    return Response(data=accounts)

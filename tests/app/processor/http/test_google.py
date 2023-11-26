@@ -5,7 +5,7 @@ from fastapi import Request
 from starlette.responses import RedirectResponse
 
 import app.exceptions as exc
-from app.base import do
+from app.base import do, enums
 from app.processor.http import google
 from app.utils import Response
 from tests import AsyncMock, AsyncTestCase, Mock
@@ -14,16 +14,18 @@ from tests import AsyncMock, AsyncTestCase, Mock
 class TestGoogleLogin(AsyncTestCase):
     def setUp(self) -> None:
         self.request = Request(scope={'type': 'http'})
+        self.role = enums.RoleType.normal
 
     @patch('app.client.oauth.OAuthHandler.login', AsyncMock(return_value=None))
     async def test_happy_path(self):
-        result = await google.google_login(request=self.request)
+        result = await google.google_login(request=self.request, role=self.role)
         self.assertIsNone(result)
 
 
 class TestAuth(AsyncTestCase):
     def setUp(self) -> None:
-        self.request = Request({'type': 'http', 'query_string': b''})
+        self.role = 'PROVIDER'
+        self.request = Request({'type': 'http', 'query_string': {'state': self.role}})
         self.email = 'user@user.com'
         self.access_token = 'access_token'
         self.refresh_token = 'refresh_token'
@@ -82,6 +84,7 @@ class TestAuth(AsyncTestCase):
         mock_read.assert_called_with(email=self.email)
         mock_add.assert_called_with(
             email=self.email, is_google_login=True,
+            role=self.role,
             access_token=self.access_token,
             refresh_token=self.refresh_token,
         )
