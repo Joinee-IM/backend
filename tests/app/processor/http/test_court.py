@@ -84,7 +84,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     ):
         mock_read_court.return_value = self.court
         mock_browse_business_hour.return_value = self.business_hours
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
 
         result = await court.browse_reservation_by_court_id(
             court_id=self.court_id,
@@ -106,7 +106,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     ):
         mock_read_court.return_value = self.court
         mock_browse_business_hour.return_value = self.business_hours
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
 
         with self.assertRaises(exc.NotFound):
             await court.browse_reservation_by_court_id(
@@ -127,7 +127,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     ):
         mock_read_court.return_value = self.court
         mock_browse_business_hour.return_value = self.business_hours
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
 
         result = await court.browse_reservation_by_court_id(
             court_id=self.court_id,
@@ -150,7 +150,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     ):
         mock_read_court.return_value = self.court
         mock_browse_business_hour.return_value = self.business_hours
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
 
         result = await court.browse_reservation_by_court_id(
             court_id=self.court_id,
@@ -171,7 +171,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     ):
         mock_read_court.return_value = self.court
         mock_browse_business_hour.side_effect = None
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
         with self.assertRaises(exc.NotFound):
             await court.browse_reservation_by_court_id(
                 court_id=self.court_id,
@@ -247,7 +247,7 @@ class TestAddReservation(AsyncTestCase):
                               mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
                               mock_context: MockContext):
         mock_context._context = self.context
-        mock_browse_reservation.return_value = None
+        mock_browse_reservation.return_value = None, 0
         mock_generate.return_value = self.invitation_code
         mock_read_court.return_value = self.court
         mock_read_venue.return_value = self.venue
@@ -290,7 +290,7 @@ class TestAddReservation(AsyncTestCase):
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_illegal_time(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
-        mock_browse_reservation.return_value = None
+        mock_browse_reservation.return_value = None, 0
 
         with self.assertRaises(exc.IllegalInput):
             await court.add_reservation(court_id=self.court_id, data=self.data)
@@ -310,7 +310,7 @@ class TestAddReservation(AsyncTestCase):
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_court(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
-        mock_browse_reservation.return_value = self.reservations
+        mock_browse_reservation.return_value = self.reservations, 1
 
         with self.assertRaises(exc.CourtReserved):
             await court.add_reservation(court_id=self.court_id, data=self.data)

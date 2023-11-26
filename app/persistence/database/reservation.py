@@ -23,7 +23,7 @@ async def browse(
         offset: int | None = None,
         sort_by: enums.BrowseReservationSortBy = None,
         order: enums.Sorter = None,
-) -> Sequence[do.Reservation]:
+) -> tuple[Sequence[do.Reservation], int]:
     if not end_date and start_date:
         end_date = start_date + timedelta(days=7)
     criteria_dict = {
@@ -64,22 +64,32 @@ async def browse(
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
     where_sql += (' AND ' if where_sql else 'WHERE ') + or_query if or_query else ''
 
+    sql = (
+        fr'SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+        fr'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+        fr'  FROM reservation'
+        fr' INNER JOIN stadium'
+        fr'         ON stadium.id = reservation.stadium_id'
+        fr' INNER JOIN district'
+        fr'         ON stadium.district_id = district.id'
+        fr' INNER JOIN venue'
+        fr'         ON venue.id = reservation.venue_id'
+        fr' {where_sql}'
+        fr' ORDER BY {f"{sort_by_dict[sort_by]} {order}, " if sort_by else ""}start_time'
+    )
+
     results = await PostgresQueryExecutor(
-        sql=fr'SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-            fr'       vacancy, technical_level, remark, invitation_code, is_cancelled'
-            fr'  FROM reservation'
-            fr' INNER JOIN stadium'
-            fr'         ON stadium.id = reservation.stadium_id'
-            fr' INNER JOIN district'
-            fr'         ON stadium.district_id = district.id'
-            fr' INNER JOIN venue'
-            fr'         ON venue.id = reservation.venue_id'
-            fr' {where_sql}'
-            fr' ORDER BY {f"{sort_by_dict[sort_by]} {order}, " if sort_by else ""}start_time'
+        sql=fr'{sql}'
             fr'{" LIMIT %(limit)s" if limit else ""}'
             fr'{" OFFSET %(offset)s" if offset else ""}',
         fetch='all', **params, limit=limit, offset=offset,
     ).execute()
+
+    total_count, = await PostgresQueryExecutor(
+        sql=fr'SELECT COUNT(*)'
+            fr'  FROM ({sql}) AS tbl',
+        fetch=1, **params,
+    ).fetch_one()
 
     return [
         do.Reservation(
@@ -98,7 +108,7 @@ async def browse(
         )
         for id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level,
         remark, invitation_code, is_cancelled in results
-    ]
+    ], total_count
 
 
 async def add(

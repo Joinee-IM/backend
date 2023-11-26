@@ -3,7 +3,7 @@ from datetime import date, datetime
 import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database import reservation
-from tests import AsyncMock, AsyncTestCase, Mock, patch
+from tests import AsyncMock, AsyncTestCase, Mock, call, patch
 
 
 class TestBrowse(AsyncTestCase):
@@ -32,6 +32,7 @@ class TestBrowse(AsyncTestCase):
             (1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False),
             (2, 2, 2, 2, datetime(2023, 11, 17), datetime(2023, 11, 17), 2, 2, ['ADVANCED'], '', '', False),
         ]
+        self.total_count = 1
 
         self.reservations = [
             do.Reservation(
@@ -50,12 +51,14 @@ class TestBrowse(AsyncTestCase):
             )
             for id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level,
             remark, invitation_code, is_cancelled in self.raw_reservations
-        ]
+        ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_reservations
+        mock_fetch.return_value = self.total_count,
 
         result = await reservation.browse(
             court_id=self.court_id,
@@ -66,27 +69,49 @@ class TestBrowse(AsyncTestCase):
         )
 
         self.assertEqual(result, self.reservations)
-        mock_init.assert_called_with(
-            sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                '       vacancy, technical_level, remark, invitation_code, is_cancelled'
-                '  FROM reservation'
-                ' INNER JOIN stadium'
-                '         ON stadium.id = reservation.stadium_id'
-                ' INNER JOIN district'
-                '         ON stadium.district_id = district.id'
-                ' INNER JOIN venue'
-                '         ON venue.id = reservation.venue_id'
-                ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
-                ' AND is_cancelled = %(is_cancelled)s'
-                ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
-                ' ORDER BY start_time',
-            fetch='all', **self.params, limit=None, offset=None
-        )
+        mock_init.assert_has_calls([
+            call(
+                sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                    '       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                    '  FROM reservation'
+                    ' INNER JOIN stadium'
+                    '         ON stadium.id = reservation.stadium_id'
+                    ' INNER JOIN district'
+                    '         ON stadium.district_id = district.id'
+                    ' INNER JOIN venue'
+                    '         ON venue.id = reservation.venue_id'
+                    ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
+                    ' AND is_cancelled = %(is_cancelled)s'
+                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' ORDER BY start_time',
+                fetch='all', **self.params, limit=None, offset=None,
+            ),
+            call(
+                sql='SELECT COUNT(*)'
+                    '  FROM ('
+                    'SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                    '       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                    '  FROM reservation'
+                    ' INNER JOIN stadium'
+                    '         ON stadium.id = reservation.stadium_id'
+                    ' INNER JOIN district'
+                    '         ON stadium.district_id = district.id'
+                    ' INNER JOIN venue'
+                    '         ON venue.id = reservation.venue_id'
+                    ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
+                    ' AND is_cancelled = %(is_cancelled)s'
+                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' ORDER BY start_time) AS tbl',
+                fetch=1, **self.params,
+            ),
+        ])
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_no_end_date(self, mock_execute: AsyncMock, mock_init: Mock):
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_no_end_date(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_reservations
+        mock_fetch.return_value = self.total_count,
 
         result = await reservation.browse(
             court_id=self.court_id,
@@ -96,22 +121,42 @@ class TestBrowse(AsyncTestCase):
         )
 
         self.assertEqual(result, self.reservations)
-        mock_init.assert_called_with(
-            sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                '       vacancy, technical_level, remark, invitation_code, is_cancelled'
-                '  FROM reservation'
-                ' INNER JOIN stadium'
-                '         ON stadium.id = reservation.stadium_id'
-                ' INNER JOIN district'
-                '         ON stadium.district_id = district.id'
-                ' INNER JOIN venue'
-                '         ON venue.id = reservation.venue_id'
-                ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
-                ' AND is_cancelled = %(is_cancelled)s'
-                ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
-                ' ORDER BY start_time',
-            fetch='all', **self.params, limit=None, offset=None,
-        )
+        mock_init.assert_has_calls([
+            call(
+                sql='SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                    '       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                    '  FROM reservation'
+                    ' INNER JOIN stadium'
+                    '         ON stadium.id = reservation.stadium_id'
+                    ' INNER JOIN district'
+                    '         ON stadium.district_id = district.id'
+                    ' INNER JOIN venue'
+                    '         ON venue.id = reservation.venue_id'
+                    ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
+                    ' AND is_cancelled = %(is_cancelled)s'
+                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' ORDER BY start_time',
+                fetch='all', **self.params, limit=None, offset=None,
+            ),
+            call(
+                sql='SELECT COUNT(*)'
+                    '  FROM ('
+                    'SELECT reservation.id, reservation.stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+                    '       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                    '  FROM reservation'
+                    ' INNER JOIN stadium'
+                    '         ON stadium.id = reservation.stadium_id'
+                    ' INNER JOIN district'
+                    '         ON stadium.district_id = district.id'
+                    ' INNER JOIN venue'
+                    '         ON venue.id = reservation.venue_id'
+                    ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
+                    ' AND is_cancelled = %(is_cancelled)s'
+                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' ORDER BY start_time) AS tbl',
+                fetch=1, **self.params,
+            ),
+        ])
 
 
 class TestAdd(AsyncTestCase):
