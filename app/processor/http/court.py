@@ -103,6 +103,7 @@ class AddReservationOutput(BaseModel):
 
 @router.post('/court/{court_id}/reservation')
 async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
+    account_id = context.account.id
     reservations = await db.reservation.browse(
         court_id=court_id,
         time_ranges=[vo.DateTimeRange(
@@ -135,13 +136,14 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     )
     await db.reservation_member.batch_add(
         reservation_id=reservation_id,
-        member_ids=data.member_ids,
-        manager_id=context.account.id,
+        member_ids=data.member_ids + [account_id],
+        manager_id=account_id,
     )
     await google_calendar.add_google_calendar_event(
+        reservation_id=reservation_id,
         start_time=data.start_time,
         end_time=data.end_time,
-        account_id=context.account.id,
+        account_id=account_id,
         member_ids=data.member_ids,
         stadium_id=venue.stadium_id,
     )

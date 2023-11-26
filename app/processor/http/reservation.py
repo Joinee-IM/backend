@@ -6,6 +6,7 @@ from pydantic import BaseModel
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
+from app.client import google_calendar
 from app.utils import Limit, Offset, Response, context
 
 router = APIRouter(
@@ -65,4 +66,10 @@ async def join_reservation(invitation_code: str) -> Response[bool]:
         reservation_id=reservation.id,
         member_ids=[account_id],
     )
+
+    await google_calendar.update_google_calendar_event(
+        reservation_id=reservation.id,
+        member_id=account_id,
+    )
+
     return Response(data=True)

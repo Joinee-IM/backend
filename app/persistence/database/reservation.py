@@ -180,3 +180,35 @@ async def read_by_code(invitation_code: str) -> do.Reservation:
         invitation_code=invitation_code,
         is_cancelled=is_cancelled,
     )
+
+
+async def add_event_id(reservation_id: int, event_id: str):
+    await PostgresQueryExecutor(
+        sql=r"UPDATE reservation"
+            r"   SET google_event_id = %(event_id)s"
+            r" WHERE id = %(reservation_id)s",
+        reservation_id=reservation_id, event_id=event_id
+    ).execute()
+
+
+async def get_event_id(reservation_id: int):
+    event_id = await PostgresQueryExecutor(
+        sql=r"SELECT google_event_id"
+            r"  FROM reservation"
+            r" WHERE id = %(reservation_id)s",
+        reservation_id=reservation_id, fetch="one"
+    )
+
+    return event_id
+
+
+async def get_manager_id(reservation_id: int):
+    account_id = await PostgresQueryExecutor(
+        sql=r"SELECT reservation_member.account_id"
+            r"  FROM reservation"
+            r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+            r" WHERE resevation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+        reservation_id=reservation_id, fetch="one"
+    ).execute()
+
+    return account_id

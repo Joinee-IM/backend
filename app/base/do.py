@@ -104,6 +104,7 @@ class Reservation(BaseModel):
     remark: Optional[str]
     invitation_code: str
     is_cancelled: bool
+    google_event_id: Optional[str]
 
 
 class Court(BaseModel):
