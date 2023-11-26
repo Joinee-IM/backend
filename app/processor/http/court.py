@@ -8,7 +8,6 @@ import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
 from app.client import google_calendar
-from app.client import google_calendar
 from app.middleware.headers import get_auth_token
 from app.utils import Response, context, invitation_code
 

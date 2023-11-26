@@ -17,3 +17,35 @@ async def batch_add(reservation_id: int, member_ids: Sequence[int], manager_id: 
             fr'     VALUES {value_sql}',
         reservation_id=reservation_id, is_joined=False, **params, fetch=None,
     ).execute()
+
+
+async def browse(
+        reservation_id: int | None = None,
+        account_id: int | None = None,
+) -> Sequence[do.ReservationMember]:
+
+    criteria_dict = {
+        'reservation_id': (reservation_id, 'reservation_id = %(reservation_id)s'),
+        'account_id': (account_id, 'account_id = %(account_id)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+
+    where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
+
+    results = await PostgresQueryExecutor(
+        sql=r'SELECT reservation_id, account_id, is_manager, is_joined'
+            r'  FROM reservation_member'
+            fr' {where_sql}'
+            r' ORDER BY is_manager, account_id',
+        **params, fetch='all',
+    ).fetch_all()
+
+    return [
+        do.ReservationMember(
+            reservation_id=reservation_id,
+            account_id=account_id,
+            is_manager=is_manager,
+            is_joined=is_joined,
+        ) for reservation_id, account_id, is_manager, is_joined in results
+    ]
