@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from fastapi import APIRouter, responses, Depends
+from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
 
 import app.exceptions as exc
