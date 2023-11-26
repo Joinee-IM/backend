@@ -23,7 +23,7 @@ router = APIRouter(
 
 
 @router.get('/google-login')
-async def google_login(request: Request, role: enums.RoleType):
+async def google_login(request: Request, role: enums.RoleType | None = None):
     return await oauth_handler.login(request=request, state=role)
 
 
