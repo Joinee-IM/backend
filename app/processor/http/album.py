@@ -1,6 +1,6 @@
 from typing import Sequence
 
-from fastapi import APIRouter, Query, responses
+from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
 
 import app.persistence.database as db
@@ -24,7 +24,7 @@ class BrowseAlbumOutput(BaseModel):
 
 
 @router.get('/album')
-async def browse_album(params: BrowseAlbumInput) -> Response[Sequence[BrowseAlbumOutput]]:
+async def browse_album(params: BrowseAlbumInput = Depends()) -> Response[BrowseAlbumOutput]:
     albums = await db.album.browse(
         place_type=params.place_type,
         place_id=params.place_id,
