@@ -16,7 +16,7 @@ async def browse(
         time_ranges: Sequence[vo.WeekTimeRange] | None = None,
         limit: int = 10,
         offset: int = 0,
-) -> Sequence[vo.ViewStadium]:
+) -> tuple[Sequence[vo.ViewStadium], int]:
     criteria_dict = {
         'name': (f'%{name}%' if name else None, 'stadium.name LIKE %(name)s'),
         'city_id': (city_id, 'district.city_id = %(city_id)s'),
@@ -47,26 +47,36 @@ async def browse(
 
     where_sql += (' AND ' if where_sql else 'WHERE ') + or_query if or_query else ''
 
+    sql = (
+        fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+        fr'       description, long, lat,'
+        fr'       city.name,'
+        fr'       district.name,'
+        fr'       ARRAY_AGG(DISTINCT sport.name),'
+        fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+        fr'  FROM stadium'
+        fr' INNER JOIN district ON stadium.district_id = district.id'
+        fr' INNER JOIN city ON district.city_id = city.id'
+        fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+        fr' INNER JOIN sport ON venue.sport_id = sport.id'
+        fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+        fr'                         AND business_hour.type = %(place_type)s'
+        fr' {where_sql}'
+        fr' GROUP BY stadium.id, city.id, district.id'
+        fr' ORDER BY stadium.id'
+    )
+
     results = await PostgresQueryExecutor(
-        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
-            fr'       description, long, lat,'
-            fr'       city.name,'
-            fr'       district.name,'
-            fr'       ARRAY_AGG(DISTINCT sport.name),'
-            fr'       ARRAY_AGG(DISTINCT business_hour.*)'
-            fr'  FROM stadium'
-            fr' INNER JOIN district ON stadium.district_id = district.id'
-            fr' INNER JOIN city ON district.city_id = city.id'
-            fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-            fr' INNER JOIN sport ON venue.sport_id = sport.id'
-            fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
-            fr'                         AND business_hour.type = %(place_type)s'
-            fr' {where_sql}'
-            fr' GROUP BY stadium.id, city.id, district.id'
-            fr' ORDER BY stadium.id'
+        sql=fr'{sql}'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
         limit=limit, offset=offset, place_type=enums.PlaceType.stadium, fetch='all', **params,
     ).execute()
+
+    record_count, = await PostgresQueryExecutor(
+        sql=fr'SELECT COUNT(*)'
+            fr'  FROM ({sql}) AS tbl',
+        place_type=enums.PlaceType.stadium, fetch=1, **params,
+    ).fetch_one()
 
     return [
         vo.ViewStadium(
@@ -93,7 +103,7 @@ async def browse(
         )
         for id_, name, district_id, contact_number, description, long, lat, city, district,
         sport_names, business_hours in results
-    ]
+    ], record_count
 
 
 async def read(stadium_id: int) -> vo.ViewStadium:
