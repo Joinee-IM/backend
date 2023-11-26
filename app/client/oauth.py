@@ -22,10 +22,11 @@ class OAuthHandler(metaclass=mcs.Singleton):
         )
         self.login_redirect_url = google_config.LOGIN_REDIRECT_URI
 
-    async def login(self, request, access_type: str = 'offline', prompt: str = 'consent'):
+    async def login(self, request, access_type: str = 'offline', prompt: str = 'consent', state: dict = None):
         return await self.oauth.google.authorize_redirect(
             request, self.login_redirect_url,
             access_type=access_type, prompt=prompt,
+            state=state,
         )
 
     async def authorize_access_token(self, request):
