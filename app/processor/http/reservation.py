@@ -32,6 +32,7 @@ class BrowseReservationOutput(BaseModel):
     total_count: int
 
 
+# use POST here since GET can't process request body
 @router.post('/view/reservation')
 async def browse_reservation(params: BrowseReservationParameters) -> Response[BrowseReservationOutput]:
     reservations, total_count = await db.reservation.browse(
