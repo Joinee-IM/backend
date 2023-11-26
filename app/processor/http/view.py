@@ -23,16 +23,25 @@ class ViewMyReservationParams(BaseModel):
     offset: int = Offset
 
 
+class ViewMyReservationOutput(BaseModel):
+    data: Sequence[vo.ViewMyReservation]
+    total_count: int
+
+
 @router.get('/view/reservation')
-async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Depends(get_auth_token)) -> Response[Sequence[vo.ViewMyReservation]]:
+async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Depends(get_auth_token))\
+        -> Response[ViewMyReservationOutput]:
     if context.account.id != params.account_id:
         raise exc.NoPermission
 
-    reservations = await db.view.browse_my_reservation(
+    reservations, total_count = await db.view.browse_my_reservation(
         account_id=params.account_id,
         sort_by=params.sort_by,
         order=params.order,
         limit=params.limit,
         offset=params.offset,
     )
-    return Response(data=reservations)
+    return Response(data=ViewMyReservationOutput(
+        data=reservations,
+        total_count=total_count,
+    ))
