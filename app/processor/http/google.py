@@ -52,8 +52,8 @@ async def auth(request: Request):
             )
         token = encode_jwt(account_id=account_id)
         response = RedirectResponse(url=f"{service_config.url}/", status_code=302)
-        response.set_cookie(key="account_id", value=str(account_id), httponly=True, samesite='none', secure=True, domain='http://localhost:3000')
-        response.set_cookie(key="token", value=str(token), httponly=True, samesite='none', secure=True, domain='http://localhost:3000')
+        response.set_cookie(key="account_id", value=str(account_id), httponly=True, samesite='lax', secure=True)
+        response.set_cookie(key="token", value=str(token), httponly=True, samesite='lax', secure=True)
         return response
 
 
