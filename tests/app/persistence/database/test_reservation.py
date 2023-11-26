@@ -159,7 +159,7 @@ class TestAdd(AsyncTestCase):
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
-        self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False  # noqa
+        self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False, None  # noqa
         self.reservation = do.Reservation(
             id=1,
             stadium_id=1,
@@ -173,6 +173,7 @@ class TestRead(AsyncTestCase):
             remark='',
             invitation_code='',
             is_cancelled=False,
+            google_event_id=None
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -185,7 +186,7 @@ class TestRead(AsyncTestCase):
         self.assertEqual(result, self.reservation)
         mock_init.assert_called_with(
             sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
             reservation_id=self.reservation_id, fetch=1,
@@ -201,7 +202,7 @@ class TestRead(AsyncTestCase):
 
         mock_init.assert_called_with(
             sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
             reservation_id=self.reservation_id, fetch=1,
@@ -270,42 +271,6 @@ class TestAddEventId(AsyncTestCase):
     async def test_happy_path(self):
         result = await reservation.add_event_id(reservation_id=self.reservation_id, event_id=self.event_id)
         self.assertIsNone(result)
-
-
-class TestGetEventId(AsyncTestCase):
-    def setUp(self) -> None:
-        self.reservation_id = 1
-        self.event_id = '111111'
-
-    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.event_id,
-
-        result = await reservation.get_event_id(reservation_id=self.reservation_id)
-
-        self.assertEqual(result, self.event_id)
-        mock_init.assert_called_with(
-            sql=r"SELECT google_event_id"
-                r"  FROM reservation"
-                r" WHERE id = %(reservation_id)s",
-            reservation_id=self.reservation_id, fetch=1
-        )
-
-    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = None
-
-        with self.assertRaises(exc.NotFound):
-            await reservation.get_event_id(reservation_id=self.reservation_id)
-
-        mock_init.assert_called_with(
-            sql=r"SELECT google_event_id"
-                r"  FROM reservation"
-                r" WHERE id = %(reservation_id)s",
-            reservation_id=self.reservation_id, fetch=1
-        )
 
 
 class TestGetManagerId(AsyncTestCase):

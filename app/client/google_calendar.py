@@ -68,7 +68,7 @@ class GoogleCalendar:
 
         return event
 
-    def update_calendar_event(self, data: UpdateEventInput) -> object:
+    def update_calendar_event(self, data: UpdateEventInput) -> None:
         event = self.service.events().get(calendarId='primary', eventId=data.event_id).execute()
 
         attendees = event.get("attendees", [])
@@ -106,14 +106,14 @@ async def add_google_calendar_event(
 async def update_google_calendar_event(
     reservation_id: int, member_id: int
 ):
-    google_event_id = await db.reservation.get_event_id(reservation_id=reservation_id)
+    reservation = await db.reservation.read(reservation_id=reservation_id)
     manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
     member = await db.account.read(account_id=member_id)
 
-    if google_event_id and member.id != manager_id:
+    if reservation.google_event_id:
         calendar = GoogleCalendar(account_id=manager_id, config=google_config)
         await calendar.build_connection()
         calendar.update_calendar_event(data=UpdateEventInput(
-            event_id=google_event_id,
+            event_id=reservation.google_event_id,
             member_email=Email(email=member.email),
         ))
