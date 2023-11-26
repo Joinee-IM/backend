@@ -244,7 +244,6 @@ class TestReadByCode(AsyncTestCase):
             invitation_code=self.invitation_code, fetch=1,
         )
 
-
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
@@ -259,4 +258,89 @@ class TestReadByCode(AsyncTestCase):
                 r'  FROM reservation'
                 r' WHERE invitation_code = %(invitation_code)s',
             invitation_code=self.invitation_code, fetch=1,
+        )
+
+
+class TestAddEventId(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.event_id = 1
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=None))
+    async def test_happy_path(self):
+        result = await reservation.add_event_id(reservation_id=self.reservation_id, event_id=self.event_id)
+        self.assertIsNone(result)
+
+
+class TestGetEventId(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.event_id = '111111'
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = self.event_id,
+
+        result = await reservation.get_event_id(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.event_id)
+        mock_init.assert_called_with(
+            sql=r"SELECT google_event_id"
+                r"  FROM reservation"
+                r" WHERE id = %(reservation_id)s",
+            reservation_id=self.reservation_id, fetch=1
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await reservation.get_event_id(reservation_id=self.reservation_id)
+
+        mock_init.assert_called_with(
+            sql=r"SELECT google_event_id"
+                r"  FROM reservation"
+                r" WHERE id = %(reservation_id)s",
+            reservation_id=self.reservation_id, fetch=1
+        )
+
+
+class TestGetManagerId(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.manager_id = 1
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = self.manager_id,
+
+        result = await reservation.get_manager_id(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.manager_id)
+        mock_init.assert_called_with(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=self.reservation_id, fetch=1
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await reservation.get_manager_id(reservation_id=self.reservation_id)
+
+        mock_init.assert_called_with(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=self.reservation_id, fetch=1
         )

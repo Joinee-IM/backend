@@ -133,10 +133,11 @@ class TestJoinReservation(AsyncTestCase):
         )
         self.expect_result = Response(data=True)
 
+    @patch('app.client.google_calendar.update_google_calendar_event', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext, mock_update_event: AsyncMock):
         mock_context._context = self.context
         mock_read.return_value = self.reservation
 
@@ -147,6 +148,10 @@ class TestJoinReservation(AsyncTestCase):
         mock_add.assert_called_with(
             reservation_id=self.reservation.id,
             member_ids=[self.account_id],
+        )
+        mock_update_event.assert_called_with(
+            reservation_id=self.reservation.id,
+            member_id=self.account_id,
         )
 
         mock_context.reset_context()

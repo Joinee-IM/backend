@@ -1,4 +1,5 @@
 from datetime import date, datetime, time
+from uuid import UUID
 
 from freezegun import freeze_time
 
@@ -190,7 +191,7 @@ class TestAddReservation(AsyncTestCase):
             remark='',
             member_count=1,
             vacancy=1,
-            member_ids=[1],
+            member_ids=[2],
         )
         self.court = do.Court(
             id=1,
@@ -229,6 +230,11 @@ class TestAddReservation(AsyncTestCase):
             invitation_code='invitation_code',
             is_cancelled=False,
         )]
+        self.account = do.Account(
+            id=self.account_id, email='email@gmail.com', nickname='1',
+            gender=enums.GenderType.female, image_uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+            role=enums.RoleType.normal, is_verified=True, is_google_login=True,
+        )
         self.reservation_id = 1
         self.invitation_code = 'code'
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
@@ -236,6 +242,7 @@ class TestAddReservation(AsyncTestCase):
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
 
     @freeze_time('2023-10-10')
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.client.google_calendar.add_google_calendar_event', new_callable=AsyncMock)
     @patch('app.processor.http.court.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
@@ -246,14 +253,14 @@ class TestAddReservation(AsyncTestCase):
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
     async def test_happy_path(self, mock_batch_add: AsyncMock, mock_add: AsyncMock, mock_read_venue: AsyncMock,
                               mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
-                              mock_context: MockContext, mock_add_event: AsyncMock):
+                              mock_context: MockContext, mock_add_event: AsyncMock, mock_read_account: AsyncMock):
         mock_context._context = self.context
         mock_browse_reservation.return_value = None
         mock_generate.return_value = self.invitation_code
         mock_read_court.return_value = self.court
         mock_read_venue.return_value = self.venue
         mock_add.return_value = self.reservation_id
-        mock_add_event.return_value = None
+        mock_read_account.return_value = self.account
 
         result = await court.add_reservation(court_id=self.court_id, data=self.data)
 
@@ -281,10 +288,11 @@ class TestAddReservation(AsyncTestCase):
         )
         mock_batch_add.assert_called_with(
             reservation_id=self.reservation_id,
-            member_ids=self.data.member_ids,
+            member_ids=self.data.member_ids+[self.account_id],
             manager_id=self.account_id,
         )
         mock_add_event.assert_called_with(
+            reservation_id=self.reservation_id,
             start_time=self.data.start_time,
             end_time=self.data.end_time,
             account_id=self.account_id,

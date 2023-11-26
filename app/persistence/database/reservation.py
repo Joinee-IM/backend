@@ -192,23 +192,29 @@ async def add_event_id(reservation_id: int, event_id: str):
 
 
 async def get_event_id(reservation_id: int):
-    result = await PostgresQueryExecutor(
-        sql=r"SELECT google_event_id"
-            r"  FROM reservation"
-            r" WHERE id = %(reservation_id)s",
-        reservation_id=reservation_id, fetch="one"
-    ).execute()
+    try:
+        google_event_id, = await PostgresQueryExecutor(
+            sql=r"SELECT google_event_id"
+                r"  FROM reservation"
+                r" WHERE id = %(reservation_id)s",
+            reservation_id=reservation_id, fetch=1
+        ).execute()
+    except TypeError:
+        raise exc.NotFound
 
-    return result['google_event_id']
+    return google_event_id
 
 
 async def get_manager_id(reservation_id: int):
-    result = await PostgresQueryExecutor(
-        sql=r"SELECT reservation_member.account_id"
-            r"  FROM reservation"
-            r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
-            r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
-        reservation_id=reservation_id, fetch="one"
-    ).execute()
+    try:
+        account_id, = await PostgresQueryExecutor(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=reservation_id, fetch=1
+        ).execute()
+    except TypeError:
+        raise exc.NotFound
 
-    return result['account_id']
+    return account_id
