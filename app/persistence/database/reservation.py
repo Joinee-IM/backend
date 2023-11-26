@@ -149,3 +149,34 @@ async def read(reservation_id: int) -> do.Reservation:
         invitation_code=invitation_code,
         is_cancelled=is_cancelled,
     )
+
+
+async def read_by_code(invitation_code: str) -> do.Reservation:
+    reservation = await PostgresQueryExecutor(
+        sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
+            r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+            r'  FROM reservation'
+            r' WHERE invitation_code = %(invitation_code)s',
+        invitation_code=invitation_code, fetch=1,
+    ).fetch_one()
+
+    try:
+        id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level, \
+            remark, invitation_code, is_cancelled = reservation
+    except TypeError:
+        raise exc.NotFound
+
+    return do.Reservation(
+        id=id_,
+        stadium_id=stadium_id,
+        venue_id=venue_id,
+        court_id=court_id,
+        start_time=start_time,
+        end_time=end_time,
+        member_count=member_count,
+        vacancy=vacancy,
+        technical_level=[enums.TechnicalType(t) for t in technical_level],
+        remark=remark,
+        invitation_code=invitation_code,
+        is_cancelled=is_cancelled,
+    )

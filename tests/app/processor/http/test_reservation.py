@@ -1,9 +1,11 @@
 from datetime import datetime
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.processor.http import reservation
 from app.utils import Response
-from tests import AsyncMock, AsyncTestCase, patch
+from app.utils.security import AuthedAccount
+from tests import AsyncMock, AsyncTestCase, MockContext, patch
 
 
 class TestBrowseReservation(AsyncTestCase):
@@ -94,3 +96,71 @@ class TestReadReservation(AsyncTestCase):
         mock_read.assert_called_with(
             reservation_id=self.reservation_id,
         )
+
+
+class TestJoinReservation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.invitation_code = 'code'
+        self.account_id = 1
+        self.reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=1,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.full_reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=-1,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.expect_result = Response(data=True)
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.reservation
+
+        result = await reservation.join_reservation(invitation_code=self.invitation_code)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(invitation_code=self.invitation_code)
+        mock_add.assert_called_with(
+            reservation_id=self.reservation.id,
+            member_ids=[self.account_id],
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
+    async def test_reservation_full(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.full_reservation
+
+        with self.assertRaises(exc.ReservationFull):
+            await reservation.join_reservation(invitation_code=self.invitation_code)
+
+        mock_read.assert_called_with(invitation_code=self.invitation_code)
+        mock_add.assert_not_called()
+        mock_context.reset_context()

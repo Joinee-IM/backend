@@ -23,8 +23,8 @@ router = APIRouter(
 
 
 @router.get('/google-login')
-async def google_login(request: Request):
-    return await oauth_handler.login(request=request)
+async def google_login(request: Request, role: enums.RoleType):
+    return await oauth_handler.login(request=request, state=role)
 
 
 @router.get('/auth')
@@ -44,8 +44,10 @@ async def auth(request: Request):
                 refresh_token=token_google['refresh_token'],
             )
         except exc.NotFound:
+            role = enums.RoleType(request.query_params.get('state'))
             account_id = await db.account.add(
                 email=user_email, is_google_login=True,
+                role=role,
                 access_token=token_google['access_token'],
                 refresh_token=token_google['refresh_token'],
             )
