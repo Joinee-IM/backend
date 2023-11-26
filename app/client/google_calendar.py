@@ -71,11 +71,11 @@ class GoogleCalendar:
     def update_calendar_event(self, data: UpdateEventInput) -> object:
         event = self.service.events().get(calendarId='primary', eventId=data.event_id).execute()
 
-        event['attendees'] = event['attendees'].append(data.member_email.model_dump())
-        updated_event = self.service.events().update(calendarId='primary', eventId=data.event_id, body=event).execute()
+        attendees = event.get("attendees", [])
+        attendees.append(data.member_email.model_dump())
+        event['attendees'] = attendees
 
-        # Print the updated date.
-        print(updated_event['updated'])
+        self.service.events().update(calendarId='primary', eventId=data.event_id, body=event).execute()
 
 
 async def add_google_calendar_event(
@@ -96,13 +96,11 @@ async def add_google_calendar_event(
         summary="[Joinee Reservation] Exercise",
     )
 
-    # print("=========AddEventInput", event)
-
     calendar = GoogleCalendar(account_id=account_id, config=google_config)
     await calendar.build_connection()
     result = calendar.add_calendar_event(data=event)
 
-    await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result.id)
+    await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result["id"])
 
 
 async def update_google_calendar_event(
@@ -112,10 +110,10 @@ async def update_google_calendar_event(
     manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
     member = await db.account.read(account_id=member_id)
 
-    calendar = GoogleCalendar(account_id=manager_id, config=google_config)
-    await calendar.build_connection()
-
-    calendar.update_calendar_event(data=UpdateEventInput(
-        event_id=google_event_id,
-        member_mail=Email(email=member.email),
-    ))
+    if google_event_id and member.id != manager_id:
+        calendar = GoogleCalendar(account_id=manager_id, config=google_config)
+        await calendar.build_connection()
+        calendar.update_calendar_event(data=UpdateEventInput(
+            event_id=google_event_id,
+            member_email=Email(email=member.email),
+        ))

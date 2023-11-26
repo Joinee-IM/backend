@@ -139,13 +139,16 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
         member_ids=data.member_ids + [account_id],
         manager_id=account_id,
     )
-    await google_calendar.add_google_calendar_event(
-        reservation_id=reservation_id,
-        start_time=data.start_time,
-        end_time=data.end_time,
-        account_id=account_id,
-        member_ids=data.member_ids,
-        stadium_id=venue.stadium_id,
-    )
+
+    account = await db.account.read(account_id=account_id)
+    if account.is_google_login:
+        await google_calendar.add_google_calendar_event(
+            reservation_id=reservation_id,
+            start_time=data.start_time,
+            end_time=data.end_time,
+            account_id=account_id,
+            member_ids=data.member_ids,
+            stadium_id=venue.stadium_id,
+        )
 
     return Response(data=AddReservationOutput(id=reservation_id))
