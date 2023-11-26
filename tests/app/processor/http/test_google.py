@@ -84,6 +84,7 @@ class TestAuth(AsyncTestCase):
         mock_read.assert_called_with(email=self.email)
         mock_add.assert_called_with(
             email=self.email, is_google_login=True,
+            nickname=self.email.split("@")[0],
             role=self.role,
             access_token=self.access_token,
             refresh_token=self.refresh_token,
