@@ -17,6 +17,7 @@ class TestViewMyReservation(AsyncTestCase):
             limit=1,
             offset=0,
         )
+        self.total_count = 1
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
         self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
 
@@ -31,13 +32,16 @@ class TestViewMyReservation(AsyncTestCase):
                 status=enums.ReservationStatus.finished,
             ),
         ]
-        self.expect_result = Response(data=self.reservations)
+        self.expect_result = Response(data=view.ViewMyReservationOutput(
+            data=self.reservations,
+            total_count=self.total_count,
+        ))
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.view.browse_my_reservation', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
-        mock_browse.return_value = self.reservations
+        mock_browse.return_value = self.reservations, self.total_count
 
         result = await view.view_my_reservation(params=self.params)
 

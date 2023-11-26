@@ -29,9 +29,15 @@ class BrowseReservationParameters(BaseModel):
     order: enums.Sorter = enums.Sorter.desc
 
 
+class BrowseReservationOutput(BaseModel):
+    data: Sequence[do.Reservation]
+    total_count: int
+
+
+# use POST here since GET can't process request body
 @router.post('/view/reservation')
-async def browse_reservation(params: BrowseReservationParameters) -> Response[Sequence[do.Reservation]]:
-    reservations = await db.reservation.browse(
+async def browse_reservation(params: BrowseReservationParameters) -> Response[BrowseReservationOutput]:
+    reservations, total_count = await db.reservation.browse(
         city_id=params.city_id,
         district_id=params.district_id,
         sport_id=params.sport_id,
@@ -45,7 +51,10 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Se
     )
 
     return Response(
-        data=reservations,
+        data=BrowseReservationOutput(
+            data=reservations,
+            total_count=total_count,
+        ),
     )
 
 

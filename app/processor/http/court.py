@@ -8,6 +8,7 @@ import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
 from app.client import google_calendar
+from app.client import google_calendar
 from app.middleware.headers import get_auth_token
 from app.utils import Response, context, invitation_code
 
@@ -46,7 +47,7 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
     if not params.start_date and not params.time_ranges:
         params.start_date = datetime.now().date()
 
-    reservations = await db.reservation.browse(
+    reservations, _ = await db.reservation.browse(
         court_id=court_id,
         time_ranges=params.time_ranges,
         start_date=params.start_date,
@@ -75,7 +76,7 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
     if not available_date:
         raise exc.NotFound  # TODO: ask pm/designer not found's behavior
 
-    reservations = await db.reservation.browse(
+    reservations, _ = await db.reservation.browse(
         court_id=court_id,
         start_date=available_date,
     )
@@ -104,7 +105,8 @@ class AddReservationOutput(BaseModel):
 @router.post('/court/{court_id}/reservation')
 async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
     account_id = context.account.id
-    reservations = await db.reservation.browse(
+
+    reservations, _ = await db.reservation.browse(
         court_id=court_id,
         time_ranges=[vo.DateTimeRange(
             start_time=data.start_time,
@@ -150,5 +152,4 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
             member_ids=data.member_ids,
             stadium_id=venue.stadium_id,
         )
-
     return Response(data=AddReservationOutput(id=reservation_id))

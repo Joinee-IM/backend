@@ -27,7 +27,7 @@ class TestBrowseReservation(AsyncTestCase):
             sort_by=enums.BrowseReservationSortBy.time,
             order=enums.Sorter.desc,
         )
-
+        self.total_count = 1
         self.reservations = [
             do.Reservation(
                 id=1,
@@ -44,11 +44,14 @@ class TestBrowseReservation(AsyncTestCase):
                 is_cancelled=False,
             ),
         ]
-        self.expect_result = Response(data=self.reservations)
+        self.expect_result = Response(data=reservation.BrowseReservationOutput(
+            data=self.reservations,
+            total_count=self.total_count,
+        ))
 
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock):
-        mock_browse.return_value = self.reservations
+        mock_browse.return_value = self.reservations, self.total_count
 
         result = await reservation.browse_reservation(params=self.params)
 

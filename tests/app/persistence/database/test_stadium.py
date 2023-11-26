@@ -1,5 +1,5 @@
 from datetime import time
-from unittest.mock import patch
+from unittest.mock import call, patch
 
 import app.exceptions as exc
 from app.base import do, enums, vo
@@ -37,6 +37,7 @@ class TestBrowse(AsyncTestCase):
             (1, 'name', 1, '0800092000', 'desc', 3.14, 1.59, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
             (2, 'name2', 2, '0800092001', 'desc2', 3.15, 1.58, 'city2', 'district2', ['sport2'], [(2, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
         ]
+        self.total_count = 1
         self.stadiums = [
             vo.ViewStadium(
                 id=1,
@@ -82,12 +83,14 @@ class TestBrowse(AsyncTestCase):
                     )
                 ]
             ),
-        ]
+        ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_stadium
+        mock_fetch.return_value = self.total_count,
 
         result = await stadium.browse(
             name=self.name,
@@ -100,61 +103,116 @@ class TestBrowse(AsyncTestCase):
         )
 
         self.assertEqual(result, self.stadiums)
-        mock_init.assert_called_with(
-            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
-                fr'       description, long, lat,'
-                fr'       city.name,'
-                fr'       district.name,'
-                fr'       ARRAY_AGG(DISTINCT sport.name),'
-                fr'       ARRAY_AGG(DISTINCT business_hour.*)'
-                fr'  FROM stadium'
-                fr' INNER JOIN district ON stadium.district_id = district.id'
-                fr' INNER JOIN city ON district.city_id = city.id'
-                fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-                fr' INNER JOIN sport ON venue.sport_id = sport.id'
-                fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
-                fr'                         AND business_hour.type = %(place_type)s'
-                fr' WHERE stadium.name LIKE %(name)s'
-                fr' AND district.city_id = %(city_id)s'
-                fr' AND district.id = %(district_id)s'
-                fr' AND venue.sport_id = %(sport_id)s'
-                fr' AND (business_hour.weekday = %(weekday_0)s'
-                fr' AND business_hour.start_time <= %(end_time_0)s'
-                fr' AND business_hour.end_time >= %(start_time_0)s)'
-                fr' GROUP BY stadium.id, city.id, district.id'
-                fr' ORDER BY stadium.id'
-                fr' LIMIT %(limit)s OFFSET %(offset)s',
-            limit=self.limit, offset=self.offset, place_type=enums.PlaceType.stadium, fetch='all', **self.query_params,
-        )
+        mock_init.assert_has_calls([
+            call(
+                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+                    fr'       description, long, lat,'
+                    fr'       city.name,'
+                    fr'       district.name,'
+                    fr'       ARRAY_AGG(DISTINCT sport.name),'
+                    fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+                    fr'  FROM stadium'
+                    fr' INNER JOIN district ON stadium.district_id = district.id'
+                    fr' INNER JOIN city ON district.city_id = city.id'
+                    fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+                    fr' INNER JOIN sport ON venue.sport_id = sport.id'
+                    fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+                    fr'                         AND business_hour.type = %(place_type)s'
+                    fr' WHERE stadium.name LIKE %(name)s'
+                    fr' AND district.city_id = %(city_id)s'
+                    fr' AND district.id = %(district_id)s'
+                    fr' AND venue.sport_id = %(sport_id)s'
+                    fr' AND (business_hour.weekday = %(weekday_0)s'
+                    fr' AND business_hour.start_time <= %(end_time_0)s'
+                    fr' AND business_hour.end_time >= %(start_time_0)s)'
+                    fr' GROUP BY stadium.id, city.id, district.id'
+                    fr' ORDER BY stadium.id'
+                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                limit=self.limit, offset=self.offset, place_type=enums.PlaceType.stadium, fetch='all',
+                **self.query_params,
+            ),
+            call(
+                sql=fr'SELECT COUNT(*)'
+                    fr'  FROM ('
+                    fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+                    fr'       description, long, lat,'
+                    fr'       city.name,'
+                    fr'       district.name,'
+                    fr'       ARRAY_AGG(DISTINCT sport.name),'
+                    fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+                    fr'  FROM stadium'
+                    fr' INNER JOIN district ON stadium.district_id = district.id'
+                    fr' INNER JOIN city ON district.city_id = city.id'
+                    fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+                    fr' INNER JOIN sport ON venue.sport_id = sport.id'
+                    fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+                    fr'                         AND business_hour.type = %(place_type)s'
+                    fr' WHERE stadium.name LIKE %(name)s'
+                    fr' AND district.city_id = %(city_id)s'
+                    fr' AND district.id = %(district_id)s'
+                    fr' AND venue.sport_id = %(sport_id)s'
+                    fr' AND (business_hour.weekday = %(weekday_0)s'
+                    fr' AND business_hour.start_time <= %(end_time_0)s'
+                    fr' AND business_hour.end_time >= %(start_time_0)s)'
+                    fr' GROUP BY stadium.id, city.id, district.id'
+                    fr' ORDER BY stadium.id) AS tbl',
+                place_type=enums.PlaceType.stadium, fetch=1,
+                **self.query_params,
+            ),
+        ])
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_no_where_sql(self, mock_execute: AsyncMock, mock_init: Mock):
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_no_where_sql(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
         mock_execute.return_value = self.raw_stadium
-
+        mock_fetch.return_value = self.total_count,
         result = await stadium.browse()
 
         self.assertEqual(result, self.stadiums)
-        mock_init.assert_called_with(
-            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
-                fr'       description, long, lat,'
-                fr'       city.name,'
-                fr'       district.name,'
-                fr'       ARRAY_AGG(DISTINCT sport.name),'
-                fr'       ARRAY_AGG(DISTINCT business_hour.*)'
-                fr'  FROM stadium'
-                fr' INNER JOIN district ON stadium.district_id = district.id'
-                fr' INNER JOIN city ON district.city_id = city.id'
-                fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-                fr' INNER JOIN sport ON venue.sport_id = sport.id'
-                fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
-                fr'                         AND business_hour.type = %(place_type)s'
-                fr' '
-                fr' GROUP BY stadium.id, city.id, district.id'
-                fr' ORDER BY stadium.id'
-                fr' LIMIT %(limit)s OFFSET %(offset)s',
-            limit=10, offset=0, place_type=enums.PlaceType.stadium, fetch='all',
-        )
+        mock_init.assert_has_calls([
+            call(
+                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+                    fr'       description, long, lat,'
+                    fr'       city.name,'
+                    fr'       district.name,'
+                    fr'       ARRAY_AGG(DISTINCT sport.name),'
+                    fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+                    fr'  FROM stadium'
+                    fr' INNER JOIN district ON stadium.district_id = district.id'
+                    fr' INNER JOIN city ON district.city_id = city.id'
+                    fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+                    fr' INNER JOIN sport ON venue.sport_id = sport.id'
+                    fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+                    fr'                         AND business_hour.type = %(place_type)s'
+                    fr' '
+                    fr' GROUP BY stadium.id, city.id, district.id'
+                    fr' ORDER BY stadium.id'
+                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                limit=10, offset=0, place_type=enums.PlaceType.stadium, fetch='all',
+            ),
+            call(
+                sql=fr'SELECT COUNT(*)'
+                    fr'  FROM ('
+                    fr'SELECT stadium.id, stadium.name, district_id, contact_number,'
+                    fr'       description, long, lat,'
+                    fr'       city.name,'
+                    fr'       district.name,'
+                    fr'       ARRAY_AGG(DISTINCT sport.name),'
+                    fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+                    fr'  FROM stadium'
+                    fr' INNER JOIN district ON stadium.district_id = district.id'
+                    fr' INNER JOIN city ON district.city_id = city.id'
+                    fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
+                    fr' INNER JOIN sport ON venue.sport_id = sport.id'
+                    fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+                    fr'                         AND business_hour.type = %(place_type)s'
+                    fr' '
+                    fr' GROUP BY stadium.id, city.id, district.id'
+                    fr' ORDER BY stadium.id) AS tbl',
+                place_type=enums.PlaceType.stadium, fetch=1,
+            ),
+        ])
 
 
 class TestRead(AsyncTestCase):
