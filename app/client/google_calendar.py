@@ -10,14 +10,15 @@ from app.config import GoogleConfig
 
 
 class GoogleCalendar:
-    def __init__(self, account_id):
+    def __init__(self, account_id: int, google_config: GoogleConfig):
         self.id = account_id
         self.service = None
+        self.google_config = google_config
 
     async def build_connection(self):
         access_token, refresh_token = await db.account.get_google_token(account_id=self.id)
         token_dict = {'access_token': access_token, 'refresh_token': refresh_token,
-                      'client_id': GoogleConfig.CLIENT_ID, 'client_secret': GoogleConfig.CLIENT_SECRET, }
+                      'client_id': self.google_config.CLIENT_ID, 'client_secret': self.google_config.CLIENT_SECRET}
         scopes = ["https://www.googleapis.com/auth/calendar"]
         creds = Credentials.from_authorized_user_info(token_dict, scopes)
         if not creds.valid:
@@ -46,7 +47,7 @@ class GoogleCalendar:
             },
         }
 
-        self.service.events().insert(calendarId='primary', body=event, sendUpdates="all").execute()
+        await self.service.events().insert(calendarId='primary', body=event, sendUpdates="all").execute()
 
 
 class Email(BaseModel):
