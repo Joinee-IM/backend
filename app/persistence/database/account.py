@@ -75,7 +75,8 @@ async def reset_password(code: str, pass_hash: str) -> None:
                 'UPDATE email_verification'
                 '   SET is_consumed = $1'
                 ' WHERE code = $2'
-                '   AND is_consumed = $3',
+                '   AND is_consumed = $3'
+                ' RETURNING account_id',
                 True, code, False,
             )
         except TypeError:
