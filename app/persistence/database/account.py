@@ -103,11 +103,14 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
 
 async def edit(
     account_id: int,
+    pass_hash: Optional[str] = None,
     nickname: Optional[str] = None,
     gender: Optional[GenderType] = None,
     image_uuid: Optional[UUID] = None,
 ) -> None:
     to_update = {}
+    if pass_hash:
+        to_update['pass_hash'] = pass_hash
     if nickname:
         to_update['nickname'] = nickname
     if gender:
