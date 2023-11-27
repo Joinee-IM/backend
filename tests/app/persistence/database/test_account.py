@@ -164,3 +164,17 @@ class TestSearch(AsyncTestCase):
 
     async def test_happy_path(self):
         pass
+
+
+class TestGetGoogleToken(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.expect_result = ('access_token', 'refresh_token')
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_executor: AsyncMock):
+        mock_executor.return_value = 'access_token', 'refresh_token'
+
+        result = await account.get_google_token(account_id=self.account_id)
+
+        self.assertEqual(result, self.expect_result)

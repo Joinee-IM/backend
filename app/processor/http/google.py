@@ -46,6 +46,7 @@ async def auth(request: Request):
             role = enums.RoleType(request.query_params.get('state'))
             account_id = await db.account.add(
                 email=user_email, is_google_login=True,
+                nickname=user_email.split("@")[0],
                 role=role,
                 access_token=token_google['access_token'],
                 refresh_token=token_google['refresh_token'],

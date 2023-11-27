@@ -10,7 +10,7 @@ class StrEnum(str, enum.Enum):
 
 class GenderType(StrEnum):
     male = 'MALE'
-    femail = 'FEMALE'
+    female = 'FEMALE'
     unrevealed = 'UNREVEALED'
 
 

@@ -133,7 +133,7 @@ async def add(
 async def read(reservation_id: int) -> do.Reservation:
     reservation = await PostgresQueryExecutor(
         sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-            r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+            r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
             r'  FROM reservation'
             r' WHERE id = %(reservation_id)s',
         reservation_id=reservation_id, fetch=1,
@@ -141,7 +141,7 @@ async def read(reservation_id: int) -> do.Reservation:
 
     try:
         id_, stadium_id, venue_id, court_id, start_time, end_time, member_count, vacancy, technical_level, \
-            remark, invitation_code, is_cancelled = reservation
+            remark, invitation_code, is_cancelled, google_event_id = reservation
     except TypeError:
         raise exc.NotFound
 
@@ -158,6 +158,7 @@ async def read(reservation_id: int) -> do.Reservation:
         remark=remark,
         invitation_code=invitation_code,
         is_cancelled=is_cancelled,
+        google_event_id=google_event_id,
     )
 
 
@@ -190,3 +191,27 @@ async def read_by_code(invitation_code: str) -> do.Reservation:
         invitation_code=invitation_code,
         is_cancelled=is_cancelled,
     )
+
+
+async def add_event_id(reservation_id: int, event_id: str):
+    await PostgresQueryExecutor(
+        sql=r"UPDATE reservation"
+            r"   SET google_event_id = %(event_id)s"
+            r" WHERE id = %(reservation_id)s",
+        reservation_id=reservation_id, event_id=event_id, fetch=None
+    ).execute()
+
+
+async def get_manager_id(reservation_id: int):
+    try:
+        account_id, = await PostgresQueryExecutor(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=reservation_id, fetch=1
+        ).execute()
+    except TypeError:
+        raise exc.NotFound
+
+    return account_id
