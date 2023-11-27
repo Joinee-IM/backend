@@ -66,7 +66,7 @@ class TestLogin(AsyncTestCase):
 
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     async def test_no_account(self, mock_read: AsyncMock):
-        mock_read.side_effect = TypeError
+        mock_read.side_effect = exc.NotFound
         with self.assertRaises(exc.LoginFailed):
             await public.login(self.login_input, self.response)
 
