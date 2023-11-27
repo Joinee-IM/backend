@@ -19,7 +19,8 @@ async def browse_my_reservation(
         sort_by = 'start_time'
 
     sql = (
-        r'SELECT start_time,'
+        r'SELECT reservation.id AS reservation_id,'
+        r'       start_time,'
         r'       end_time,'
         r'       stadium.name AS stadium_name,'
         r'       venue.name AS venue_name,'
@@ -49,6 +50,7 @@ async def browse_my_reservation(
 
     return [
         vo.ViewMyReservation(
+            reservation_id=reservation_id,
             start_time=start_time,
             end_time=end_time,
             stadium_name=stadium_name,
@@ -57,5 +59,5 @@ async def browse_my_reservation(
             vacancy=vacancy,
             status=compose_reservation_status(end_time=end_time, is_cancelled=is_cancelled),
         )
-        for start_time, end_time, stadium_name, venue_name, is_manager, vacancy, is_cancelled in results
+        for reservation_id, start_time, end_time, stadium_name, venue_name, is_manager, vacancy, is_cancelled in results
     ], total_count

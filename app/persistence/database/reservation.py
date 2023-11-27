@@ -1,10 +1,13 @@
 from datetime import date, datetime, timedelta
 from typing import Optional, Sequence
 
+import asyncpg
+
 import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters)
+                                           generate_query_parameters,
+                                           pg_pool_handler)
 
 
 async def browse(
@@ -215,3 +218,18 @@ async def get_manager_id(reservation_id: int):
         raise exc.NotFound
 
     return account_id
+
+
+async def delete(reservation_id: int) -> None:
+    async with pg_pool_handler.cursor() as cursor:
+        cursor: asyncpg.Connection
+        await cursor.execute(
+            'DELETE FROM reservation_member'
+            ' WHERE reservation_id = $1',
+            reservation_id,
+        )
+        await cursor.execute(
+            'DELETE FROM reservation'
+            ' WHERE id = $1',
+            reservation_id,
+        )

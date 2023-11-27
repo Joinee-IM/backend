@@ -23,6 +23,7 @@ class TestViewMyReservation(AsyncTestCase):
 
         self.reservations = [
             vo.ViewMyReservation(
+                reservation_id=1,
                 start_time=datetime(2023, 11, 11),
                 end_time=datetime(2023, 11, 17),
                 stadium_name='stadium_name',

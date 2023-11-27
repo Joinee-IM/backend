@@ -29,6 +29,7 @@ class DateTimeRange(BaseModel):
 
 
 class ViewMyReservation(BaseModel):
+    reservation_id: int
     start_time: NaiveDatetime
     end_time: NaiveDatetime
     stadium_name: str

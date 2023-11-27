@@ -83,3 +83,15 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
     )
 
     return Response(data=True)
+
+
+@router.delete('/reservation/{reservation_id}')
+async def delete_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse(reservation_id=reservation_id,
+                                                            account_id=context.account.id)
+
+    if not reservation_member or not reservation_member[0].is_manager:
+        raise exc.NoPermission
+
+    await db.reservation.delete(reservation_id=reservation_id)
+    return Response()

@@ -172,3 +172,55 @@ class TestJoinReservation(AsyncTestCase):
         mock_read.assert_called_with(invitation_code=self.invitation_code)
         mock_add.assert_not_called()
         mock_context.reset_context()
+
+
+class TestDeleteReservation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.reservation_members = [
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=self.account_id,
+                is_joined=True,
+                is_manager=True,
+            )
+        ]
+        self.expect_result = Response()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_browse.return_value = self.reservation_members
+
+        result = await reservation.delete_reservation(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_browse.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_delete.assert_called_with(
+            reservation_id=self.reservation_id,
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_browse.return_value = []
+
+        with self.assertRaises(exc.NoPermission):
+            await reservation.delete_reservation(reservation_id=self.reservation_id)
+
+        mock_browse.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_delete.assert_not_called()
+        mock_context.reset_context()

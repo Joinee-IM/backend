@@ -18,11 +18,12 @@ class TestBrowseMyReservation(AsyncTestCase):
         self.offset = 0
 
         self.raw_reservation = [
-            (datetime(2023, 11, 11), datetime(2023, 11, 17), 'stadium_name', 'venue_name', True, 1, False),
+            (1, datetime(2023, 11, 11), datetime(2023, 11, 17), 'stadium_name', 'venue_name', True, 1, False),
         ]
         self.total_count = 1
         self.expect_result = [
             vo.ViewMyReservation(
+                reservation_id=1,
                 start_time=datetime(2023, 11, 11),
                 end_time=datetime(2023, 11, 17),
                 stadium_name='stadium_name',
@@ -54,7 +55,8 @@ class TestBrowseMyReservation(AsyncTestCase):
         self.assertEqual(result, self.expect_result)
         mock_init.assert_has_calls([
             call(
-                sql=r'SELECT start_time,'
+                sql=r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
@@ -74,7 +76,8 @@ class TestBrowseMyReservation(AsyncTestCase):
             call(
                 sql=r'SELECT COUNT(*)'
                     r'  FROM ('
-                    r'SELECT start_time,'
+                    r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
@@ -113,7 +116,8 @@ class TestBrowseMyReservation(AsyncTestCase):
         self.assertEqual(result, self.expect_result)
         mock_init.assert_has_calls([
             call(
-                sql=r'SELECT start_time,'
+                sql=r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
@@ -133,7 +137,8 @@ class TestBrowseMyReservation(AsyncTestCase):
             call(
                 sql=r'SELECT COUNT(*)'
                     r'  FROM ('
-                    r'SELECT start_time,'
+                    r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
@@ -156,7 +161,7 @@ class TestBrowseMyReservation(AsyncTestCase):
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.view.compose_reservation_status', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_sort_by_status(self, mock_fetch_one: AsyncMock, mock_compose: Mock, mock_fetch: AsyncMock, mock_init: Mock):
+    async def test_sort_by_time(self, mock_fetch_one: AsyncMock, mock_compose: Mock, mock_fetch: AsyncMock, mock_init: Mock):
         mock_fetch.return_value = self.raw_reservation
         mock_compose.return_value = enums.ReservationStatus.finished
         mock_fetch_one.return_value = self.total_count,
@@ -172,7 +177,8 @@ class TestBrowseMyReservation(AsyncTestCase):
         self.assertEqual(result, self.expect_result)
         mock_init.assert_has_calls([
             call(
-                sql=r'SELECT start_time,'
+                sql=r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
@@ -192,7 +198,8 @@ class TestBrowseMyReservation(AsyncTestCase):
             call(
                 sql=r'SELECT COUNT(*)'
                     r'  FROM ('
-                    r'SELECT start_time,'
+                    r'SELECT reservation.id AS reservation_id,'
+                    r'       start_time,'
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
