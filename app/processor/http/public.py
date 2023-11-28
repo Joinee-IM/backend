@@ -46,7 +46,7 @@ class LoginOutput:
 async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOutput]:
     try:
         account_id, pass_hash, role, is_verified = await db.account.read_by_email(email=data.email)
-    except TypeError:
+    except exc.NotFound:
         raise exc.LoginFailed
 
     if not is_verified:

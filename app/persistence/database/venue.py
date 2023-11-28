@@ -11,6 +11,7 @@ from app.persistence.database.util import (
 async def browse(
         name: str | None = None,
         sport_id: int | None = None,
+        stadium_id: int | None = None,
         is_reservable: bool | None = None,
         sort_by: enums.VenueAvailableSortBy | None = None,
         order: enums.Sorter = enums.Sorter.desc,
@@ -20,6 +21,7 @@ async def browse(
     criteria_dict = {
         'name': (f'%{name}%' if name else None, 'name LIKE %(name)s'),
         'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
+        'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
         'is_reservable': (is_reservable, 'is_reservable = %(is_reservable)s'),
     }
     query, params = generate_query_parameters(criteria_dict=criteria_dict)

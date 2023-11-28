@@ -7,6 +7,7 @@ from pydantic import BaseModel, NaiveDatetime
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
+from app.client import google_calendar
 from app.middleware.headers import get_auth_token
 from app.utils import Response, context, invitation_code
 
@@ -102,8 +103,7 @@ class AddReservationOutput(BaseModel):
 
 @router.post('/court/{court_id}/reservation')
 async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
-    if context.account.id not in data.member_ids:
-        raise exc.NoPermission
+    account_id = context.account.id
 
     reservations, _ = await db.reservation.browse(
         court_id=court_id,
@@ -137,7 +137,18 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     )
     await db.reservation_member.batch_add(
         reservation_id=reservation_id,
-        member_ids=data.member_ids,
-        manager_id=context.account.id,
+        member_ids=data.member_ids + [account_id],
+        manager_id=account_id,
     )
+
+    account = await db.account.read(account_id=account_id)
+    if account.is_google_login:
+        await google_calendar.add_google_calendar_event(
+            reservation_id=reservation_id,
+            start_time=data.start_time,
+            end_time=data.end_time,
+            account_id=account_id,
+            member_ids=data.member_ids,
+            stadium_id=venue.stadium_id,
+        )
     return Response(data=AddReservationOutput(id=reservation_id))

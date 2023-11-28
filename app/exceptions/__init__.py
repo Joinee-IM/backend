@@ -66,3 +66,10 @@ class ReservationFull(AckException):
     Reservation's vacancy <= 0
     """
     status_code = 200
+
+
+class WrongPassword(AckException):
+    """
+    old password is wrong while editing password
+    """
+    status_code = 400

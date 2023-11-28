@@ -13,7 +13,7 @@ from app.base import do, enums
 class ViewStadium(do.Stadium):
     city: str
     district: str
-    sports: Sequence[str]
+    sports: Sequence[str] | None = None
     business_hours: Sequence[do.BusinessHour]
 
 
@@ -29,6 +29,7 @@ class DateTimeRange(BaseModel):
 
 
 class ViewMyReservation(BaseModel):
+    reservation_id: int
     start_time: NaiveDatetime
     end_time: NaiveDatetime
     stadium_name: str

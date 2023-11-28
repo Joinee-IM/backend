@@ -206,3 +206,68 @@ class TestSearchAccount(AsyncTestCase):
         mock_search.assert_called_with(
             query=self.query,
         )
+
+
+class TestEditPassword(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.data = account.EditPasswordInput(
+            old_password='old',
+            new_password='new',
+        )
+        self.account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
+            role=RoleType.normal, is_verified=True, is_google_login=False,
+        )
+        self.pass_hash = 'pass_hash'
+        self.expect_result = account.Response()
+
+    @patch('app.processor.http.account.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
+    @patch('app.processor.http.account.security.hash_password', new_callable=Mock)
+    @patch('app.persistence.database.account.edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_edit: AsyncMock, mock_hash: Mock, mock_verify: Mock,
+                              mock_read_by_email: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.account
+        mock_read_by_email.return_value = None, self.pass_hash, None, None
+        mock_verify.return_value = True
+        mock_hash.return_value = self.pass_hash
+
+        result = await account.edit_password(account_id=self.account_id, data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+        mock_edit.assert_called_with(
+            account_id=self.account_id,
+            pass_hash=self.pass_hash,
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.account.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
+    async def test_wrong_password(self, mock_verify: Mock, mock_read_by_email: AsyncMock,
+                                  mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.account
+        mock_read_by_email.return_value = None, self.pass_hash, None, None
+        mock_verify.return_value = False
+
+        with self.assertRaises(exc.WrongPassword):
+            await account.edit_password(account_id=self.account_id, data=self.data)
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.account.context', new_callable=MockContext)
+    async def test_no_permission(self, mock_context: MockContext):
+        mock_context._context = self.wrong_context
+
+        with self.assertRaises(exc.NoPermission):
+            await account.edit_password(account_id=self.account_id, data=self.data)
+
+        mock_context.reset_context()

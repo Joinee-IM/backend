@@ -204,7 +204,7 @@ class TestAdd(AsyncTestCase):
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
-        self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False  # noqa
+        self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, ['ADVANCED'], '', '', False, None  # noqa
         self.reservation = do.Reservation(
             id=1,
             stadium_id=1,
@@ -218,6 +218,7 @@ class TestRead(AsyncTestCase):
             remark='',
             invitation_code='',
             is_cancelled=False,
+            google_event_id=None
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -230,7 +231,7 @@ class TestRead(AsyncTestCase):
         self.assertEqual(result, self.reservation)
         mock_init.assert_called_with(
             sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
             reservation_id=self.reservation_id, fetch=1,
@@ -246,7 +247,7 @@ class TestRead(AsyncTestCase):
 
         mock_init.assert_called_with(
             sql=r'SELECT id, stadium_id, venue_id, court_id, start_time, end_time, member_count,'
-                r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
+                r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
             reservation_id=self.reservation_id, fetch=1,
@@ -289,7 +290,6 @@ class TestReadByCode(AsyncTestCase):
             invitation_code=self.invitation_code, fetch=1,
         )
 
-
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
@@ -304,4 +304,53 @@ class TestReadByCode(AsyncTestCase):
                 r'  FROM reservation'
                 r' WHERE invitation_code = %(invitation_code)s',
             invitation_code=self.invitation_code, fetch=1,
+        )
+
+
+class TestAddEventId(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.event_id = 1
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=None))
+    async def test_happy_path(self):
+        result = await reservation.add_event_id(reservation_id=self.reservation_id, event_id=self.event_id)
+        self.assertIsNone(result)
+
+
+class TestGetManagerId(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.manager_id = 1
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = self.manager_id,
+
+        result = await reservation.get_manager_id(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.manager_id)
+        mock_init.assert_called_with(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=self.reservation_id, fetch=1
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        with self.assertRaises(exc.NotFound):
+            await reservation.get_manager_id(reservation_id=self.reservation_id)
+
+        mock_init.assert_called_with(
+            sql=r"SELECT reservation_member.account_id"
+                r"  FROM reservation"
+                r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
+                r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
+            reservation_id=self.reservation_id, fetch=1
         )

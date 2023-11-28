@@ -75,7 +75,8 @@ async def reset_password(code: str, pass_hash: str) -> None:
                 'UPDATE email_verification'
                 '   SET is_consumed = $1'
                 ' WHERE code = $2'
-                '   AND is_consumed = $3',
+                '   AND is_consumed = $3'
+                ' RETURNING account_id',
                 True, code, False,
             )
         except TypeError:
@@ -102,11 +103,14 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
 
 async def edit(
     account_id: int,
+    pass_hash: Optional[str] = None,
     nickname: Optional[str] = None,
     gender: Optional[GenderType] = None,
     image_uuid: Optional[UUID] = None,
 ) -> None:
     to_update = {}
+    if pass_hash:
+        to_update['pass_hash'] = pass_hash
     if nickname:
         to_update['nickname'] = nickname
     if gender:
@@ -143,3 +147,15 @@ async def search(query: str) -> Sequence[do.Account]:
         )
         for id_, email, nickname, gender, image_uuid, role, is_verified, is_google_login in results
     ]
+
+
+async def get_google_token(account_id: int) -> tuple[str, str]:
+    access_token, refresh_token = await PostgresQueryExecutor(
+        sql=r"SELECT access_token, refresh_token"
+            r"  FROM account"
+            r" WHERE id = %(account_id)s",
+        account_id=account_id,
+        fetch='one',
+    ).execute()
+
+    return access_token, refresh_token

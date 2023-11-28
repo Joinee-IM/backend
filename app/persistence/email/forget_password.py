@@ -16,7 +16,7 @@ async def send(to: str, code: str, subject='Joinee reset password verification')
                     <p style="color: black;">Hello,</p>
                     <p style="color: black;">Please click on the following link to reset your password.</p>
                     <p style="color: black;">{service_config.url}/reset-password?code={code}</p>
-                    <a href="{service_config.url}/reset-password?code={code}">Click here to reset password.</a>
+                    <a href="{service_config.url}//auth/forget-password/reset-password?code={code}">Click here to reset password.</a>
                 </body>
             </html>
             """

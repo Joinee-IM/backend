@@ -11,7 +11,7 @@ import app.persistence.file_storage as fs
 from app.base import do, enums
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
-from app.utils import Response, context
+from app.utils import Response, context, security
 
 router = APIRouter(
     tags=['Account'],
@@ -76,3 +76,26 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
 async def search_account(query: str) -> Response[Sequence[do.Account]]:
     accounts = await db.account.search(query=query)
     return Response(data=accounts)
+
+
+class EditPasswordInput(BaseModel):
+    old_password: str
+    new_password: str
+
+
+@router.patch('/account/{account_id}/password')
+async def edit_password(account_id: int, data: EditPasswordInput, _=Depends(get_auth_token)) -> Response:
+    if context.account.id != account_id:
+        raise exc.NoPermission
+
+    account = await db.account.read(account_id=account_id)
+    _, pass_hash, *_ = await db.account.read_by_email(account.email)
+
+    if not security.verify_password(data.old_password, pass_hash):
+        raise exc.WrongPassword
+
+    await db.account.edit(
+        account_id=account_id,
+        pass_hash=security.hash_password(data.new_password),
+    )
+    return Response()

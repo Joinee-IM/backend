@@ -57,8 +57,8 @@ async def browse(
         fr'  FROM stadium'
         fr' INNER JOIN district ON stadium.district_id = district.id'
         fr' INNER JOIN city ON district.city_id = city.id'
-        fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-        fr' INNER JOIN sport ON venue.sport_id = sport.id'
+        fr'  LEFT JOIN venue ON stadium.id = venue.stadium_id'
+        fr'  LEFT JOIN sport ON venue.sport_id = sport.id'
         fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
         fr'                         AND business_hour.type = %(place_type)s'
         fr' {where_sql}'
@@ -89,7 +89,7 @@ async def browse(
             lat=lat,
             city=city,
             district=district,
-            sports=[name for name in sport_names],
+            sports=[name for name in sport_names if name],
             business_hours=[
                 do.BusinessHour(
                     id=bid,

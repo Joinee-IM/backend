@@ -1,11 +1,13 @@
 from typing import Sequence
 
-from fastapi import APIRouter, responses
+from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
 from app.base import do, enums, vo
+from app.client import google_calendar
+from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
 
 router = APIRouter(
@@ -63,7 +65,7 @@ async def read_reservation(reservation_id: int) -> Response[do.Reservation]:
 
 
 @router.post('/reservation/code/{invitation_code}')
-async def join_reservation(invitation_code: str) -> Response[bool]:
+async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> Response[bool]:
     account_id = context.account.id
     reservation = await db.reservation.read_by_code(invitation_code=invitation_code)
 
@@ -74,4 +76,22 @@ async def join_reservation(invitation_code: str) -> Response[bool]:
         reservation_id=reservation.id,
         member_ids=[account_id],
     )
+
+    await google_calendar.update_google_calendar_event(
+        reservation_id=reservation.id,
+        member_id=account_id,
+    )
+
     return Response(data=True)
+
+
+@router.delete('/reservation/{reservation_id}')
+async def delete_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse(reservation_id=reservation_id,
+                                                            account_id=context.account.id)
+
+    if not reservation_member or not reservation_member[0].is_manager:
+        raise exc.NoPermission
+
+    await db.reservation.delete(reservation_id=reservation_id)
+    return Response()

@@ -15,6 +15,7 @@ router = APIRouter(
 
 class VenueSearchParameters(BaseModel):
     name: str | None = Query(default=None)
+    stadium_id: int | None = Query(default=None)
     sport_id: int | None = Query(default=None)
     is_reservable: bool | None = Query(default=None)
     sort_by: enums.VenueAvailableSortBy = Query(default=enums.VenueAvailableSortBy.current_user_count)
@@ -33,6 +34,7 @@ async def browse_venue(params: VenueSearchParameters = Depends()) -> Response[Br
     venues, total_count = await db.venue.browse(
         name=params.name,
         sport_id=params.sport_id,
+        stadium_id=params.stadium_id,
         is_reservable=params.is_reservable,
         sort_by=params.sort_by,
         order=params.order,
