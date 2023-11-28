@@ -71,13 +71,13 @@ async def browse(
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
-        limit=limit, offset=offset, place_type=enums.PlaceType.stadium, fetch='all', **params,
-    ).execute()
+        limit=limit, offset=offset, place_type=enums.PlaceType.stadium, **params,
+    ).fetch_all()
 
     record_count, = await PostgresQueryExecutor(
         sql=fr'SELECT COUNT(*)'
             fr'  FROM ({sql}) AS tbl',
-        place_type=enums.PlaceType.stadium, fetch=1, **params,
+        place_type=enums.PlaceType.stadium, **params,
     ).fetch_one()
 
     return [
@@ -128,8 +128,8 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
             fr'{" AND stadium.is_published = True" if not include_unpublished else ""}'
             fr' GROUP BY stadium.id, city.id, district.id'
             fr' ORDER BY stadium.id',
-        fetch=1, place_type=enums.PlaceType.stadium, stadium_id=stadium_id,
-    ).execute()
+        place_type=enums.PlaceType.stadium, stadium_id=stadium_id,
+    ).fetch_one()
 
     try:
         (id_, name, district_id, contact_number, description, long, lat, is_published,

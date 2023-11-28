@@ -54,10 +54,10 @@ class TestBrowse(AsyncTestCase):
         ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_reservations
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_reservations
         mock_fetch.return_value = self.total_count,
 
         result = await reservation.browse(
@@ -84,7 +84,7 @@ class TestBrowse(AsyncTestCase):
                     ' AND is_cancelled = %(is_cancelled)s'
                     ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                     ' ORDER BY start_time',
-                fetch='all', **self.params, limit=None, offset=None,
+                **self.params, limit=None, offset=None,
             ),
             call(
                 sql='SELECT COUNT(*)'
@@ -102,15 +102,15 @@ class TestBrowse(AsyncTestCase):
                     ' AND is_cancelled = %(is_cancelled)s'
                     ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                     ' ORDER BY start_time) AS tbl',
-                fetch=1, **self.params,
+                **self.params,
             ),
         ])
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_no_end_date(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_reservations
+    async def test_no_end_date(self, mock_fetch: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_reservations
         mock_fetch.return_value = self.total_count,
 
         result = await reservation.browse(
@@ -136,7 +136,7 @@ class TestBrowse(AsyncTestCase):
                     ' AND is_cancelled = %(is_cancelled)s'
                     ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                     ' ORDER BY start_time',
-                fetch='all', **self.params, limit=None, offset=None,
+                **self.params, limit=None, offset=None,
             ),
             call(
                 sql='SELECT COUNT(*)'
@@ -154,7 +154,7 @@ class TestBrowse(AsyncTestCase):
                     ' AND is_cancelled = %(is_cancelled)s'
                     ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
                     ' ORDER BY start_time) AS tbl',
-                fetch=1, **self.params,
+                **self.params,
             ),
         ])
 
@@ -169,7 +169,7 @@ class TestAdd(AsyncTestCase):
         self.technical_level = [
             enums.TechnicalType.advanced,
         ]
-        self.invitaion_code = 'code'
+        self.invitation_code = 'code'
         self.remark = 'remark'
         self.member_count = 1
         self.vacancy = -1
@@ -183,7 +183,7 @@ class TestAdd(AsyncTestCase):
 
         result = await reservation.add(
             stadium_id=self.stadium_id, venue_id=self.venue_id, court_id=self.court_id, start_time=self.start_time,
-            end_time=self.end_time, technical_level=self.technical_level, invitation_code=self.invitaion_code,
+            end_time=self.end_time, technical_level=self.technical_level, invitation_code=self.invitation_code,
             remark=self.remark, member_count=self.member_count, vacancy=self.vacancy,
         )
 
@@ -197,7 +197,7 @@ class TestAdd(AsyncTestCase):
                 r'  RETURNING id',
             stadium_id=self.stadium_id, venue_id=self.venue_id, court_id=self.court_id, start_time=self.start_time,
             end_time=self.end_time, member_count=self.member_count, vacancy=self.vacancy,
-            technical_level=self.technical_level, remark=self.remark, invitation_code=self.invitaion_code, fetch=1,
+            technical_level=self.technical_level, remark=self.remark, invitation_code=self.invitation_code,
         )
 
 
@@ -234,7 +234,7 @@ class TestRead(AsyncTestCase):
                 r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
-            reservation_id=self.reservation_id, fetch=1,
+            reservation_id=self.reservation_id,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -250,7 +250,7 @@ class TestRead(AsyncTestCase):
                 r'       vacancy, technical_level, remark, invitation_code, is_cancelled, google_event_id'
                 r'  FROM reservation'
                 r' WHERE id = %(reservation_id)s',
-            reservation_id=self.reservation_id, fetch=1,
+            reservation_id=self.reservation_id,
         )
 
 
@@ -287,7 +287,7 @@ class TestReadByCode(AsyncTestCase):
                 r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
                 r'  FROM reservation'
                 r' WHERE invitation_code = %(invitation_code)s',
-            invitation_code=self.invitation_code, fetch=1,
+            invitation_code=self.invitation_code,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -303,7 +303,7 @@ class TestReadByCode(AsyncTestCase):
                 r'       vacancy, technical_level, remark, invitation_code, is_cancelled'
                 r'  FROM reservation'
                 r' WHERE invitation_code = %(invitation_code)s',
-            invitation_code=self.invitation_code, fetch=1,
+            invitation_code=self.invitation_code,
         )
 
 
@@ -324,9 +324,9 @@ class TestGetManagerId(AsyncTestCase):
         self.manager_id = 1
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.manager_id,
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.manager_id,
 
         result = await reservation.get_manager_id(reservation_id=self.reservation_id)
 
@@ -336,13 +336,13 @@ class TestGetManagerId(AsyncTestCase):
                 r"  FROM reservation"
                 r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
                 r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
-            reservation_id=self.reservation_id, fetch=1
+            reservation_id=self.reservation_id,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = None
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = None
 
         with self.assertRaises(exc.NotFound):
             await reservation.get_manager_id(reservation_id=self.reservation_id)
@@ -352,5 +352,5 @@ class TestGetManagerId(AsyncTestCase):
                 r"  FROM reservation"
                 r" INNER JOIN reservation_member ON reservation_member.reservation_id = reservation.id"
                 r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
-            reservation_id=self.reservation_id, fetch=1
+            reservation_id=self.reservation_id,
         )

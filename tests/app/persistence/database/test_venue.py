@@ -73,10 +73,10 @@ class TestBrowse(AsyncTestCase):
         ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_venue
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_venue
         mock_fetch.return_value = self.total_count,
         result = await venue.browse(
             name=self.name,
@@ -99,7 +99,7 @@ class TestBrowse(AsyncTestCase):
                     fr' AND is_published = %(is_published)s'
                     fr' ORDER BY current_user_count DESC, venue.id'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                limit=self.limit, offset=self.offset, fetch='all', **self.params,
+                limit=self.limit, offset=self.offset, **self.params,
             ),
             call(
                 sql=fr'SELECT COUNT(*)'
@@ -111,7 +111,7 @@ class TestBrowse(AsyncTestCase):
                     fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
                     fr' AND is_published = %(is_published)s'
                     fr' ORDER BY current_user_count DESC, venue.id) AS tbl',
-                fetch=1, **self.params,
+                **self.params,
             )
         ])
 
@@ -142,9 +142,9 @@ class TestRead(AsyncTestCase):
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_venue
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_venue
 
         result = await venue.read(venue_id=self.venue_id)
 
@@ -156,13 +156,13 @@ class TestRead(AsyncTestCase):
                 fr'  FROM venue'
                 fr' WHERE venue.id = %(venue_id)s'
                 fr' AND is_published',
-            fetch=1, venue_id=self.venue_id,
+            venue_id=self.venue_id,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = None
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = None
 
         with self.assertRaises(exc.NotFound):
             await venue.read(venue_id=self.venue_id)
@@ -174,5 +174,5 @@ class TestRead(AsyncTestCase):
                 fr'  FROM venue'
                 fr' WHERE venue.id = %(venue_id)s'
                 fr' AND is_published',
-            fetch=1, venue_id=self.venue_id,
+            venue_id=self.venue_id,
         )

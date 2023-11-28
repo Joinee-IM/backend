@@ -28,8 +28,7 @@ async def add(
             r'  RETURNING id',
         email=email, pass_hash=pass_hash, nickname=nickname, gender=gender, role=role,
         is_google_login=is_google_login, access_token=access_token, refresh_token=refresh_token,
-        fetch=1,
-    ).execute()
+    ).fetch_one()
     return id_
 
 
@@ -42,8 +41,8 @@ async def read_by_email(email: str) -> tuple[int, str, RoleType, bool]:
             sql=r'SELECT id, pass_hash, role, is_verified'
                 r'  FROM account'
                 r' WHERE email = %(email)s',
-            email=email, fetch=1,
-        ).execute()
+            email=email,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 
@@ -56,8 +55,8 @@ async def read(account_id: int) -> do.Account:
             sql=r'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
                 r'  FROM account'
                 r' WHERE id = %(account_id)s',
-            account_id=account_id, fetch=1,
-        ).execute()
+            account_id=account_id,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 
@@ -97,7 +96,6 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
             r"       is_google_login = %(is_google_login)s"
             r" WHERE id = %(account_id)s",
         access_token=access_token, refresh_token=refresh_token, is_google_login=True, account_id=account_id,
-        fetch=None,
     ).execute()
 
 
@@ -126,18 +124,18 @@ async def edit(
         sql=fr'UPDATE account'
             fr'   SET {update_sql}'
             fr' WHERE id = %(account_id)s',
-        account_id=account_id, **to_update, fetch=None,
+        account_id=account_id, **to_update,
     ).execute()
 
 
 async def search(query: str) -> Sequence[do.Account]:
     results = await PostgresQueryExecutor(
-        r'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
-        r'  FROM account'
-        r' WHERE (email LIKE %(query)s'
-        r'    OR nickname LIKE %(query)s)'
-        r'   AND is_verified = %(is_verified)s',
-        query=query, is_verified=True, fetch='all',
+        sql=r'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
+            r'  FROM account'
+            r' WHERE (email LIKE %(query)s'
+            r'    OR nickname LIKE %(query)s)'
+            r'   AND is_verified = %(is_verified)s',
+        query=query, is_verified=True,
     ).fetch_all()
 
     return [
@@ -155,7 +153,6 @@ async def get_google_token(account_id: int) -> tuple[str, str]:
             r"  FROM account"
             r" WHERE id = %(account_id)s",
         account_id=account_id,
-        fetch='one',
-    ).execute()
+    ).fetch_one()
 
     return access_token, refresh_token

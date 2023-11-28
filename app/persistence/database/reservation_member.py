@@ -13,7 +13,7 @@ async def batch_add(reservation_id: int, member_ids: Sequence[int], manager_id: 
         sql=fr'INSERT INTO reservation_member'
             fr'            (reservation_id, account_id, is_manager, is_joined)'
             fr'     VALUES {value_sql}',
-        reservation_id=reservation_id, is_joined=False, **params, fetch=None,
+        reservation_id=reservation_id, is_joined=False, **params,
     ).execute()
 
 
@@ -36,7 +36,7 @@ async def browse(
             r'  FROM reservation_member'
             fr' {where_sql}'
             r' ORDER BY is_manager, account_id',
-        **params, fetch='all',
+        **params,
     ).fetch_all()
 
     return [

@@ -9,8 +9,8 @@ async def browse(place_type: enums.PlaceType, place_id: int) -> Sequence[do.Albu
         sql=r'SELECT id, place_id, type, file_uuid'
             r'  FROM album'
             r' WHERE place_id = %(place_id)s AND type = %(place_type)s',
-        place_id=place_id, place_type=place_type, fetch='all',
-    ).execute()
+        place_id=place_id, place_type=place_type,
+    ).fetch_all()
 
     return [
         do.Album(

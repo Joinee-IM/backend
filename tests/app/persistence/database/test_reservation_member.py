@@ -25,5 +25,5 @@ class TestBatchAdd(AsyncTestCase):
                 r'            (reservation_id, account_id, is_manager, is_joined)'
                 r'     VALUES (%(reservation_id)s, %(account_id_0)s, %(is_manager_0)s, %(is_joined)s),'
                 r' (%(reservation_id)s, %(account_id_1)s, %(is_manager_1)s, %(is_joined)s)',
-            reservation_id=self.reservation_id, is_joined=False, **self.params, fetch=None,
+            reservation_id=self.reservation_id, is_joined=False, **self.params,
         )

@@ -40,8 +40,8 @@ async def browse(
             fr'  FROM business_hour'
             fr' {where_sql}'
             fr' ORDER BY id',
-        fetch='all', **params,
-    ).execute()
+        **params,
+    ).fetch_all()
 
     return [
         do.BusinessHour(

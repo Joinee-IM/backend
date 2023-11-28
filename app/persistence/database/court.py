@@ -12,8 +12,8 @@ async def read(court_id: int, include_unpublished: bool = False) -> do.Court:
                 fr'  FROM court'
                 fr' WHERE id = %(court_id)s'
                 fr'{" AND is_published = True" if not include_unpublished else ""}',
-            court_id=court_id, fetch=1,
-        ).execute()
+            court_id=court_id,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 
@@ -26,7 +26,7 @@ async def browse(venue_id: int, include_unpublished: bool = False) -> Sequence[d
             fr'  FROM court'
             fr' WHERE venue_id = %(venue_id)s'
             fr'{" AND is_published = True" if not include_unpublished else ""}',
-        venue_id=venue_id, fetch='all',
+        venue_id=venue_id,
     ).fetch_all()
 
     return [

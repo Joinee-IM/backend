@@ -71,7 +71,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY stadium_name DESC'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                account_id=self.account_id, fetch='all', limit=self.limit, offset=self.offset,
+                account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
                 sql=r'SELECT COUNT(*)'
@@ -91,7 +91,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY stadium_name DESC) AS tbl',
-                account_id=self.account_id, fetch=1,
+                account_id=self.account_id,
             ),
         ])
 
@@ -132,7 +132,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY (start_time, is_cancelled) DESC'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                account_id=self.account_id, fetch='all', limit=self.limit, offset=self.offset,
+                account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
                 sql=r'SELECT COUNT(*)'
@@ -152,7 +152,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY (start_time, is_cancelled) DESC) AS tbl',
-                account_id=self.account_id, fetch=1,
+                account_id=self.account_id,
             ),
         ])
 
@@ -193,7 +193,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY start_time DESC'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                account_id=self.account_id, fetch='all', limit=self.limit, offset=self.offset,
+                account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
                 sql=r'SELECT COUNT(*)'
@@ -213,6 +213,6 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
                     fr' ORDER BY start_time DESC) AS tbl',
-                account_id=self.account_id, fetch=1,
+                account_id=self.account_id,
             ),
         ])

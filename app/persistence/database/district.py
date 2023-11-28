@@ -10,8 +10,7 @@ async def browse(city_id: int) -> Sequence[do.District]:
             r'  FROM district'
             r' WHERE district.city_id = %(city_id)s',
         city_id=city_id,
-        fetch='all',
-    ).execute()
+    ).fetch_all()
 
     return [
         do.District(

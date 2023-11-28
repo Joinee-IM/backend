@@ -39,13 +39,13 @@ async def browse_my_reservation(
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
             r' LIMIT %(limit)s OFFSET %(offset)s',
-        account_id=account_id, fetch='all', limit=limit, offset=offset,
+        account_id=account_id, limit=limit, offset=offset,
     ).fetch_all()
 
     total_count, = await PostgresQueryExecutor(
         sql=fr'SELECT COUNT(*)'
             fr'  FROM ({sql}) AS tbl',
-        account_id=account_id, fetch=1,
+        account_id=account_id,
     ).fetch_one()
 
     return [

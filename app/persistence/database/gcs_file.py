@@ -10,7 +10,7 @@ async def add_with_do(gcs_file: do.GCSFile) -> None:
         sql=r"INSERT INTO gcs_file"
             r"            (file_uuid, key, bucket, filename)"
             r"     VALUES (%(uuid)s, %(key)s, %(bucket)s, %(filename)s)",
-        uuid=gcs_file.uuid, key=gcs_file.key, bucket=gcs_file.bucket, filename=gcs_file.filename, fetch=0,
+        uuid=gcs_file.uuid, key=gcs_file.key, bucket=gcs_file.bucket, filename=gcs_file.filename,
     ).execute()
 
 
@@ -19,7 +19,7 @@ async def add(file_uuid: UUID, key: str, bucket: str, filename: str) -> None:
         sql=r"INSERT INTO gcs_file"
             r"            (file_uuid, key, bucket, filename)"
             r"     VALUES (%(uuid)s, %(key)s, %(bucket)s, %(filename)s)",
-        uuid=file_uuid, key=key, bucket=bucket, filename=filename, fetch=None,
+        uuid=file_uuid, key=key, bucket=bucket, filename=filename,
     ).execute()
 
 
@@ -29,8 +29,8 @@ async def read(file_uuid: UUID) -> do.GCSFile:
             sql=r'SELECT file_uuid, key, bucket, filename'
                 r'  FROM gcs_file'
                 r' WHERE file_uuid = %(file_uuid)s',
-            file_uuid=file_uuid, fetch=1,
-        ).execute()
+            file_uuid=file_uuid,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 

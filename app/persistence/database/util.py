@@ -15,30 +15,15 @@ class QueryExecutor:
     UNIQUE_VIOLATION_ERROR = Exception
 
     def __init__(
-        self, sql: str, fetch: int | str | None, parameters: dict[str, any] = None,
+        self, sql: str, parameters: dict[str, any] = None,
         **params,
     ):
         self.sql, self.params = self._format(sql, parameters, **params)
-        self.fetch = fetch
 
     @staticmethod
     @abc.abstractmethod
     def _format(sql: str, parameters: dict[str, any] = None, **params):
         raise NotImplementedError
-
-    async def execute(self):
-        func_map = collections.defaultdict(
-            lambda: self.fetch_none, {
-                0: self.fetch_none,
-                1: self.fetch_one,
-                'one': self.fetch_one,
-                'all': self.fetch_all,
-            },
-        )
-        try:
-            return await func_map[self.fetch]()
-        except self.UNIQUE_VIOLATION_ERROR:
-            raise exc.UniqueViolationError
 
     @abc.abstractmethod
     async def fetch_all(self):
@@ -49,7 +34,7 @@ class QueryExecutor:
         raise NotImplementedError
 
     @abc.abstractmethod
-    async def fetch_none(self):
+    async def execute(self):
         raise NotImplementedError
 
 
@@ -76,21 +61,30 @@ class PostgresQueryExecutor(QueryExecutor):
         return formatted_query, positional_args
 
     async def fetch_all(self):
-        async with pg_pool_handler.cursor() as cursor:
-            cursor: asyncpg.connection.Connection
-            results = await cursor.fetch(self.sql, *self.params)
-        return results
+        try:
+            async with pg_pool_handler.cursor() as cursor:
+                cursor: asyncpg.connection.Connection
+                results = await cursor.fetch(self.sql, *self.params)
+            return results
+        except exc.UniqueViolationError:
+            raise exc.UniqueViolationError
 
     async def fetch_one(self):
-        async with pg_pool_handler.cursor() as cursor:
-            cursor: asyncpg.connection.Connection
-            result = await cursor.fetchrow(self.sql, *self.params)
-        return result
+        try:
+            async with pg_pool_handler.cursor() as cursor:
+                cursor: asyncpg.connection.Connection
+                result = await cursor.fetchrow(self.sql, *self.params)
+            return result
+        except self.UNIQUE_VIOLATION_ERROR:
+            raise exc.UniqueViolationError
 
-    async def fetch_none(self):
-        async with pg_pool_handler.cursor() as cursor:
-            cursor: asyncpg.connection.Connection
-            await cursor.execute(self.sql, *self.params)
+    async def execute(self):
+        try:
+            async with pg_pool_handler.cursor() as cursor:
+                cursor: asyncpg.connection.Connection
+                await cursor.execute(self.sql, *self.params)
+        except exc.UniqueViolationError:
+            raise exc.UniqueViolationError
 
 
 def generate_query_parameters(criteria_dict: dict[str, tuple[typing.Any, str]]) -> tuple[list, dict[str: typing.Any]]:

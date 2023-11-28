@@ -12,7 +12,7 @@ class TestAddAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.happy_path_result = 1
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=(1,)))
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', AsyncMock(return_value=(1,)))
     async def test_add_account_happy_path(self):
         result = await account.add(
             email='email@email.com', pass_hash='pass_hash', nickname='nickname',
@@ -21,7 +21,7 @@ class TestAddAccount(AsyncTestCase):
         self.assertEqual(result, self.happy_path_result)
 
     @patch(
-        'app.persistence.database.util.PostgresQueryExecutor.execute',
+        'app.persistence.database.util.PostgresQueryExecutor.fetch_one',
         AsyncMock(side_effect=exc.UniqueViolationError),
     )
     async def test_add_account_unique_error(self):
@@ -39,17 +39,17 @@ class TestReadByEmail(AsyncTestCase):
         self.execute_result_not_verified = 1, 'hash', 'NORMAL', False
         self.expect_output = 1, 'hash', RoleType.normal, True
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock):
-        mock_execute.return_value = self.execute_result
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock):
+        mock_fetch.return_value = self.execute_result
 
         result = await account.read_by_email(self.email)
 
         self.assertEqual(result, self.expect_output)
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock):
-        mock_execute.return_value = None
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock):
+        mock_fetch.return_value = None
         with self.assertRaises(exc.NotFound):
             await account.read_by_email(self.email)
 
@@ -62,7 +62,7 @@ class TestRead(AsyncTestCase):
             role=RoleType.normal, is_verified=True, is_google_login=False,
         )
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_happy_path(self, mock_executor: AsyncMock):
         mock_executor.return_value = 1, 'email@email.com', 'nickname', 'MALE', None, 'NORMAL', True, False
 
@@ -70,7 +70,7 @@ class TestRead(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_not_found(self, mock_executor: AsyncMock):
         mock_executor.return_value = None
         with self.assertRaises(exc.NotFound):
@@ -116,7 +116,6 @@ class TestEdit(AsyncTestCase):
                 '   SET nickname = %(nickname)s, gender = %(gender)s, image_uuid = %(image_uuid)s'
                 ' WHERE id = %(account_id)s',
             account_id=self.account_id, nickname=self.nickname, gender=self.gender, image_uuid=self.image_uuid,
-            fetch=None,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -133,7 +132,7 @@ class TestEdit(AsyncTestCase):
             sql='UPDATE account'
                 '   SET nickname = %(nickname)s'
                 ' WHERE id = %(account_id)s',
-            account_id=self.account_id, nickname=self.nickname, fetch=None,
+            account_id=self.account_id, nickname=self.nickname,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -162,8 +161,21 @@ class TestSearch(AsyncTestCase):
             ),
         ]
 
-    async def test_happy_path(self):
-        pass
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_accounts
+
+        result = await account.search(query=self.query)
+        self.assertEqual(result, self.accounts)
+        mock_init.assert_called_with(
+            sql=r'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
+                r'  FROM account'
+                r' WHERE (email LIKE %(query)s'
+                r'    OR nickname LIKE %(query)s)'
+                r'   AND is_verified = %(is_verified)s',
+            query=self.query, is_verified=True,
+        )
 
 
 class TestGetGoogleToken(AsyncTestCase):
@@ -171,7 +183,7 @@ class TestGetGoogleToken(AsyncTestCase):
         self.account_id = 1
         self.expect_result = ('access_token', 'refresh_token')
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_happy_path(self, mock_executor: AsyncMock):
         mock_executor.return_value = 'access_token', 'refresh_token'
 

@@ -46,9 +46,9 @@ class TestBrowse(AsyncTestCase):
         ]
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_business_hour
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_business_hour
 
         result = await business_hour.browse(
             place_id=self.place_id,
@@ -65,13 +65,13 @@ class TestBrowse(AsyncTestCase):
                 ' AND (business_hour.weekday = %(weekday_0)s AND business_hour.start_time <= %(end_time_0)s AND business_hour.end_time >= %(start_time_0)s)'  # noqa
                 ''
                 ' ORDER BY id',
-            fetch='all', **self.params,
+            **self.params,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_no_time_range(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_business_hour
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
+    async def test_no_time_range(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_business_hour
 
         result = await business_hour.browse(
             place_id=self.place_id,
@@ -85,5 +85,5 @@ class TestBrowse(AsyncTestCase):
                 ' WHERE type = %(place_type)s'
                 ' AND place_id = %(place_id)s'
                 ' ORDER BY id',
-            fetch='all', **self.params_no_time_range,
+            **self.params_no_time_range,
         )

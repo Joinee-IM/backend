@@ -9,8 +9,8 @@ async def add(account_id: int, email: str) -> UUID:
         sql=fr"INSERT INTO email_verification (account_id, email)"
             fr"     VALUES (%(account_id)s, %(email)s)"
             fr"  RETURNING code",
-        account_id=account_id, email=email, fetch=1,
-    ).execute()
+        account_id=account_id, email=email,
+    ).fetch_one()
     return code
 
 
@@ -21,8 +21,8 @@ async def verify_email(code: UUID):
                 r'   SET is_consumed = %(is_consumed)s'
                 r' WHERE code = %(code)s'
                 r' RETURNING account_id',
-            is_consumed=True, code=code, fetch=1,
-        ).execute()
+            is_consumed=True, code=code,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 
@@ -30,7 +30,7 @@ async def verify_email(code: UUID):
         sql=r'UPDATE account'
             r'   SET is_verified = %(is_verified)s'
             r' WHERE id = %(account_id)s',
-        is_verified=True, account_id=account_id, fetch=0,
+        is_verified=True, account_id=account_id,
     ).execute()
 
 
@@ -40,8 +40,8 @@ async def read(account_id: int, email: str) -> UUID:
             sql=r'SELECT code'
                 r'  FROM email_verification'
                 r' WHERE account_id = %(account_id)s AND email = %(email)s',
-            email=email, account_id=account_id, fetch=1,
-        ).execute()
+            email=email, account_id=account_id,
+        ).fetch_one()
     except TypeError:
         raise exc.NotFound
 

@@ -90,10 +90,10 @@ class TestBrowse(AsyncTestCase):
         ], self.total_count
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_stadium
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_stadium
         mock_fetch.return_value = self.total_count,
 
         result = await stadium.browse(
@@ -133,7 +133,7 @@ class TestBrowse(AsyncTestCase):
                     fr' GROUP BY stadium.id, city.id, district.id'
                     fr' ORDER BY stadium.id'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                limit=self.limit, offset=self.offset, place_type=enums.PlaceType.stadium, fetch='all',
+                limit=self.limit, offset=self.offset, place_type=enums.PlaceType.stadium,
                 **self.query_params,
             ),
             call(
@@ -162,16 +162,16 @@ class TestBrowse(AsyncTestCase):
                     fr' AND business_hour.end_time >= %(start_time_0)s)'
                     fr' GROUP BY stadium.id, city.id, district.id'
                     fr' ORDER BY stadium.id) AS tbl',
-                place_type=enums.PlaceType.stadium, fetch=1,
+                place_type=enums.PlaceType.stadium,
                 **self.query_params,
             ),
         ])
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
-    async def test_no_filter(self, mock_fetch: AsyncMock, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_stadium
+    async def test_no_filter(self, mock_fetch: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_stadium
         mock_fetch.return_value = self.total_count,
         result = await stadium.browse()
 
@@ -195,7 +195,7 @@ class TestBrowse(AsyncTestCase):
                     fr' GROUP BY stadium.id, city.id, district.id'
                     fr' ORDER BY stadium.id'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
-                limit=10, offset=0, place_type=enums.PlaceType.stadium, fetch='all', **self.no_filter_params,
+                limit=10, offset=0, place_type=enums.PlaceType.stadium, **self.no_filter_params,
             ),
             call(
                 sql=fr'SELECT COUNT(*)'
@@ -216,7 +216,7 @@ class TestBrowse(AsyncTestCase):
                     fr' WHERE stadium.is_published = %(is_published)s'
                     fr' GROUP BY stadium.id, city.id, district.id'
                     fr' ORDER BY stadium.id) AS tbl',
-                place_type=enums.PlaceType.stadium, fetch=1, **self.no_filter_params,
+                place_type=enums.PlaceType.stadium, **self.no_filter_params,
             ),
         ])
 
@@ -250,9 +250,9 @@ class TestRead(AsyncTestCase):
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_stadium
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_stadium
 
         result = await stadium.read(stadium_id=self.stadium_id)
 
@@ -275,13 +275,13 @@ class TestRead(AsyncTestCase):
                 fr' AND stadium.is_published = True'
                 fr' GROUP BY stadium.id, city.id, district.id'
                 fr' ORDER BY stadium.id',
-            fetch=1, place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
+            place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = None
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = None
 
         with self.assertRaises(exc.NotFound):
             await stadium.read(stadium_id=self.stadium_id)
@@ -304,5 +304,5 @@ class TestRead(AsyncTestCase):
                 fr' AND stadium.is_published = True'
                 fr' GROUP BY stadium.id, city.id, district.id'
                 fr' ORDER BY stadium.id',
-            fetch=1, place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
+            place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
         )

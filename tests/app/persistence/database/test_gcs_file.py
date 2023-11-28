@@ -54,17 +54,17 @@ class TestRead(AsyncTestCase):
             filename='fad08f83-6ad7-429f-baa6-b1c3abf4991c',
         )
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock):
-        mock_execute.return_value = self.file_uuid, self.key, self.bucket, self.filename
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock):
+        mock_fetch.return_value = self.file_uuid, self.key, self.bucket, self.filename
 
         result = await gcs_file.read(file_uuid=self.file_uuid)
 
         self.assertEqual(result, self.expect_result)
 
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_not_found(self, mock_execute: AsyncMock):
-        mock_execute.return_value = None
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_not_found(self, mock_fetch: AsyncMock):
+        mock_fetch.return_value = None
 
         with self.assertRaises(exc.NotFound):
             await gcs_file.read(file_uuid=self.file_uuid)

@@ -44,13 +44,13 @@ async def browse(
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
-        limit=limit, offset=offset, fetch='all', **params,
-    ).execute()
+        limit=limit, offset=offset, **params,
+    ).fetch_all()
 
     record_count, = await PostgresQueryExecutor(
         sql=fr'SELECT COUNT(*)'
             fr'  FROM ({sql}) AS tbl',
-        fetch=1, **params
+        **params
     ).fetch_one()
 
     return [
@@ -75,8 +75,8 @@ async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
             fr'  FROM venue'
             fr' WHERE venue.id = %(venue_id)s'
             fr'{" AND is_published" if not include_unpublished else ""}',
-        fetch=1, venue_id=venue_id,
-    ).execute()
+        venue_id=venue_id,
+    ).fetch_one()
 
     try:
         (id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area,
