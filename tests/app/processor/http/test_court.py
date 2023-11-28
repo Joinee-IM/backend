@@ -28,7 +28,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
         ]
         self.start_date = date(2023, 11, 11)
 
-        self.court = do.Court(id=self.court_id, venue_id=1)
+        self.court = do.Court(id=self.court_id, venue_id=1, is_published=True)
         self.business_hours = [
             do.BusinessHour(
                 id=1,
@@ -196,6 +196,7 @@ class TestAddReservation(AsyncTestCase):
         self.court = do.Court(
             id=1,
             venue_id=1,
+            is_published=True,
         )
         self.venue = do.Venue(
             id=1,
@@ -215,6 +216,7 @@ class TestAddReservation(AsyncTestCase):
             fee_type=enums.FeeType.per_hour,
             sport_equipments='equipment',
             facilities='facility',
+            is_published=True,
         )
         self.reservations = [do.Reservation(
             id=1,
@@ -288,7 +290,7 @@ class TestAddReservation(AsyncTestCase):
         )
         mock_batch_add.assert_called_with(
             reservation_id=self.reservation_id,
-            member_ids=self.data.member_ids+[self.account_id],
+            member_ids=self.data.member_ids + [self.account_id],
             manager_id=self.account_id,
         )
         mock_add_event.assert_called_with(

@@ -17,12 +17,14 @@ async def browse(
         order: enums.Sorter = enums.Sorter.desc,
         limit: int = 10,
         offset: int = 0,
+        include_unpublished: bool = False,
 ) -> tuple[Sequence[do.Venue], int]:
     criteria_dict = {
         'name': (f'%{name}%' if name else None, 'name LIKE %(name)s'),
         'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
         'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
         'is_reservable': (is_reservable, 'is_reservable = %(is_reservable)s'),
+        'is_published': (True if not include_unpublished else None, 'is_published = %(is_published)s'),
     }
     query, params = generate_query_parameters(criteria_dict=criteria_dict)
 
@@ -33,7 +35,7 @@ async def browse(
     sql = (
         fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
         fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-        fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+        fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
         fr'  FROM venue'
         fr' {where_sql}'
         fr' ORDER BY {order_sql} venue.id'
@@ -57,26 +59,29 @@ async def browse(
             is_reservable=is_reservable, is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type,
             area=area, current_user_count=current_user_count, capability=capability, sport_equipments=sport_equipments,
             facilities=facilities, court_count=court_count, court_type=court_type, sport_id=sport_id,
+            is_published=is_published,
         )
         for id_, stadium_id, name, floor, reservation_interval, is_reservable,
         is_chargeable, fee_rate, fee_type, area, current_user_count, capability,
-        sport_equipments, facilities, court_count, court_type, sport_id in results
+        sport_equipments, facilities, court_count, court_type, sport_id, is_published in results
     ], record_count
 
 
-async def read(venue_id: int) -> do.Venue:
+async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
     result = await PostgresQueryExecutor(
         sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
             fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-            fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+            fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
             fr'  FROM venue'
-            fr' WHERE venue.id = %(venue_id)s',
+            fr' WHERE venue.id = %(venue_id)s'
+            fr'{" AND is_published" if not include_unpublished else ""}',
         fetch=1, venue_id=venue_id,
     ).execute()
 
     try:
-        id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area, \
-            current_user_count, capability, sport_equipments, facilities, court_count, court_type, sport_id = result
+        (id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area,
+            current_user_count, capability, sport_equipments, facilities, court_count, court_type, sport_id,
+            is_published) = result
     except TypeError:
         raise exc.NotFound
 
@@ -98,4 +103,5 @@ async def read(venue_id: int) -> do.Venue:
         court_count=court_count,
         court_type=court_type,
         sport_id=sport_id,
+        is_published=is_published,
     )

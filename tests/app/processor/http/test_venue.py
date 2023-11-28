@@ -38,6 +38,7 @@ class TestBrowseVenue(AsyncTestCase):
                 fee_type=enums.FeeType.per_hour,
                 sport_equipments='equipment',
                 facilities='facility',
+                is_published=True,
             ),
             do.Venue(
                 id=2,
@@ -57,6 +58,7 @@ class TestBrowseVenue(AsyncTestCase):
                 fee_type=enums.FeeType.per_person,
                 sport_equipments='equipment1',
                 facilities='facility1',
+                is_published=True,
             ),
         ]
         self.expect_result = venue.Response(
@@ -103,6 +105,7 @@ class TestReadVenue(AsyncTestCase):
             fee_type=enums.FeeType.per_hour,
             sport_equipments='equipment',
             facilities='facility',
+            is_published=True,
         )
         self.expect_result = Response(data=self.venue)
 
@@ -125,10 +128,12 @@ class TestBrowseCourt(AsyncTestCase):
             do.Court(
                 id=1,
                 venue_id=1,
+                is_published=True,
             ),
             do.Court(
                 id=2,
                 venue_id=1,
+                is_published=True,
             ),
         ]
         self.expect_result = Response(

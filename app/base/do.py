@@ -37,6 +37,7 @@ class Stadium(BaseModel):
     description: Optional[str]
     long: float
     lat: float
+    is_published: bool
 
 
 class City(BaseModel):
@@ -62,6 +63,7 @@ class Venue(BaseModel):
     court_count: int
     court_type: str
     sport_id: int
+    is_published: bool
 
 
 class District(BaseModel):
@@ -110,6 +112,7 @@ class Reservation(BaseModel):
 class Court(BaseModel):
     id: int
     venue_id: int
+    is_published: bool
 
 
 class ReservationMember(BaseModel):

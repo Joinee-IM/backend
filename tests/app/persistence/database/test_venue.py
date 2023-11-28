@@ -20,11 +20,12 @@ class TestBrowse(AsyncTestCase):
             'name': f'%{self.name}%',
             'sport_id': self.sport_id,
             'is_reservable': self.is_reservable,
+            'is_published': True,
         }
 
         self.raw_venue = [
-            (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1),
-            (2, 2, 'name2', 'floor2', 2, False, False, 2, 'PER_PERSON', 2, 2, 2, 'equipment1', 'facility1', 2, '場', 2),
+            (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1, True),
+            (2, 2, 'name2', 'floor2', 2, False, False, 2, 'PER_PERSON', 2, 2, 2, 'equipment1', 'facility1', 2, '場', 2, True),
         ]
         self.total_count = 1
 
@@ -47,6 +48,7 @@ class TestBrowse(AsyncTestCase):
                 fee_type=enums.FeeType.per_hour,
                 sport_equipments='equipment',
                 facilities='facility',
+                is_published=True,
             ),
             do.Venue(
                 id=2,
@@ -66,6 +68,7 @@ class TestBrowse(AsyncTestCase):
                 fee_type=enums.FeeType.per_person,
                 sport_equipments='equipment1',
                 facilities='facility1',
+                is_published=True,
             ),
         ], self.total_count
 
@@ -90,9 +93,10 @@ class TestBrowse(AsyncTestCase):
             call(
                 sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
                     fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-                    fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                    fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                     fr'  FROM venue'
                     fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    fr' AND is_published = %(is_published)s'
                     fr' ORDER BY current_user_count DESC, venue.id'
                     fr' LIMIT %(limit)s OFFSET %(offset)s',
                 limit=self.limit, offset=self.offset, fetch='all', **self.params,
@@ -102,9 +106,10 @@ class TestBrowse(AsyncTestCase):
                     fr'  FROM ('
                     fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
                     fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-                    fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                    fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                     fr'  FROM venue'
                     fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    fr' AND is_published = %(is_published)s'
                     fr' ORDER BY current_user_count DESC, venue.id) AS tbl',
                 fetch=1, **self.params,
             )
@@ -114,7 +119,7 @@ class TestBrowse(AsyncTestCase):
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
         self.venue_id = 1
-        self.raw_venue = (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1)
+        self.raw_venue = (1, 1, 'name', 'floor', 1, True, True, 1, 'PER_HOUR', 1, 1, 1, 'equipment', 'facility', 1, '場', 1, True)
         self.venue = do.Venue(
             id=1,
             stadium_id=1,
@@ -133,6 +138,7 @@ class TestRead(AsyncTestCase):
             fee_type=enums.FeeType.per_hour,
             sport_equipments='equipment',
             facilities='facility',
+            is_published=True,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -146,9 +152,10 @@ class TestRead(AsyncTestCase):
         mock_init.assert_called_with(
             sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
                 fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-                fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                 fr'  FROM venue'
-                fr' WHERE venue.id = %(venue_id)s',
+                fr' WHERE venue.id = %(venue_id)s'
+                fr' AND is_published',
             fetch=1, venue_id=self.venue_id,
         )
 
@@ -163,8 +170,9 @@ class TestRead(AsyncTestCase):
         mock_init.assert_called_with(
             sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
                 fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
-                fr'       sport_equipments, facilities, court_count, court_type, sport_id'
+                fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                 fr'  FROM venue'
-                fr' WHERE venue.id = %(venue_id)s',
+                fr' WHERE venue.id = %(venue_id)s'
+                fr' AND is_published',
             fetch=1, venue_id=self.venue_id,
         )
