@@ -1,6 +1,6 @@
 import app.const as const
 import app.utils.invitation_code as invitation_code
-from tests import Mock, TestCase
+from tests import TestCase
 
 
 class TestGenerate(TestCase):

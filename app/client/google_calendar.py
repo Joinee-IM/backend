@@ -42,7 +42,7 @@ class GoogleCalendar:
             creds.refresh(Request())
         self.service = build('calendar', 'v3', credentials=creds)
 
-    def add_calendar_event(self, data: AddEventInput) -> object:
+    def add_calendar_event(self, data: AddEventInput) -> dict:
         event = {
             'summary': data.summary,
             'location': data.stadium_name,
@@ -79,8 +79,12 @@ class GoogleCalendar:
 
 
 async def add_google_calendar_event(
-    reservation_id: int, start_time: NaiveDatetime, end_time: NaiveDatetime, account_id: int, stadium_id: int, member_ids: Sequence[int] = []
+    reservation_id: int, start_time: NaiveDatetime, end_time: NaiveDatetime,
+    account_id: int, stadium_id: int, member_ids: Sequence[int] = None
 ):
+    if not member_ids:
+        member_ids = []
+
     # get stadium name
     stadium = await db.stadium.read(stadium_id=stadium_id)
 
@@ -100,7 +104,7 @@ async def add_google_calendar_event(
     await calendar.build_connection()
     result = calendar.add_calendar_event(data=event)
 
-    await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result["id"])
+    await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result['id'])
 
 
 async def update_google_calendar_event(

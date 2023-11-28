@@ -1,7 +1,5 @@
 from unittest.mock import patch
 
-from parameterized import parameterized
-
 from app.persistence.database.util import PostgresQueryExecutor, QueryExecutor
 from tests import AsyncMock, AsyncTestCase
 
@@ -61,7 +59,7 @@ class TestQueryExecutor(AsyncTestCase):
     async def test_execute(self, mock_fetch_one: AsyncMock):
         QueryExecutor.__abstractmethods__ = set()
         mock_fetch_one.side_effect = Exception()
-        result = await MockQueryExecutor(sql=self.sql, fetch=1).execute()
+        await MockQueryExecutor(sql=self.sql, fetch=1).execute()
 
 
 class TestPostgresQueryExecutor(AsyncTestCase):

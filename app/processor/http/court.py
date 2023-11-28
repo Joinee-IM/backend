@@ -102,7 +102,8 @@ class AddReservationOutput(BaseModel):
 
 
 @router.post('/court/{court_id}/reservation')
-async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) -> Response[AddReservationOutput]:
+async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(get_auth_token)) \
+        -> Response[AddReservationOutput]:
     account_id = context.account.id
 
     reservations, _ = await db.reservation.browse(

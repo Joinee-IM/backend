@@ -310,7 +310,7 @@ class TestReadByCode(AsyncTestCase):
 class TestAddEventId(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
-        self.event_id = 1
+        self.event_id = 'event_id'
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=None))
     async def test_happy_path(self):

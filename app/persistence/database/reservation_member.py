@@ -1,8 +1,6 @@
-from datetime import date, datetime, timedelta
-from typing import Optional, Sequence
+from typing import Sequence
 
-import app.exceptions as exc
-from app.base import do, enums, vo
+from app.base import do
 from app.persistence.database.util import (PostgresQueryExecutor,
                                            generate_query_parameters)
 

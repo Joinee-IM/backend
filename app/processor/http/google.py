@@ -75,7 +75,8 @@ class BatchDownloadOutput(BaseModel):
 
 
 @router.get('/file/download/batch')
-async def batch_download_files(data: BatchDownloadInput, _=Depends(get_auth_token)) -> Response[Sequence[BatchDownloadOutput]]:
+async def batch_download_files(data: BatchDownloadInput, _=Depends(get_auth_token)) \
+        -> Response[Sequence[BatchDownloadOutput]]:
     return Response(
         data=[
             BatchDownloadOutput(

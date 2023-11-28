@@ -140,7 +140,8 @@ class TestJoinReservation(AsyncTestCase):
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext, mock_update_event: AsyncMock):
+    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
+                              mock_update_event: AsyncMock):
         mock_context._context = self.context
         mock_read.return_value = self.reservation
 
