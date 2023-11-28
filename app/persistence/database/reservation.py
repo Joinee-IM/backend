@@ -233,3 +233,39 @@ async def delete(reservation_id: int) -> None:
             ' WHERE id = $1',
             reservation_id,
         )
+
+
+async def edit(
+        reservation_id: int,
+        stadium_id: int | None = None,
+        venue_id: int | None = None,
+        court_id: int | None = None,
+        start_time: datetime | None = None,
+        end_time: datetime | None = None,
+        vacancy: int | None = None,
+        technical_levels: Sequence[enums.TechnicalType] | None = None,
+        remark: str | None = None,
+):
+    criteria_dict = {
+        'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
+        'venue_id': (venue_id, 'venue_id = %(venue_id)s'),
+        'court_id': (court_id, 'court_id = %(court_id)s'),
+        'start_time': (start_time, 'start_time = %(start_time)s'),
+        'end_time': (end_time, 'end_time = %(end_time)s'),
+        'vacancy': (vacancy, 'vacancy = %(vacancy)s'),
+        'technical_levels': (technical_levels, 'technical_levels = %(technical_levels)s'),
+        'remark': (remark, 'remark = %(remark)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+    set_sql = ', '.join(query)
+
+    if not set_sql:
+        return
+
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE reservation'
+            fr'   SET {set_sql}'
+            fr' WHERE id = %(reservation_id)s',
+        **params, reservation_id=reservation_id, fetch=None,
+    ).execute()

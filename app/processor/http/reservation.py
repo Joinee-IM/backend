@@ -1,3 +1,4 @@
+from datetime import datetime
 from typing import Sequence
 
 from fastapi import APIRouter, Depends, responses
@@ -94,4 +95,56 @@ async def delete_reservation(reservation_id: int, _=Depends(get_auth_token)) -> 
         raise exc.NoPermission
 
     await db.reservation.delete(reservation_id=reservation_id)
+    return Response()
+
+
+class EditReservationInput(BaseModel):
+    court_id: int | None = None
+    start_time: datetime | None = None
+    end_time: datetime | None = None
+    vacancy: int | None = None
+    technical_levels: Sequence[enums.TechnicalType] | None = None
+    remark: str | None = None
+
+
+@router.patch('/reservation/{reservation_id}')
+async def edit_reservation(reservation_id: int, data: EditReservationInput, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse(reservation_id=reservation_id,
+                                                            account_id=context.account.id)
+
+    if not reservation_member or not reservation_member[0].is_manager:
+        raise exc.NoPermission
+
+    reservation = await db.reservation.read(reservation_id=reservation_id)
+
+    court = await db.court.read(court_id=data.court_id or reservation.court_id)
+    venue = await db.venue.read(venue_id=court.venue_id)
+    start_time = data.start_time or reservation.start_time
+    end_time = data.end_time or reservation.end_time
+
+    if start_time < context.request_time or start_time >= end_time:
+        raise exc.IllegalInput
+
+    reservations, _ = await db.reservation.browse(
+        court_id=court.id,
+        time_ranges=[vo.DateTimeRange(
+            start_time=start_time,
+            end_time=end_time,
+        )]
+    )
+
+    if len(reservations) >= 1 and reservation not in reservations:
+        raise exc.CourtReserved
+
+    await db.reservation.edit(
+        reservation_id=reservation_id,
+        court_id=court.id,
+        venue_id=venue.id,
+        stadium_id=venue.stadium_id,
+        start_time=start_time,
+        end_time=end_time,
+        vacancy=data.vacancy,
+        technical_levels=data.technical_levels,
+        remark=data.remark,
+    )
     return Response()
