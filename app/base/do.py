@@ -33,6 +33,7 @@ class Stadium(BaseModel):
     id: int
     name: str
     district_id: int
+    owner_id: int
     contact_number: Optional[str]
     description: Optional[str]
     long: float
