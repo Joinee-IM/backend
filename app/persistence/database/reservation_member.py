@@ -55,22 +55,23 @@ async def browse(
 async def leave(reservation_id: int, account_id: int) -> None:
     async with pg_pool_handler.cursor() as cursor:
         cursor: asyncpg.Connection
-        await cursor.execute(
+        is_manager = await cursor.fetchval(
             r'DELETE FROM reservation_member'
             r' WHERE reservation_id = $1'
-            r'   AND account_id = $2',
+            r'   AND account_id = $2'
+            r' RETURNING is_manager',
             reservation_id, account_id,
         )
-
-        await cursor.execute(
-            r'WITH tmp_tbl AS ('
-            r'  SELECT MIN(account_id) AS account_id'
-            r'  FROM reservation_member'
-            r'  WHERE reservation_id = $1'
-            r')'
-            r'UPDATE reservation_member'
-            r'   SET is_manager = $2'
-            r' WHERE reservation_id = $1'
-            r'  AND account_id = (SELECT account_id FROM tmp_tbl)',
-            reservation_id, True,
-        )
+        if is_manager:
+            await cursor.execute(
+                r'WITH tmp_tbl AS ('
+                r'  SELECT MIN(account_id) AS account_id'
+                r'  FROM reservation_member'
+                r'  WHERE reservation_id = $1'
+                r')'
+                r'UPDATE reservation_member'
+                r'   SET is_manager = $2'
+                r' WHERE reservation_id = $1'
+                r'  AND account_id = (SELECT account_id FROM tmp_tbl)',
+                reservation_id, True,
+            )
