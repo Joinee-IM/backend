@@ -11,6 +11,7 @@ class TestBrowseVenue(AsyncTestCase):
         self.params = venue.VenueSearchParameters(
             name='name',
             sport_id=1,
+            stadium_id=1,
             is_reservable=True,
             sort_by=enums.VenueAvailableSortBy.current_user_count,
             order=enums.Sorter.desc,
@@ -72,6 +73,7 @@ class TestBrowseVenue(AsyncTestCase):
         mock_browse.assert_called_with(
             name=self.params.name,
             sport_id=self.params.sport_id,
+            stadium_id=self.params.stadium_id,
             is_reservable=self.params.is_reservable,
             sort_by=self.params.sort_by,
             order=self.params.order,
