@@ -371,8 +371,6 @@ class TestEditReservation(AsyncTestCase):
             remark=self.data.remark,
         )
 
-        mock_context.reset_context()
-
     @freeze_time('2023-11-11')
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
@@ -460,4 +458,55 @@ class TestEditReservation(AsyncTestCase):
         mock_read_venue.assert_not_called()
         mock_browse_reservation.assert_not_called()
         mock_edit.assert_not_called()
+
         mock_context.reset_context()
+
+
+class TestLeaveReservation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.reservation_members = [
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=self.account_id,
+                is_joined=True,
+                is_manager=True,
+            )
+        ]
+        self.expect_result = Response()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.leave', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_leave: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_browse.return_value = self.reservation_members
+
+        result = await reservation.leave_reservation(
+            reservation_id=self.reservation_id,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_leave.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.leave', new_callable=AsyncMock)
+    async def test_not_found(self, mock_leave: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_browse.return_value = []
+
+        with self.assertRaises(exc.NotFound):
+            await reservation.leave_reservation(
+                reservation_id=self.reservation_id,
+            )
+        mock_leave.assert_not_called()
+        mock_context.reset_context()
+

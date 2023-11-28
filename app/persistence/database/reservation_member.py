@@ -1,8 +1,11 @@
 from typing import Sequence
 
+import asyncpg
+
 from app.base import do
 from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters)
+                                           generate_query_parameters,
+                                           pg_pool_handler)
 
 
 async def batch_add(reservation_id: int, member_ids: Sequence[int], manager_id: int | None = None) -> None:
@@ -47,3 +50,27 @@ async def browse(
             is_joined=is_joined,
         ) for reservation_id, account_id, is_manager, is_joined in results
     ]
+
+
+async def leave(reservation_id: int, account_id: int) -> None:
+    async with pg_pool_handler.cursor() as cursor:
+        cursor: asyncpg.Connection
+        await cursor.execute(
+            r'DELETE FROM reservation_member'
+            r' WHERE reservation_id = $1'
+            r'   AND account_id = $2',
+            reservation_id, account_id,
+        )
+
+        await cursor.execute(
+            r'WITH tmp_tbl AS ('
+            r'  SELECT MIN(account_id) AS account_id'
+            r'  FROM reservation_member'
+            r'  WHERE reservation_id = $1'
+            r')'
+            r'UPDATE reservation_member'
+            r'   SET is_manager = $2'
+            r' WHERE reservation_id = $1'
+            r'  AND account_id = (SELECT account_id FROM tmp_tbl)',
+            reservation_id, True,
+        )

@@ -147,4 +147,22 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
         technical_levels=data.technical_levels,
         remark=data.remark,
     )
+
+    return Response()
+
+
+@router.delete('/reservation/{reservation_id}/leave')
+async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
+    if not reservation_member:
+        raise exc.NotFound
+
+    await db.reservation_member.leave(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
+
     return Response()
