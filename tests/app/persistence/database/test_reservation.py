@@ -354,3 +354,39 @@ class TestGetManagerId(AsyncTestCase):
                 r" WHERE reservation.id = %(reservation_id)s AND reservation_member.is_manager = TRUE",
             reservation_id=self.reservation_id,
         )
+
+
+class TestEdit(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.stadium_id = 1
+        self.venue_id = 1
+        self.court_id = 1
+        self.start_time = datetime(2023, 11, 11, 11)
+        self.end_time = datetime(2023, 11, 11, 13)
+        self.vacancy = 1
+        self.technical_levels = [enums.TechnicalType.advanced]
+        self.remark = ''
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        result = await reservation.edit(
+            reservation_id=self.reservation_id,
+            stadium_id=self.stadium_id,
+            venue_id=self.venue_id,
+            court_id=self.court_id,
+            start_time=self.start_time,
+            end_time=self.start_time,
+            vacancy=self.vacancy,
+            technical_levels=self.technical_levels,
+            remark=self.remark,
+        )
+
+        self.assertIsNone(result)
+
+    async def test_no_update(self):
+        result = await reservation.edit(reservation_id=self.reservation_id)
+        self.assertIsNone(result)

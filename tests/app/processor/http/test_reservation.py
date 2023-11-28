@@ -1,5 +1,7 @@
 from datetime import datetime
 
+from freezegun import freeze_time
+
 import app.exceptions as exc
 from app.base import do, enums, vo
 from app.processor.http import reservation
@@ -224,4 +226,238 @@ class TestDeleteReservation(AsyncTestCase):
             account_id=self.account_id,
         )
         mock_delete.assert_not_called()
+        mock_context.reset_context()
+
+
+class TestEditReservation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'REQUEST_TIME': datetime(2023, 11, 11),
+        }
+        self.wrong_time_context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'REQUEST_TIME': datetime(2023, 11, 30),
+        }
+        self.data = reservation.EditReservationInput(
+            court_id=1,
+            start_time=datetime(2023, 11, 11, 11),
+            end_time=datetime(2023, 11, 11, 13),
+            vacancy=3,
+            technical_levels=[enums.TechnicalType.advanced],
+            remark='remark',
+        )
+        self.reservation_member = [
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=self.account_id,
+                is_manager=True,
+                is_joined=True,
+            )
+        ]
+        self.no_permission_reservation_member =  [
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=self.account_id,
+                is_manager=False,
+                is_joined=True,
+            )
+        ]
+        self.reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=0,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.court = do.Court(id=1, venue_id=1)
+        self.venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=True,
+            area=1,
+            capability=1,
+            current_user_count=1,
+            court_count=1,
+            court_type='場',
+            is_chargeable=True,
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+        )
+        self.reservations = [
+            do.Reservation(
+                id=1,
+                stadium_id=1,
+                venue_id=1,
+                court_id=1,
+                start_time=datetime(2023, 11, 17, 11, 11, 11),
+                end_time=datetime(2023, 11, 17, 13, 11, 11),
+                member_count=1,
+                vacancy=0,
+                technical_level=[enums.TechnicalType.advanced],
+                remark='remark',
+                invitation_code='invitation_code',
+                is_cancelled=False,
+            ),
+        ]
+        self.different_reservations = [
+            do.Reservation(
+                id=2,
+                stadium_id=1,
+                venue_id=1,
+                court_id=1,
+                start_time=datetime(2023, 11, 17, 11, 11, 11),
+                end_time=datetime(2023, 11, 17, 13, 11, 11),
+                member_count=1,
+                vacancy=0,
+                technical_level=[enums.TechnicalType.advanced],
+                remark='remark',
+                invitation_code='invitation_code',
+                is_cancelled=False,
+            ),
+        ]
+        self.expect_result = Response()
+
+    @freeze_time('2023-11-11')
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+                              mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                              mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+                              mock_context: MockContext):
+        mock_context._context = self.context
+
+        mock_browse_member.return_value = self.reservation_member
+        mock_read_reservation.return_value = self.reservation
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.venue
+        mock_browse_reservation.return_value = self.reservations, None
+
+        result = await reservation.edit_reservation(
+            reservation_id=self.reservation_id,
+            data=self.data,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_edit.assert_called_with(
+            reservation_id=self.reservation_id,
+            court_id=self.court.id,
+            venue_id=self.venue.id,
+            stadium_id=self.venue.stadium_id,
+            start_time=self.data.start_time,
+            end_time=self.data.end_time,
+            vacancy=self.data.vacancy,
+            technical_levels=self.data.technical_levels,
+            remark=self.data.remark,
+        )
+
+        mock_context.reset_context()
+
+    @freeze_time('2023-11-11')
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
+    async def test_court_reserve(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+                                 mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                                 mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+                                 mock_context: MockContext):
+        mock_context._context = self.context
+
+        mock_browse_member.return_value = self.reservation_member
+        mock_read_reservation.return_value = self.reservation
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.venue
+        mock_browse_reservation.return_value = self.different_reservations, None
+
+        with self.assertRaises(exc.CourtReserved):
+            await reservation.edit_reservation(
+                reservation_id=self.reservation_id,
+                data=self.data,
+            )
+        mock_edit.assert_not_called()
+        mock_context.reset_context()
+
+    @freeze_time('2023-11-11')
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
+    async def test_illegal_input_time(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+                                      mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                                      mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+                                      mock_context: MockContext):
+        mock_context._context = self.wrong_time_context
+
+        mock_browse_member.return_value = self.reservation_member
+        mock_read_reservation.return_value = self.reservation
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.venue
+        mock_browse_reservation.return_value = self.different_reservations, None
+
+        with self.assertRaises(exc.IllegalInput):
+            await reservation.edit_reservation(
+                reservation_id=self.reservation_id,
+                data=self.data,
+            )
+        mock_browse_reservation.assert_not_called()
+        mock_edit.assert_not_called()
+        mock_context.reset_context()
+
+    @freeze_time('2023-11-11')
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+                                 mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                                 mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+                                 mock_context: MockContext):
+        mock_context._context = self.wrong_time_context
+
+        mock_browse_member.return_value = self.no_permission_reservation_member
+        mock_read_reservation.return_value = self.reservation
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.venue
+        mock_browse_reservation.return_value = self.different_reservations, None
+
+        with self.assertRaises(exc.NoPermission):
+            await reservation.edit_reservation(
+                reservation_id=self.reservation_id,
+                data=self.data,
+            )
+        mock_read_reservation.assert_not_called()
+        mock_read_court.assert_not_called()
+        mock_read_venue.assert_not_called()
+        mock_browse_reservation.assert_not_called()
+        mock_edit.assert_not_called()
         mock_context.reset_context()
