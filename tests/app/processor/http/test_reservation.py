@@ -257,7 +257,7 @@ class TestEditReservation(AsyncTestCase):
                 is_joined=True,
             )
         ]
-        self.no_permission_reservation_member =  [
+        self.no_permission_reservation_member = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
@@ -279,7 +279,7 @@ class TestEditReservation(AsyncTestCase):
             invitation_code='invitation_code',
             is_cancelled=False,
         )
-        self.court = do.Court(id=1, venue_id=1)
+        self.court = do.Court(id=1, venue_id=1, is_published=True)
         self.venue = do.Venue(
             id=1,
             stadium_id=1,
@@ -298,6 +298,7 @@ class TestEditReservation(AsyncTestCase):
             fee_type=enums.FeeType.per_hour,
             sport_equipments='equipment',
             facilities='facility',
+            is_published=True,
         )
         self.reservations = [
             do.Reservation(
@@ -467,13 +468,27 @@ class TestLeaveReservation(AsyncTestCase):
         self.reservation_id = 1
         self.account_id = 1
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.only_one_reservation_members = [
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=self.account_id,
+                is_joined=True,
+                is_manager=True,
+            ),
+        ]
         self.reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
                 is_joined=True,
                 is_manager=True,
-            )
+            ),
+            do.ReservationMember(
+                reservation_id=self.reservation_id,
+                account_id=2,
+                is_joined=True,
+                is_manager=True,
+            ),
         ]
         self.expect_result = Response()
 
@@ -498,6 +513,24 @@ class TestLeaveReservation(AsyncTestCase):
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
+    async def test_delete_reservation(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_browse.return_value = self.only_one_reservation_members
+
+        result = await reservation.leave_reservation(
+            reservation_id=self.reservation_id,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_delete.assert_called_with(
+            reservation_id=self.reservation_id,
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.leave', new_callable=AsyncMock)
     async def test_not_found(self, mock_leave: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
@@ -509,4 +542,3 @@ class TestLeaveReservation(AsyncTestCase):
             )
         mock_leave.assert_not_called()
         mock_context.reset_context()
-
