@@ -18,11 +18,11 @@ class QueryExecutor:
         self, sql: str, parameters: dict[str, any] = None,
         **params,
     ):
-        self.sql, self.params = self._format(sql, parameters, **params)
+        self.sql, self.params = self.format(sql, parameters, **params)
 
     @staticmethod
     @abc.abstractmethod
-    def _format(sql: str, parameters: dict[str, any] = None, **params):
+    def format(sql: str, parameters: dict[str, any] = None, **params):
         raise NotImplementedError
 
     @abc.abstractmethod
@@ -42,7 +42,7 @@ class PostgresQueryExecutor(QueryExecutor):
     UNIQUE_VIOLATION_ERROR = asyncpg.exceptions.UniqueViolationError
 
     @staticmethod
-    def _format(sql: str, parameters: dict[str, any] = None, **params):
+    def format(sql: str, parameters: dict[str, any] = None, **params):
         """
         reference: https://github.com/MagicStack/asyncpg/issues/9#issuecomment-600659015
         """
