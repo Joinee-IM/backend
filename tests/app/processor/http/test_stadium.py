@@ -1,10 +1,11 @@
-from datetime import time
+from datetime import datetime, time
 from unittest.mock import patch
 
+import app.exceptions as exc
 from app.base import do, enums, vo
 from app.processor.http import stadium
-from app.utils import Response
-from tests import AsyncMock, AsyncTestCase
+from app.utils import AuthedAccount, Response
+from tests import AsyncMock, AsyncTestCase, MockContext
 
 
 class TestBrowseStadium(AsyncTestCase):
@@ -140,3 +141,89 @@ class TestReadStadium(AsyncTestCase):
         mock_read.assert_called_with(
             stadium_id=self.stadium_id
         )
+
+
+class TestEditStadium(AsyncTestCase):
+    def setUp(self) -> None:
+        self.stadium_id = 1
+        self.data = stadium.EditStadiumInput(
+            name='name',
+            address='address',
+            contact_number='contact_num',
+            time_ranges=[
+                vo.WeekTimeRange(
+                    weekday=1,
+                    start_time=time(8, 0, 0),
+                    end_time=time(17, 0, 0),
+                ),
+            ],
+            is_published=True,
+        )
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                )
+            ]
+        )
+        self.expect_result = Response()
+
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_edit: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.stadium
+
+        result = await stadium.edit_stadium(
+            stadium_id=self.stadium_id,
+            data=self.data,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_edit.assert_called_with(
+            stadium_id=self.stadium_id,
+            name=self.data.name,
+            address=self.data.address,
+            contact_number=self.data.contact_number,
+            time_ranges=self.data.time_ranges,
+            is_published=self.data.is_published,
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.edit', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_edit: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.wrong_context
+        mock_read.return_value = self.stadium
+
+        with self.assertRaises(exc.NoPermission):
+            await stadium.edit_stadium(
+                stadium_id=self.stadium_id,
+                data=self.data,
+            )
+
+        mock_edit.assert_not_called()
+        mock_context.reset_context()

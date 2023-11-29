@@ -1,10 +1,13 @@
 from typing import Sequence
 
+import asyncpg
+
 import app.exceptions as exc
 from app.base import do, enums, vo
 from app.persistence.database.util import (
     PostgresQueryExecutor,
     generate_query_parameters,
+    pg_pool_handler,
 )
 
 
@@ -61,7 +64,7 @@ async def browse(
         fr' INNER JOIN city ON district.city_id = city.id'
         fr'  LEFT JOIN venue ON stadium.id = venue.stadium_id'
         fr'  LEFT JOIN sport ON venue.sport_id = sport.id'
-        fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+        fr'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
         fr'                         AND business_hour.type = %(place_type)s'
         fr' {where_sql}'
         fr' GROUP BY stadium.id, city.id, district.id'
@@ -122,9 +125,9 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
             fr'  FROM stadium'
             fr' INNER JOIN district ON stadium.district_id = district.id'
             fr' INNER JOIN city ON district.city_id = city.id'
-            fr' INNER JOIN venue ON stadium.id = venue.stadium_id'
-            fr' INNER JOIN sport ON venue.sport_id = sport.id'
-            fr' INNER JOIN business_hour ON business_hour.place_id = stadium.id'
+            fr'  LEFT JOIN venue ON stadium.id = venue.stadium_id'
+            fr'  LEFT JOIN sport ON venue.sport_id = sport.id'
+            fr'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
             fr'                         AND business_hour.type = %(place_type)s'
             fr' WHERE stadium.id = %(stadium_id)s'
             fr'{" AND stadium.is_published = True" if not include_unpublished else ""}'
@@ -152,7 +155,7 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
         is_published=is_published,
         city=city,
         district=district,
-        sports=[name for name in sport_names],
+        sports=[name for name in sport_names if name],
         business_hours=[
             do.BusinessHour(
                 id=bid,
@@ -164,3 +167,66 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
             ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
         ],
     )
+
+
+async def edit(
+        stadium_id: int,
+        name: str | None = None,
+        address: str | None = None,
+        contact_number: str | None = None,
+        time_ranges: Sequence[vo.WeekTimeRange] | None = None,
+        is_published: bool | None = None,
+) -> None:
+    if not time_ranges:
+        time_ranges = []
+
+    criteria_dict = {
+        'name': (name, 'name = %(name)s'),
+        'address': (address, 'address = %(address)s'),
+        'contact_number': (contact_number, 'contact_number = %(contact_number)s'),
+        'is_published': (is_published, 'is_published = %(is_published)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+
+    set_sql = ', '.join(query)
+
+    update_sql, update_param = PostgresQueryExecutor.format(
+        sql=fr'UPDATE stadium'
+            fr'   SET {set_sql}'
+            fr' WHERE id = %(stadium_id)s',
+        stadium_id=stadium_id, **params,
+    )
+
+    raw_insert_sql = ', '.join(
+        f'(%(place_id)s, %(place_type)s, %(weekday_{i})s, %(start_time_{i})s, %(end_time_{i})s)' for i, time_range in
+        enumerate(time_ranges))
+    raw_params = {f'weekday_{i}': time_range.weekday for i, time_range in enumerate(time_ranges)}
+    raw_params.update({f'start_time_{i}': time_range.start_time for i, time_range in enumerate(time_ranges)})
+    raw_params.update({f'end_time_{i}': time_range.end_time for i, time_range in enumerate(time_ranges)})
+
+    insert_sql, insert_params = PostgresQueryExecutor.format(
+        sql=fr'INSERT INTO business_hour'
+            fr'            (place_id, type, weekday, start_time, end_time)'
+            fr'     VALUES {raw_insert_sql}',
+        place_id=stadium_id, place_type=enums.PlaceType.stadium, **raw_params,
+    )
+
+    async with pg_pool_handler.cursor() as cursor:
+        cursor: asyncpg.connection.Connection
+        if set_sql:
+            await cursor.execute(
+                update_sql, *update_param,
+            )
+
+        if time_ranges:
+            await cursor.execute(
+                'DELETE FROM business_hour'
+                ' WHERE type = $1'
+                '   AND place_id = $2',
+                enums.PlaceType.stadium, stadium_id,
+            )
+
+            await cursor.execute(
+                insert_sql, *insert_params,
+            )

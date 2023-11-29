@@ -6,7 +6,7 @@ from tests import AsyncMock, AsyncTestCase
 
 class MockQueryExecutor(QueryExecutor):
     @staticmethod
-    def _format(sql: str, parameters: dict[str, any] = None, **params):
+    def format(sql: str, parameters: dict[str, any] = None, **params):
         return "", []
 
     async def fetch_all(self):
@@ -26,7 +26,7 @@ class TestQueryExecutor(AsyncTestCase):
 
     def test_format(self):
         with self.assertRaises(NotImplementedError):
-            QueryExecutor._format(sql=self.sql, parameters=self.params)
+            QueryExecutor.format(sql=self.sql, parameters=self.params)
 
     async def test_fetch_all(self):
         QueryExecutor.__abstractmethods__ = set()
@@ -60,7 +60,7 @@ class TestPostgresQueryExecutor(AsyncTestCase):
 
     @patch('app.log.context', AsyncTestCase.context)
     async def test__format(self):
-        result = PostgresQueryExecutor._format(
+        result = PostgresQueryExecutor.format(
             sql=self.sql, parameters=self.params,
         )
         self.assertEqual(result, self._format_expect_output)
