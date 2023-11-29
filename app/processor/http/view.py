@@ -26,6 +26,8 @@ class ViewMyReservationParams(BaseModel):
 class ViewMyReservationOutput(BaseModel):
     data: Sequence[vo.ViewMyReservation]
     total_count: int
+    limit: int
+    offset: int
 
 
 @router.get('/view/reservation')
@@ -44,4 +46,6 @@ async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Dep
     return Response(data=ViewMyReservationOutput(
         data=reservations,
         total_count=total_count,
+        limit=params.limit,
+        offset=params.offset,
     ))

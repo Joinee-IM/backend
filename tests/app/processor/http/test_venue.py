@@ -62,7 +62,10 @@ class TestBrowseVenue(AsyncTestCase):
             ),
         ]
         self.expect_result = venue.Response(
-            data=venue.BrowseVenueOutput(data=self.venues, total_count=self.total_count)
+            data=venue.BrowseVenueOutput(
+                data=self.venues, total_count=self.total_count,
+                limit=self.params.limit, offset=self.params.offset
+            ),
         )
 
     @patch('app.persistence.database.venue.browse', new_callable=AsyncMock)

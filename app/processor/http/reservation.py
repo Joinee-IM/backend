@@ -33,6 +33,8 @@ class BrowseReservationParameters(BaseModel):
 class BrowseReservationOutput(BaseModel):
     data: Sequence[do.Reservation]
     total_count: int
+    limit: int
+    offset: int
 
 
 # use POST here since GET can't process request body
@@ -55,6 +57,8 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
         data=BrowseReservationOutput(
             data=reservations,
             total_count=total_count,
+            limit=params.limit,
+            offset=params.offset,
         ),
     )
 

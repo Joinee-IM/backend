@@ -36,6 +36,8 @@ class TestViewMyReservation(AsyncTestCase):
         self.expect_result = Response(data=view.ViewMyReservationOutput(
             data=self.reservations,
             total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
         ))
 
     @patch('app.processor.http.view.context', new_callable=MockContext)

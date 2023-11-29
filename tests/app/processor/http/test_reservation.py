@@ -49,6 +49,8 @@ class TestBrowseReservation(AsyncTestCase):
         self.expect_result = Response(data=reservation.BrowseReservationOutput(
             data=self.reservations,
             total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
         ))
 
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)

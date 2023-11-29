@@ -27,6 +27,8 @@ class VenueSearchParameters(BaseModel):
 class BrowseVenueOutput(BaseModel):
     data: Sequence[do.Venue]
     total_count: int
+    limit: int
+    offset: int
 
 
 @router.get('/venue')
@@ -41,7 +43,8 @@ async def browse_venue(params: VenueSearchParameters = Depends()) -> Response[Br
         limit=params.limit,
         offset=params.offset,
     )
-    return Response(data=BrowseVenueOutput(data=venues, total_count=total_count))
+    return Response(data=BrowseVenueOutput(data=venues, total_count=total_count,
+                                           limit=params.limit, offset=params.offset))
 
 
 @router.get('/venue/{venue_id}')
