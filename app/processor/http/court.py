@@ -1,4 +1,4 @@
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from typing import Optional, Sequence
 
 from fastapi import APIRouter, Depends, responses
@@ -106,6 +106,15 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
         -> Response[AddReservationOutput]:
     account_id = context.account.id
 
+    court = await db.court.read(court_id=court_id)
+    venue = await db.venue.read(venue_id=court.venue_id)
+
+    if not venue.is_reservable:
+        raise exc.VenueUnreservable
+
+    if data.start_time > context.request_time + timedelta(days=venue.reservation_interval):
+        raise exc.CourtUnreservable
+
     reservations, _ = await db.reservation.browse(
         court_id=court_id,
         time_ranges=[vo.DateTimeRange(
@@ -117,12 +126,10 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     if reservations:
         raise exc.CourtReserved
 
-    if data.start_time < datetime.now() or data.start_time >= data.end_time:
+    if data.start_time < context.request_time or data.start_time >= data.end_time:
         raise exc.IllegalInput
 
     invite_code = invitation_code.generate()
-    court = await db.court.read(court_id=court_id)
-    venue = await db.venue.read(venue_id=court.venue_id)
 
     reservation_id = await db.reservation.add(
         court_id=court_id,
@@ -138,7 +145,7 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     )
     await db.reservation_member.batch_add(
         reservation_id=reservation_id,
-        member_ids=data.member_ids + [account_id],
+        member_ids=list(data.member_ids) + [account_id],
         manager_id=account_id,
     )
 

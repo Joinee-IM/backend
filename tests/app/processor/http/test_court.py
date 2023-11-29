@@ -185,8 +185,17 @@ class TestAddReservation(AsyncTestCase):
         self.court_id = 1
         self.account_id = 1
         self.data = court.AddReservationInput(
-            start_time=datetime(2023, 11, 11, 11, 11, 11),
-            end_time=datetime(2023, 11, 11, 13, 11, 11),
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            technical_level=[enums.TechnicalType.advanced],
+            remark='',
+            member_count=1,
+            vacancy=1,
+            member_ids=[2],
+        )
+        self.unreservable_data = court.AddReservationInput(
+            start_time=datetime(2023, 11, 30, 11, 11, 11),
+            end_time=datetime(2023, 12, 1, 13, 11, 11),
             technical_level=[enums.TechnicalType.advanced],
             remark='',
             member_count=1,
@@ -205,6 +214,26 @@ class TestAddReservation(AsyncTestCase):
             floor='floor',
             reservation_interval=1,
             is_reservable=True,
+            is_chargeable=True,
+            area=1,
+            capability=1,
+            current_user_count=1,
+            court_count=1,
+            court_type='場',
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+            is_published=True,
+        )
+        self.unreservable_venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=False,
             is_chargeable=True,
             area=1,
             capability=1,
@@ -239,7 +268,14 @@ class TestAddReservation(AsyncTestCase):
         )
         self.reservation_id = 1
         self.invitation_code = 'code'
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4)),
+            'REQUEST_TIME': datetime(2023, 11, 17)
+        }
+        self.illegal_time_context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4)),
+            'REQUEST_TIME': datetime(2023, 11, 30)
+        }
         self.wrong_account_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
 
@@ -290,7 +326,7 @@ class TestAddReservation(AsyncTestCase):
         )
         mock_batch_add.assert_called_with(
             reservation_id=self.reservation_id,
-            member_ids=self.data.member_ids + [self.account_id],
+            member_ids=list(self.data.member_ids) + [self.account_id],
             manager_id=self.account_id,
         )
         mock_add_event.assert_called_with(
@@ -304,11 +340,15 @@ class TestAddReservation(AsyncTestCase):
 
         mock_context.reset_context()
 
-    @freeze_time('2023-11-27')
     @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
-    async def test_illegal_time(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
-        mock_context._context = self.context
+    async def test_illegal_time(self, mock_browse_reservation: AsyncMock, mock_read_venue: AsyncMock,
+                                mock_read_court: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.illegal_time_context
+        mock_read_venue.return_value = self.venue
+        mock_read_court.return_value = self.court
         mock_browse_reservation.return_value = None, 0
 
         with self.assertRaises(exc.IllegalInput):
@@ -324,11 +364,15 @@ class TestAddReservation(AsyncTestCase):
 
         mock_context.reset_context()
 
-    @freeze_time('2023-11-27')
     @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
-    async def test_court(self, mock_browse_reservation: AsyncMock, mock_context: MockContext):
+    async def test_court_reserve(self, mock_browse_reservation: AsyncMock, mock_read_venue: AsyncMock,
+                         mock_read_court: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
+        mock_read_venue.return_value = self.venue
+        mock_read_court.return_value = self.court
         mock_browse_reservation.return_value = self.reservations, 1
 
         with self.assertRaises(exc.CourtReserved):
@@ -341,5 +385,39 @@ class TestAddReservation(AsyncTestCase):
                 end_time=self.data.end_time,
             )],
         )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    async def test_venue_unreservable(self, mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                                      mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.unreservable_venue
+
+        with self.assertRaises(exc.VenueUnreservable):
+            await court.add_reservation(
+                court_id=self.court_id,
+                data=self.data,
+            )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    async def test_court_unreservable(self, mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+                                      mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read_court.return_value = self.court
+        mock_read_venue.return_value = self.venue
+
+        with self.assertRaises(exc.CourtUnreservable):
+            await court.add_reservation(
+                court_id=self.court_id,
+                data=self.unreservable_data,
+            )
 
         mock_context.reset_context()
