@@ -50,7 +50,7 @@ async def browse(
     where_sql += (' AND ' if where_sql else 'WHERE ') + or_query if or_query else ''
 
     sql = (
-        fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+        fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
         fr'       description, long, lat, stadium.is_published,'
         fr'       city.name,'
         fr'       district.name,'
@@ -88,6 +88,7 @@ async def browse(
             contact_number=contact_number,
             description=description,
             owner_id=owner_id,
+            address=address,
             long=long,
             lat=lat,
             is_published=is_published,
@@ -105,14 +106,14 @@ async def browse(
                 ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
             ],
         )
-        for id_, name, district_id, contact_number, owner_id, description, long, lat, is_published, city, district,
-        sport_names, business_hours in results
+        for id_, name, district_id, contact_number, owner_id, address, description, long, lat, is_published, city,
+        district, sport_names, business_hours in results
     ], record_count
 
 
 async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewStadium:
     result = await PostgresQueryExecutor(
-        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
             fr'       description, long, lat, stadium.is_published,'
             fr'       city.name,'
             fr'       district.name,'
@@ -133,7 +134,7 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
     ).fetch_one()
 
     try:
-        (id_, name, district_id, contact_number, owner_id, description, long, lat, is_published,
+        (id_, name, district_id, contact_number, owner_id, address, description, long, lat, is_published,
          city, district, sport_names, business_hours) = result
     except TypeError:
         raise exc.NotFound
@@ -144,6 +145,7 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
         district_id=district_id,
         contact_number=contact_number,
         owner_id=owner_id,
+        address=address,
         description=description,
         long=long,
         lat=lat,
