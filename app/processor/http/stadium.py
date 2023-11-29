@@ -26,6 +26,8 @@ class StadiumSearchParameters(BaseModel):
 class BrowseStadiumOutput(BaseModel):
     data: Sequence[vo.ViewStadium]
     total_count: int
+    limit: int
+    offset: int
 
 
 # use POST here since GET can't process request body
@@ -40,7 +42,8 @@ async def browse_stadium(params: StadiumSearchParameters) -> Response[BrowseStad
         limit=params.limit,
         offset=params.offset,
     )
-    return Response(data=BrowseStadiumOutput(data=stadiums, total_count=row_count))
+    return Response(data=BrowseStadiumOutput(data=stadiums, total_count=row_count,
+                                             limit=params.limit, offset=params.offset))
 
 
 @router.get('/stadium/{stadium_id}')

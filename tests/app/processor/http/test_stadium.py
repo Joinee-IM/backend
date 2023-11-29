@@ -79,7 +79,9 @@ class TestBrowseStadium(AsyncTestCase):
         self.total_count = 1
         self.expect_result = Response(data=stadium.BrowseStadiumOutput(
             data=self.stadiums,
-            total_count=self.total_count
+            total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
         ))
 
     @patch('app.persistence.database.stadium.browse', new_callable=AsyncMock)
