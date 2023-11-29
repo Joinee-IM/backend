@@ -36,8 +36,8 @@ class TestBrowse(AsyncTestCase):
         self.query_params['name'] = f'%{self.params["name"]}%'
         self.no_filter_params = {'is_published': True}
         self.raw_stadium = [
-            (1, 'name', 1, '0800092000', 1, 'desc', 3.14, 1.59, True, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
-            (2, 'name2', 2, '0800092001', 2, 'desc2', 3.15, 1.58, True, 'city2', 'district2', ['sport2'], [(2, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
+            (1, 'name', 1, '0800092000', 1, 'address1', 'desc', 3.14, 1.59, True, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
+            (2, 'name2', 2, '0800092001', 2, 'address2', 'desc2', 3.15, 1.58, True, 'city2', 'district2', ['sport2'], [(2, 1, 'STADIUM', 1, time(10, 27), time(20, 27))]),
         ]
         self.total_count = 1
         self.stadiums = [
@@ -48,6 +48,7 @@ class TestBrowse(AsyncTestCase):
                 contact_number='0800092000',
                 description='desc',
                 owner_id=1,
+                address='address1',
                 long=3.14,
                 lat=1.59,
                 is_published=True,
@@ -72,6 +73,7 @@ class TestBrowse(AsyncTestCase):
                 contact_number='0800092001',
                 description='desc2',
                 owner_id=2,
+                address='address2',
                 long=3.15,
                 lat=1.58,
                 is_published=True,
@@ -111,7 +113,7 @@ class TestBrowse(AsyncTestCase):
         self.assertEqual(result, self.stadiums)
         mock_init.assert_has_calls([
             call(
-                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                     fr'       description, long, lat, stadium.is_published,'
                     fr'       city.name,'
                     fr'       district.name,'
@@ -141,7 +143,7 @@ class TestBrowse(AsyncTestCase):
             call(
                 sql=fr'SELECT COUNT(*)'
                     fr'  FROM ('
-                    fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+                    fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                     fr'       description, long, lat, stadium.is_published,'
                     fr'       city.name,'
                     fr'       district.name,'
@@ -180,7 +182,7 @@ class TestBrowse(AsyncTestCase):
         self.assertEqual(result, self.stadiums)
         mock_init.assert_has_calls([
             call(
-                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+                sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                     fr'       description, long, lat, stadium.is_published,'
                     fr'       city.name,'
                     fr'       district.name,'
@@ -202,7 +204,7 @@ class TestBrowse(AsyncTestCase):
             call(
                 sql=fr'SELECT COUNT(*)'
                     fr'  FROM ('
-                    fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+                    fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                     fr'       description, long, lat, stadium.is_published,'
                     fr'       city.name,'
                     fr'       district.name,'
@@ -226,7 +228,7 @@ class TestBrowse(AsyncTestCase):
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
         self.stadium_id = 1
-        self.raw_stadium = (1, 'name', 1, '0800092000', 1, 'desc', 3.14, 1.59, True, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))])
+        self.raw_stadium = (1, 'name', 1, '0800092000', 1, 'address', 'desc', 3.14, 1.59, True, 'city1', 'district1', ['sport1'], [(1, 1, 'STADIUM', 1, time(10, 27), time(20, 27))])
         self.stadium = vo.ViewStadium(
             id=1,
             name='name',
@@ -234,6 +236,7 @@ class TestRead(AsyncTestCase):
             contact_number='0800092000',
             description='desc',
             owner_id=1,
+            address='address',
             long=3.14,
             lat=1.59,
             is_published=True,
@@ -261,7 +264,7 @@ class TestRead(AsyncTestCase):
 
         self.assertEqual(result, self.stadium)
         mock_init.assert_called_with(
-            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                 fr'       description, long, lat, stadium.is_published,'
                 fr'       city.name,'
                 fr'       district.name,'
@@ -290,7 +293,7 @@ class TestRead(AsyncTestCase):
             await stadium.read(stadium_id=self.stadium_id)
 
         mock_init.assert_called_with(
-            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id,'
+            sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
                 fr'       description, long, lat, stadium.is_published,'
                 fr'       city.name,'
                 fr'       district.name,'
