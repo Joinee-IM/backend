@@ -44,7 +44,7 @@ class EmailExists(AckException):
     """
     duplicate email
     """
-    status_code = 200
+    status_code = 409
 
 
 class IllegalInput(AckException):
@@ -58,14 +58,14 @@ class CourtReserved(AckException):
     """
     Court is already reserved
     """
-    status_code = 200
+    status_code = 409
 
 
 class ReservationFull(AckException):
     """
     Reservation's vacancy <= 0
     """
-    status_code = 200
+    status_code = 409
 
 
 class WrongPassword(AckException):
@@ -73,3 +73,17 @@ class WrongPassword(AckException):
     old password is wrong while editing password
     """
     status_code = 400
+
+
+class VenueUnreservable(AckException):
+    """
+    Venue can't be reserved
+    """
+    status_code = 409
+
+
+class CourtUnreservable(AckException):
+    """
+    Court can't be reserved yet.
+    """
+    status_code = 409
