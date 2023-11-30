@@ -57,8 +57,8 @@ class ViewProviderStadiumParams(BaseModel):
     is_published: bool | None = Query(default=None)
     sort_by: enums.ViewProviderStadiumSortBy = Query(default=enums.ViewProviderStadiumSortBy.district_name)
     order: enums.Sorter = Query(default=enums.Sorter.asc)
-    limit: int = Limit
-    offset: int = Offset
+    limit: int = Query(default=None)
+    offset: int = Query(default=None)
 
 
 class ViewProviderStadiumOutput(BaseModel):
@@ -89,6 +89,48 @@ async def view_provider_stadium(params: ViewProviderStadiumParams = Depends(),
 
     return Response(data=ViewProviderStadiumOutput(
         data=stadiums,
+        total_count=total_count,
+        limit=params.limit,
+        offset=params.offset,
+    ))
+
+
+class ViewProviderVenueParams(BaseModel):
+    stadium_id: int | None = Query(default=None)
+    is_published: bool | None = Query(default=None)
+    sort_by: enums.ViewProviderVenueSortBy = Query(default=enums.ViewProviderVenueSortBy.stadium_name)
+    order: enums.Sorter = Query(default=enums.Sorter.asc)
+    limit: int | None = Query(default=None)
+    offset: int | None = Query(default=None)
+
+
+class ViewProviderVenueOutput(BaseModel):
+    data: Sequence[vo.ViewProviderVenue]
+    total_count: int
+    limit: int | None
+    offset: int | None
+
+
+@router.get('/view/venue/provider')
+async def view_provider_venue(params: ViewProviderVenueParams = Depends(),
+                              _=Depends(get_auth_token)) -> Response[ViewProviderVenueOutput]:
+    account = await db.account.read(account_id=context.account.id)
+
+    if account.role is not enums.RoleType.provider:
+        raise exc.NoPermission
+
+    venues, total_count = await db.view.browse_provider_venues(
+        owner_id=account.id,
+        stadium_id=params.stadium_id,
+        is_published=params.is_published,
+        sort_by=params.sort_by,
+        order=params.order,
+        limit=params.limit,
+        offset=params.offset,
+    )
+
+    return Response(data=ViewProviderVenueOutput(
+        data=venues,
         total_count=total_count,
         limit=params.limit,
         offset=params.offset,

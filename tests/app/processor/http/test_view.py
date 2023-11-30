@@ -152,3 +152,79 @@ class TestViewProviderStadium(AsyncTestCase):
         mock_browse.assert_not_called()
 
         mock_context.reset_context()
+
+
+class TestViewProviderVenue(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.normal_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.normal, is_verified=True, is_google_login=False,
+        )
+        self.provider_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.provider, is_verified=True, is_google_login=False,
+        )
+        self.params = view.ViewProviderVenueParams(
+            stadium_id=1,
+            is_published=True,
+            sort_by=enums.ViewProviderVenueSortBy.stadium_name,
+            order=enums.Sorter.asc,
+            limit=10,
+            offset=0,
+        )
+        self.total_count = 1
+        self.venues = [
+            vo.ViewProviderVenue(
+                venue_id=1,
+                stadium_name='s1',
+                venue_name='v1',
+                court_count=1,
+                area=1,
+                is_published=True,
+            ),
+            vo.ViewProviderVenue(
+                venue_id=2,
+                stadium_name='s2',
+                venue_name='v2',
+                court_count=2,
+                area=2,
+                is_published=True,
+            ),
+        ]
+        self.expect_result = Response(data=view.ViewProviderVenueOutput(
+            data=self.venues,
+            total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
+        ))
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_venues', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.provider_account
+        mock_browse.return_value = self.venues, self.total_count
+
+        result = await view.view_provider_venue(
+            params=self.params,
+        )
+
+        self.assertEqual(result, self.expect_result)
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_venues', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.normal_account
+        mock_browse.return_value = self.venues, self.total_count
+
+        with self.assertRaises(exc.NoPermission):
+            await view.view_provider_venue(
+                params=self.params,
+            )
+
+        mock_context.reset_context()
