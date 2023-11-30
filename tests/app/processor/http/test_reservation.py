@@ -281,7 +281,7 @@ class TestEditReservation(AsyncTestCase):
             invitation_code='invitation_code',
             is_cancelled=False,
         )
-        self.court = do.Court(id=1, venue_id=1, is_published=True)
+        self.court = do.Court(id=1, venue_id=1, is_published=True, number=1)
         self.venue = do.Venue(
             id=1,
             stadium_id=1,

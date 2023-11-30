@@ -8,9 +8,9 @@ from tests import AsyncMock, AsyncTestCase, Mock
 
 class TestRead(AsyncTestCase):
     def setUp(self) -> None:
-        self.raw_court = 1, 1, True
+        self.raw_court = 1, 1, 1, True
         self.court_id = 1
-        self.court = do.Court(id=1, venue_id=1, is_published=True)
+        self.court = do.Court(id=1, venue_id=1, is_published=True, number=1)
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
@@ -21,7 +21,7 @@ class TestRead(AsyncTestCase):
 
         self.assertEqual(result, self.court)
         mock_init.assert_called_with(
-            sql='SELECT id, venue_id, is_published'
+            sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
                 ' WHERE id = %(court_id)s'
                 ' AND is_published = True',
@@ -37,7 +37,7 @@ class TestRead(AsyncTestCase):
             await court.read(court_id=self.court_id)
 
         mock_init.assert_called_with(
-            sql='SELECT id, venue_id, is_published'
+            sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
                 ' WHERE id = %(court_id)s'
                 ' AND is_published = True',
@@ -53,7 +53,7 @@ class TestRead(AsyncTestCase):
 
         self.assertEqual(result, self.court)
         mock_init.assert_called_with(
-            sql='SELECT id, venue_id, is_published'
+            sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
                 ' WHERE id = %(court_id)s',
             court_id=self.court_id,
@@ -64,18 +64,20 @@ class TestBrowse(AsyncTestCase):
     def setUp(self) -> None:
         self.venue_id = 1
         self.raw_court = [
-            (1, 1, True),
-            (2, 1, True),
+            (1, 1, 1, True),
+            (2, 1, 2, True),
         ]
         self.courts = [
             do.Court(
                 id=1,
                 venue_id=1,
+                number=1,
                 is_published=True,
             ),
             do.Court(
                 id=2,
                 venue_id=1,
+                number=2,
                 is_published=True,
             ),
         ]
@@ -89,7 +91,7 @@ class TestBrowse(AsyncTestCase):
 
         self.assertEqual(result, self.courts)
         mock_init.assert_called_with(
-            sql='SELECT id, venue_id, is_published'
+            sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
                 ' WHERE venue_id = %(venue_id)s'
                 ' AND is_published = True',
@@ -105,7 +107,7 @@ class TestBrowse(AsyncTestCase):
 
         self.assertEqual(result, self.courts)
         mock_init.assert_called_with(
-            sql='SELECT id, venue_id, is_published'
+            sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
                 ' WHERE venue_id = %(venue_id)s',
             venue_id=self.venue_id,
