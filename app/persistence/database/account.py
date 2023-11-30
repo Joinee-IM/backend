@@ -14,7 +14,7 @@ async def add(
     email: str,
     pass_hash: Optional[str] = None,
     nickname: Optional[str] = None,
-    gender: GenderType = GenderType.unrevealed,
+    gender: GenderType = None,
     role: RoleType = RoleType.normal,
     is_google_login: bool = False,
     access_token: Optional[str] = None,
