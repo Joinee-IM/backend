@@ -55,3 +55,11 @@ class ViewProviderVenue(BaseModel):
     court_count: int
     area: int
     is_published: bool
+
+
+class ViewProviderCourt(BaseModel):
+    court_id: int
+    stadium_name: str
+    venue_name: str
+    court_number: int
+    is_published: bool

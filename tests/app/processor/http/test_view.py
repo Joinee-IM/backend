@@ -202,7 +202,7 @@ class TestViewProviderVenue(AsyncTestCase):
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
-    @patch('app.persistence.database.view.browse_provider_venues', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_venue', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_read.return_value = self.provider_account
@@ -216,7 +216,7 @@ class TestViewProviderVenue(AsyncTestCase):
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
-    @patch('app.persistence.database.view.browse_provider_venues', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_venue', new_callable=AsyncMock)
     async def test_no_permission(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
         mock_read.return_value = self.normal_account
@@ -227,4 +227,79 @@ class TestViewProviderVenue(AsyncTestCase):
                 params=self.params,
             )
 
+        mock_context.reset_context()
+
+
+class TestViewProviderCourt(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.normal_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.normal, is_verified=True, is_google_login=False,
+        )
+        self.provider_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.provider, is_verified=True, is_google_login=False,
+        )
+        self.params = view.ViewProviderCourtParams(
+            stadium_id=1,
+            venue_id=1,
+            is_published=True,
+            sort_by=enums.ViewProviderCourtSortBy.stadium_name,
+            order=enums.Sorter.desc,
+            limit=10,
+            offset=0,
+        )
+        self.total_count = 1
+        self.courts = [
+            vo.ViewProviderCourt(
+                court_id=1,
+                stadium_name='s1',
+                venue_name='v1',
+                court_number=1,
+                is_published=True,
+            ),
+            vo.ViewProviderCourt(
+                court_id=2,
+                stadium_name='s2',
+                venue_name='v2',
+                court_number=2,
+                is_published=False,
+            ),
+        ]
+        self.expect_result = Response(data=view.ViewProviderCourtOutput(
+            data=self.courts,
+            total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
+        ))
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_court', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.provider_account
+        mock_browse.return_value = self.courts, self.total_count
+
+        result = await view.view_provider_court(
+            params=self.params,
+        )
+        self.assertEqual(result, self.expect_result)
+        mock_context.reset_context()
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_court', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.normal_account
+        mock_browse.return_value = self.courts, self.total_count
+
+        with self.assertRaises(exc.NoPermission):
+            await view.view_provider_court(
+                params=self.params,
+            )
+        mock_browse.assert_not_called()
         mock_context.reset_context()
