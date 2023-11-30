@@ -131,11 +131,13 @@ class TestBrowseCourt(AsyncTestCase):
             do.Court(
                 id=1,
                 venue_id=1,
+                number=1,
                 is_published=True,
             ),
             do.Court(
                 id=2,
                 venue_id=1,
+                number=2,
                 is_published=True,
             ),
         ]

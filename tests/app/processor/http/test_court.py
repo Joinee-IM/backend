@@ -28,7 +28,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
         ]
         self.start_date = date(2023, 11, 11)
 
-        self.court = do.Court(id=self.court_id, venue_id=1, is_published=True)
+        self.court = do.Court(id=self.court_id, venue_id=1, is_published=True, number=1)
         self.business_hours = [
             do.BusinessHour(
                 id=1,
@@ -206,6 +206,7 @@ class TestAddReservation(AsyncTestCase):
             id=1,
             venue_id=1,
             is_published=True,
+            number=1,
         )
         self.venue = do.Venue(
             id=1,

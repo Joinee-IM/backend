@@ -114,6 +114,7 @@ class Reservation(BaseModel):
 class Court(BaseModel):
     id: int
     venue_id: int
+    number: int
     is_published: bool
 
 
