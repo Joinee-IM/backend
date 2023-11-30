@@ -37,3 +37,12 @@ class ViewMyReservation(BaseModel):
     is_manager: bool
     vacancy: int
     status: enums.ReservationStatus
+
+
+class ViewProviderStadium(BaseModel):
+    stadium_id: int
+    city_name: str
+    district_name: str
+    stadium_name: str
+    venue_count: int
+    is_published: bool

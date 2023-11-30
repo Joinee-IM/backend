@@ -1,7 +1,7 @@
 from datetime import datetime
 
 import app.exceptions as exc
-from app.base import enums, vo
+from app.base import do, enums, vo
 from app.processor.http import view
 from app.utils import Response
 from app.utils.security import AuthedAccount
@@ -65,5 +65,90 @@ class TestViewMyReservation(AsyncTestCase):
 
         with self.assertRaises(exc.NoPermission):
             await view.view_my_reservation(params=self.params)
+
+        mock_context.reset_context()
+
+
+class TestViewProviderStadium(AsyncTestCase):
+    def setUp(self) -> None:
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.normal_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.normal, is_verified=True, is_google_login=False,
+        )
+        self.provider_account = do.Account(
+            id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
+            role=enums.RoleType.provider, is_verified=True, is_google_login=False,
+        )
+        self.params = view.ViewProviderStadiumParams(
+            city_id=1,
+            district_id=1,
+            is_published=True,
+            sort_by=enums.ViewProviderStadiumSortBy.stadium_name,
+            order=enums.Sorter.desc,
+            limit=1,
+            offset=0,
+        )
+        self.stadiums = [
+            vo.ViewProviderStadium(
+                stadium_id=1,
+                city_name='city',
+                district_name='district',
+                stadium_name='stadium',
+                venue_count=0,
+                is_published=True,
+            ),
+        ]
+        self.total_count = 1
+        self.expect_result = Response(data=view.ViewProviderStadiumOutput(
+            data=self.stadiums,
+            total_count=self.total_count,
+            limit=self.params.limit,
+            offset=self.params.offset,
+        ))
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_stadium', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.provider_account
+        mock_browse.return_value = self.stadiums, self.total_count
+
+        result = await view.view_provider_stadium(params=self.params)
+
+        self.assertEqual(result, self.expect_result)
+        mock_read.assert_called_with(
+            account_id=self.account_id,
+        )
+        mock_browse.assert_called_with(
+            owner_id=self.provider_account.id,
+            city_id=self.params.city_id,
+            district_id=self.params.district_id,
+            is_published=self.params.is_published,
+            sort_by=self.params.sort_by,
+            order=self.params.order,
+            limit=self.params.limit,
+            offset=self.params.offset,
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.view.context', new_callable=MockContext)
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.view.browse_provider_stadium', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_browse: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.normal_account
+        mock_browse.return_value = self.stadiums, self.total_count
+
+        with self.assertRaises(exc.NoPermission):
+            await view.view_provider_stadium(params=self.params)
+
+        mock_read.assert_called_with(
+            account_id=self.account_id,
+        )
+        mock_browse.assert_not_called()
 
         mock_context.reset_context()

@@ -49,3 +49,47 @@ async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Dep
         limit=params.limit,
         offset=params.offset,
     ))
+
+
+class ViewProviderStadiumParams(BaseModel):
+    city_id: int | None = Query(default=None)
+    district_id: int | None = Query(default=None)
+    is_published: bool | None = Query(default=None)
+    sort_by: enums.ViewProviderStadiumSortBy = Query(default=enums.ViewProviderStadiumSortBy.district_name)
+    order: enums.Sorter = Query(default=enums.Sorter.asc)
+    limit: int = Limit
+    offset: int = Offset
+
+
+class ViewProviderStadiumOutput(BaseModel):
+    data: Sequence[vo.ViewProviderStadium]
+    total_count: int
+    limit: int
+    offset: int
+
+
+@router.get('/view/stadium/provider')
+async def view_provider_stadium(params: ViewProviderStadiumParams = Depends(),
+                                _=Depends(get_auth_token)) -> Response[ViewProviderStadiumOutput]:
+    account = await db.account.read(account_id=context.account.id)
+
+    if account.role is not enums.RoleType.provider:
+        raise exc.NoPermission
+
+    stadiums, total_count = await db.view.browse_provider_stadium(
+        owner_id=account.id,
+        city_id=params.city_id,
+        district_id=params.district_id,
+        is_published=params.is_published,
+        sort_by=params.sort_by,
+        order=params.order,
+        limit=params.limit,
+        offset=params.offset,
+    )
+
+    return Response(data=ViewProviderStadiumOutput(
+        data=stadiums,
+        total_count=total_count,
+        limit=params.limit,
+        offset=params.offset,
+    ))
