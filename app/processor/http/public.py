@@ -61,6 +61,13 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
     return Response(data=LoginOutput(account_id=account_id, token=token))
 
 
+@router.post('/logout', tags=['Account'])
+async def logout(response: FastAPIResponse) -> Response:
+    response.delete_cookie('account_id')
+    response.delete_cookie('token')
+    return Response()
+
+
 class EmailVerificationInput(BaseModel):
     code: UUID
 

@@ -99,6 +99,13 @@ class TestLogin(AsyncTestCase):
         mock_verify.assert_not_called()
 
 
+class TestLogout(AsyncTestCase):
+    async def test_happy_path(self):
+        response = FastAPIResponse()
+        await public.logout(response=response)
+        self.assertEqual(len(response.raw_headers), 3)
+
+
 class TestEmailVerification(AsyncTestCase):
     def setUp(self) -> None:
         self.code = UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c')
