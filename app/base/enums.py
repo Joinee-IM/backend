@@ -67,3 +67,18 @@ class ViewMyReservationSortBy(StrEnum):
     is_manager = 'is_manager'
     vacancy = 'vacancy'
     status = 'status'
+
+
+class ViewProviderStadiumSortBy(StrEnum):
+    district_name = 'district_name'
+    stadium_name = 'stadium_name'
+    venue_count = 'venue_count'
+    is_published = 'is_published'
+
+
+class ViewProviderVenueSortBy(StrEnum):
+    stadium_name = 'stadium_name'
+    venue_name = 'venue_name'
+    court_count = 'court_count'
+    area = 'area'
+    is_published = 'is_published'
