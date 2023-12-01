@@ -1,4 +1,8 @@
-with open('logging.yaml', 'r') as conf:
+import os
+
+ENV = os.getenv('ENV', 'ci')
+
+with open(f'logging-{ENV}.yaml', 'r') as conf:
     import yaml
     log_config = yaml.safe_load(conf.read())
     import logging.config
