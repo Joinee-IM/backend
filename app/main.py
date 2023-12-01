@@ -32,12 +32,6 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 async def app_startup():
     log.info('app start.')
 
-    log.info('initializing database')
-    from app.config import pg_config
-    from app.persistence.database import pg_pool_handler
-    await pg_pool_handler.initialize(db_config=pg_config)
-    log.info('initialized database')
-
     log.info('initializing smtp')
     from app.config import smtp_config
     from app.persistence.email import smtp_handler

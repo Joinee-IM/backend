@@ -1,8 +1,10 @@
 version: 1
+disable_existing_loggers: False
 loggers:
-  fastapi:
-    handlers: [ efk ]
+  cloud:
     level: INFO
+    handlers: [cloud]
+    propagate: yes
 formatters:
   human:
     format: '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s'
@@ -14,15 +16,14 @@ formatters:
 handlers:
   console:
     class: logging.StreamHandler
-    formatter: human
     level: DEBUG
+    formatter: human
     stream: ext://sys.stdout
-  efk:
-    class: logging.StreamHandler
+  cloud:
+    class: app.log.LoggingHandlerInherited
     formatter: json
     level: DEBUG
-    stream: ext://sys.stdout
+    name: my-custom-cloud-native-log
 root:
-  level: DEBUG
-  handlers:
-    - efk
+  level: INFO
+  handlers: [console, cloud]
