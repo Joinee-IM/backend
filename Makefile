@@ -10,7 +10,7 @@ test: # run unit tests for backend service
 	poetry run pre-commit run --all-files
 	poetry run pycodestyle --ignore "E501, E402, W503, W504" app
 	poetry run coverage run --source=app -m unittest -v
-	poetry run coverage repo
+	poetry run coverage report
 
 install: # install dependencies
 	poetry install
