@@ -30,7 +30,7 @@ async def read_account(account_id: int) -> Response[ReadAccountOutput]:
         raise exc.NoPermission
 
     account = await db.account.read(account_id=account_id)
-    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid))
+    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid)) if account.image_uuid else None
     return Response(data=ReadAccountOutput(
         **account.model_dump(),
         image_url=image_url,
