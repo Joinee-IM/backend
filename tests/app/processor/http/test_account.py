@@ -25,7 +25,7 @@ class TestReadAccount(AsyncTestCase):
         self.image_url = 'image_url'
         self.account_output = account.ReadAccountOutput(
             **self.account.model_dump(),
-            image_url=self.image_url,
+            image_url=None,
         )
         self.expect_output = account.Response(
             data=self.account_output,
