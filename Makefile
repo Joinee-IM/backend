@@ -9,7 +9,7 @@ test: # run unit tests for backend service
 	poetry run isort .
 	poetry run pre-commit run --all-files
 	poetry run pycodestyle --ignore "E501, E402, W503, W504" app
-	poetry run coverage run --source=app -m unittest -v
+	ENV=ci poetry run coverage run --source=app -m unittest -v
 	poetry run coverage report
 
 install: # install dependencies
@@ -26,10 +26,10 @@ coverage: # show coverage report
 	poetry run coverage report
 
 run: # run service without reload flag
-	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json ENV=ci poetry run uvicorn app.main:app
 
 dev: # run service with reload flag
-	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json poetry run uvicorn app.main:app --reload
+	GOOGLE_APPLICATION_CREDENTIALS=config/gcp-service-account.json ENV=ci poetry run uvicorn app.main:app --reload
 
 build: # build docker image
 	docker build -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend .

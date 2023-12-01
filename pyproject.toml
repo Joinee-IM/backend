@@ -28,6 +28,7 @@ httpx = "^0.25.1"
 starlette-session = "^0.4.3"
 google-api-python-client = "^2.108.0"
 requests = "2.31.0"
+google-cloud-logging = "^3.8.0"
 
 [tool.poetry.group.dev.dependencies]
 responses = "^0.23.3"
