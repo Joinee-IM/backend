@@ -59,7 +59,7 @@ class Venue(BaseModel):
     fee_type: Optional[enums.FeeType]
     area: int
     current_user_count: int
-    capability: int
+    capacity: int
     sport_equipments: Optional[str]
     facilities: Optional[str]
     court_count: int

@@ -290,7 +290,7 @@ class TestEditReservation(AsyncTestCase):
             reservation_interval=1,
             is_reservable=True,
             area=1,
-            capability=1,
+            capacity=1,
             current_user_count=1,
             court_count=1,
             court_type='場',

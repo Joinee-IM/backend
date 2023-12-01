@@ -1,9 +1,11 @@
+from datetime import datetime, time
 from unittest.mock import patch
 
-from app.base import do, enums
+import app.exceptions as exc
+from app.base import do, enums, vo
 from app.processor.http import venue
-from app.utils import Response
-from tests import AsyncMock, AsyncTestCase
+from app.utils import Response, AuthedAccount
+from tests import AsyncMock, AsyncTestCase, MockContext
 
 
 class TestBrowseVenue(AsyncTestCase):
@@ -28,7 +30,7 @@ class TestBrowseVenue(AsyncTestCase):
                 reservation_interval=1,
                 is_reservable=True,
                 area=1,
-                capability=1,
+                capacity=1,
                 current_user_count=1,
                 court_count=1,
                 court_type='場',
@@ -48,7 +50,7 @@ class TestBrowseVenue(AsyncTestCase):
                 reservation_interval=2,
                 is_reservable=False,
                 area=2,
-                capability=2,
+                capacity=2,
                 current_user_count=2,
                 court_count=2,
                 court_type='場',
@@ -98,7 +100,7 @@ class TestReadVenue(AsyncTestCase):
             reservation_interval=1,
             is_reservable=True,
             area=1,
-            capability=1,
+            capacity=1,
             current_user_count=1,
             court_count=1,
             court_type='場',
@@ -155,3 +157,112 @@ class TestBrowseCourt(AsyncTestCase):
         mock_browse.assert_called_with(
             venue_id=self.venue_id,
         )
+
+
+class TestEditVenue(AsyncTestCase):
+    def setUp(self) -> None:
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+
+        self.data = venue.EditVenueInput(
+            name='name',
+            floor='floor',
+            area=1,
+            capacity=1,
+            sport_id=1,
+            is_reservable=True,
+            reservation_interval=1,
+            is_chargeable=True,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='s',
+            facilities='f',
+            court_type='1',
+        )
+        self.venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=True,
+            area=1,
+            capacity=1,
+            current_user_count=1,
+            court_count=1,
+            court_type='場',
+            is_chargeable=True,
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+            is_published=True,
+        )
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                )
+            ],
+        )
+        self.expect_result = Response()
+
+    @patch('app.processor.http.venue.context', new_callable=MockContext)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
+                              mock_read_venue: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read_venue.return_value = self.venue
+        mock_read_stadium.return_value = self.stadium
+
+        result = await venue.edit_venue(
+            venue_id=self.venue.id,
+            data=self.data,
+        )
+        self.assertEqual(result, self.expect_result)
+
+        mock_edit.assert_called_with(
+            venue_id=self.venue.id,
+            **self.data.model_dump(),
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.venue.context', new_callable=MockContext)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.edit', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
+                                 mock_read_venue: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.wrong_context
+        mock_read_venue.return_value = self.venue
+        mock_read_stadium.return_value = self.stadium
+
+        with self.assertRaises(exc.NoPermission):
+            await venue.edit_venue(
+                venue_id=self.venue.id,
+                data=self.data,
+            )
+
+        mock_edit.assert_not_called()
+        mock_context.reset_context()

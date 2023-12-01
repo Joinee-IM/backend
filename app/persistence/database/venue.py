@@ -34,7 +34,7 @@ async def browse(
 
     sql = (
         fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-        fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+        fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
         fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
         fr'  FROM venue'
         fr' {where_sql}'
@@ -57,12 +57,12 @@ async def browse(
         do.Venue(
             id=id_, stadium_id=stadium_id, name=name, floor=floor, reservation_interval=reservation_interval,
             is_reservable=is_reservable, is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type,
-            area=area, current_user_count=current_user_count, capability=capability, sport_equipments=sport_equipments,
+            area=area, current_user_count=current_user_count, capacity=capacity, sport_equipments=sport_equipments,
             facilities=facilities, court_count=court_count, court_type=court_type, sport_id=sport_id,
             is_published=is_published,
         )
         for id_, stadium_id, name, floor, reservation_interval, is_reservable,
-        is_chargeable, fee_rate, fee_type, area, current_user_count, capability,
+        is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,
         sport_equipments, facilities, court_count, court_type, sport_id, is_published in results
     ], record_count
 
@@ -70,7 +70,7 @@ async def browse(
 async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
     result = await PostgresQueryExecutor(
         sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-            fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+            fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
             fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
             fr'  FROM venue'
             fr' WHERE venue.id = %(venue_id)s'
@@ -80,7 +80,7 @@ async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
 
     try:
         (id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area,
-            current_user_count, capability, sport_equipments, facilities, court_count, court_type, sport_id,
+            current_user_count, capacity, sport_equipments, facilities, court_count, court_type, sport_id,
             is_published) = result
     except TypeError:
         raise exc.NotFound
@@ -97,7 +97,7 @@ async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
         fee_type=fee_type,
         area=area,
         current_user_count=current_user_count,
-        capability=capability,
+        capacity=capacity,
         sport_equipments=sport_equipments,
         facilities=facilities,
         court_count=court_count,
@@ -105,3 +105,46 @@ async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
         sport_id=sport_id,
         is_published=is_published,
     )
+
+
+async def edit(
+        venue_id: int,
+        name: str | None = None,
+        floor: str | None = None,
+        area: int | None = None,
+        capacity: int | None = None,
+        sport_id: int | None = None,
+        is_reservable: int | None = None,
+        reservation_interval: int | None = None,
+        is_chargeable: bool | None = None,
+        fee_rate: float | None = None,
+        fee_type: enums.FeeType | None = None,
+        sport_equipments: str | None = None,
+        facilities: str | None = None,
+        court_type: str | None = None,
+) -> None:
+    criteria_dict = {
+        'name': (name, 'name = %(name)s'),
+        'floor': (floor, 'floor = %(floor)s'),
+        'area': (area, 'area = %(area)s'),
+        'capacity': (capacity, 'capacity = %(capacity)s'),
+        'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
+        'is_reservable': (is_reservable, 'is_reservable = %(is_reservable)s'),
+        'reservation_interval': (reservation_interval, 'reservation_interval = %(reservation_interval)s'),
+        'is_chargeable': (is_chargeable, 'is_chargeable = %(is_chargeable)s'),
+        'fee_rate': (fee_rate, 'fee_rate = %(fee_rate)s'),
+        'fee_type': (fee_type, 'fee_type = %(fee_type)s'),
+        'sport_equipments': (sport_equipments, 'sport_equipments = %(sport_equipments)s'),
+        'facilities': (facilities, 'facilities = %(facilities)s'),
+        'court_type': (court_type, 'court_type = %(court_type)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+    set_sql = ', '.join(query)
+
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE venue'
+            fr'   SET {set_sql}'
+            fr' WHERE id = %(venue_id)s',
+        venue_id=venue_id, **params,
+    ).execute()

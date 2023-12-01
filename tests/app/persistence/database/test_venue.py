@@ -38,7 +38,7 @@ class TestBrowse(AsyncTestCase):
                 reservation_interval=1,
                 is_reservable=True,
                 area=1,
-                capability=1,
+                capacity=1,
                 current_user_count=1,
                 court_count=1,
                 court_type='場',
@@ -58,7 +58,7 @@ class TestBrowse(AsyncTestCase):
                 reservation_interval=2,
                 is_reservable=False,
                 area=2,
-                capability=2,
+                capacity=2,
                 current_user_count=2,
                 court_count=2,
                 court_type='場',
@@ -92,7 +92,7 @@ class TestBrowse(AsyncTestCase):
         mock_init.assert_has_calls([
             call(
                 sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
                     fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                     fr'  FROM venue'
                     fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
@@ -105,7 +105,7 @@ class TestBrowse(AsyncTestCase):
                 sql=fr'SELECT COUNT(*)'
                     fr'  FROM ('
                     fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
                     fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                     fr'  FROM venue'
                     fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
@@ -129,7 +129,7 @@ class TestRead(AsyncTestCase):
             is_reservable=True,
             is_chargeable=True,
             area=1,
-            capability=1,
+            capacity=1,
             current_user_count=1,
             court_count=1,
             court_type='場',
@@ -151,7 +151,7 @@ class TestRead(AsyncTestCase):
         self.assertEqual(result, self.venue)
         mock_init.assert_called_with(
             sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
                 fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                 fr'  FROM venue'
                 fr' WHERE venue.id = %(venue_id)s'
@@ -169,10 +169,49 @@ class TestRead(AsyncTestCase):
 
         mock_init.assert_called_with(
             sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capability,'
+                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
                 fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
                 fr'  FROM venue'
                 fr' WHERE venue.id = %(venue_id)s'
                 fr' AND is_published',
             venue_id=self.venue_id,
         )
+
+
+class TestEdit(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.name = 'name'
+        self.floor = 'f'
+        self.area = 1
+        self.capacity = 1
+        self.sport_id = 1
+        self.is_reservable = True
+        self.reservation_interval = 1
+        self.is_chargeable = True
+        self.fee_rate = 0.1
+        self.fee_type = enums.FeeType.per_hour
+        self.sport_equipments = 'se'
+        self.facilities = 'f'
+        self.court_type = 'ct'
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock):
+        result = await venue.edit(
+            venue_id=self.venue_id,
+            name=self.name,
+            floor=self.floor,
+            area=self.area,
+            capacity=self.capacity,
+            sport_id=self.sport_id,
+            is_reservable=self.is_reservable,
+            reservation_interval=self.reservation_interval,
+            is_chargeable=self.is_chargeable,
+            fee_rate=self.fee_rate,
+            fee_type=self.fee_type,
+            sport_equipments=self.sport_equipments,
+            facilities=self.facilities,
+            court_type=self.court_type,
+        )
+        self.assertIsNone(result)
+        mock_execute.assert_called_once()
