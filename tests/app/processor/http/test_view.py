@@ -18,8 +18,8 @@ class TestViewMyReservation(AsyncTestCase):
             offset=0,
         )
         self.total_count = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
 
         self.reservations = [
             vo.ViewMyReservation(
@@ -74,7 +74,7 @@ class TestViewMyReservation(AsyncTestCase):
 class TestViewProviderStadium(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.normal_account = do.Account(
             id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
             role=enums.RoleType.normal, is_verified=True, is_google_login=False,
@@ -161,7 +161,7 @@ class TestViewProviderStadium(AsyncTestCase):
 class TestViewProviderVenue(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.normal_account = do.Account(
             id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
             role=enums.RoleType.normal, is_verified=True, is_google_login=False,
@@ -239,7 +239,7 @@ class TestViewProviderVenue(AsyncTestCase):
 class TestViewProviderCourt(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.normal_account = do.Account(
             id=1, email='email@email.com', nickname='nickname', gender=enums.GenderType.male, image_uuid=None,
             role=enums.RoleType.normal, is_verified=True, is_google_login=False,

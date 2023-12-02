@@ -1,6 +1,7 @@
 from datetime import datetime
 
 import app.exceptions as exc
+from app.base.enums import RoleType
 from app.utils.context import Context
 from app.utils.security import AuthedAccount
 from tests import TestCase
@@ -33,6 +34,7 @@ class TestContext(TestCase):
         self.authed_account = AuthedAccount(
             id=1,
             time=datetime(2023, 10, 27),
+            role=RoleType.normal,
         )
         self.request_time = datetime(2023, 10, 27)
         self.request_uuid = TestCase.context.request_uuid
