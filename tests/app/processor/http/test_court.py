@@ -202,31 +202,6 @@ class TestAddReservation(AsyncTestCase):
             vacancy=1,
             member_ids=[2],
         )
-        self.stadium = vo.ViewStadium(
-            id=1,
-            name='name',
-            district_id=1,
-            contact_number='0800092000',
-            description='desc',
-            owner_id=1,
-            address='address1',
-            long=3.14,
-            lat=1.59,
-            is_published=True,
-            city='city1',
-            district='district1',
-            sports=['sport1'],
-            business_hours=[
-                do.BusinessHour(
-                    id=1,
-                    place_id=1,
-                    type=enums.PlaceType.stadium,
-                    weekday=1,
-                    start_time=time(10, 27),
-                    end_time=time(20, 27),
-                ),
-            ],
-        )
         self.court = do.Court(
             id=1,
             venue_id=1,
@@ -252,6 +227,31 @@ class TestAddReservation(AsyncTestCase):
             sport_equipments='equipment',
             facilities='facility',
             is_published=True,
+        )
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address1',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                ),
+            ],
         )
         self.unreservable_venue = do.Venue(
             id=1,
