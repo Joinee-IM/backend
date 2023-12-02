@@ -36,7 +36,7 @@ class TestAuth(AsyncTestCase):
         }
         self.jwt_token = 'jwt'
         self.account_id = 1
-        self.read_output = self.account_id,
+        self.read_output = (self.account_id, "mocked_pass_hash", self.role, True)
         self.expect_result = RedirectResponse(url='http://localhost:8000/login')
 
         self.access_denied_request = Request({'type': 'http', 'query_string': b'access_denied'})
