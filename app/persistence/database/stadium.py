@@ -233,3 +233,15 @@ async def edit(
             await cursor.execute(
                 insert_sql, *insert_params,
             )
+
+
+async def add(
+        name: str,
+        address: str,
+        district_id: int,
+        owner_id: int,
+        contact_number: str,
+        description: str,
+        business_hour: Sequence[vo.WeekTimeRange],
+):
+    pass
