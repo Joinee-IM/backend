@@ -31,5 +31,5 @@ async def batch_add(place_type: enums.PlaceType, place_id: int, uuids: Sequence[
         sql=fr'INSERT INTO album'
             fr'            (type, place_id, file_uuid)'
             fr'     VALUES {value_sql}',
-        place_type=place_type, place_id=place_id, **params
+        place_type=place_type, place_id=place_id, **params,
     ).execute()

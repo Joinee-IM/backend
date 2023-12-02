@@ -67,14 +67,14 @@ class TestAddAlbum(AsyncTestCase):
 
         self.images = [
             UploadFile(File('asdf'), headers=self.accept_header),
-            UploadFile(File('asdf'), headers=self.accept_header)
+            UploadFile(File('asdf'), headers=self.accept_header),
         ]
         self.reject_images = [
-            UploadFile(File('fail'), headers=self.reject_header)
+            UploadFile(File('fail'), headers=self.reject_header),
         ]
 
         self.file_uuid = UUID('262b3702-1891-4e18-958e-82ebe758b0c9')
-        self.file_uuids = [UUID('262b3702-1891-4e18-958e-82ebe758b0c9'), UUID('262b3702-1891-4e18-958e-82ebe758b0c9')]
+        self.file_uuids = [UUID('262b3702-1891-4e18-958e-82ebe758b0c9'), UUID('262b3702-1891-4e18-958e-82ebe758b0c9'), ]
 
         self.bucket_name = BUCKET_NAME
 
@@ -85,7 +85,7 @@ class TestAddAlbum(AsyncTestCase):
             filename=str(uuid),
         ) for uuid in self.file_uuids]
 
-        self.urls = ['url', 'url']
+        self.urls = ['url', 'url', ]
         self.expect_result = Response(
             data=album.BrowseAlbumOutput(urls=self.urls)
         )
@@ -108,12 +108,12 @@ class TestAddAlbum(AsyncTestCase):
         mock_upload.assert_has_calls(expected_calls, any_order=False)
 
         mock_add_gcs.assert_called_with(
-            self.gcs_files
+            self.gcs_files,
         )
         mock_add_album.assert_called_with(
             place_type=self.place_type,
             place_id=self.place_id,
-            uuids=self.file_uuids
+            uuids=self.file_uuids,
         )
 
     @patch('app.persistence.file_storage.gcs.GCSHandler.sign_url', AsyncMock(return_value='url'))
@@ -122,7 +122,7 @@ class TestAddAlbum(AsyncTestCase):
     @patch('app.persistence.database.gcs_file.batch_add_with_do', new_callable=AsyncMock)
     async def test_wrong_content_type(self, mock_add_gcs: AsyncMock, mock_add_album: AsyncMock, mock_upload: AsyncMock):
         with self.assertRaises(exc.IllegalInput):
-            await album.batch_add_album(place_type=self.place_type, place_id=self.place_id, files=self.reject_images)
+            await album.batch_add_album(place_type=self.place_type, place_id=self.place_id, files=self.reject_images,)
 
         mock_upload.assert_not_called()
         mock_add_gcs.assert_not_called()

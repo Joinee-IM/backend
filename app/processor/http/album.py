@@ -52,7 +52,7 @@ async def batch_add_album(place_type: enums.PlaceType, place_id: int,
         if file.content_type not in ALLOWED_MEDIA_TYPE:
             log.info(f'received content_type {file.content_type}, denied.')
             raise exc.IllegalInput
-        uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME))
+        uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME,))
 
     await db.gcs_file.batch_add_with_do([
         do.GCSFile(
@@ -66,7 +66,7 @@ async def batch_add_album(place_type: enums.PlaceType, place_id: int,
     await db.album.batch_add(
         place_type=place_type,
         place_id=place_id,
-        uuids=uuids
+        uuids=uuids,
     )
 
     return Response(

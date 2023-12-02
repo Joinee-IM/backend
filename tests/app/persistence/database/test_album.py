@@ -55,7 +55,7 @@ class TestBatchAdd(AsyncTestCase):
         self.place_type = enums.PlaceType.stadium
         self.uuids = [
             UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
-            UUID('04321607-1b70-47c4-906a-d4b8f3ef8bcb')
+            UUID('04321607-1b70-47c4-906a-d4b8f3ef8bcb'),
         ]
         self.params = {
             'file_uuid_0': UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
@@ -70,7 +70,7 @@ class TestBatchAdd(AsyncTestCase):
         result = await album.batch_add(
             place_type=self.place_type,
             place_id=self.place_id,
-            uuids=self.uuids
+            uuids=self.uuids,
         )
 
         self.assertIsNone(result)
@@ -80,5 +80,5 @@ class TestBatchAdd(AsyncTestCase):
                 r'            (type, place_id, file_uuid)'
                 r'     VALUES (%(place_type)s, %(place_id)s, %(file_uuid_0)s),'
                 r' (%(place_type)s, %(place_id)s, %(file_uuid_1)s)',
-            place_type=self.place_type, place_id=self.place_id, **self.params
+            place_type=self.place_type, place_id=self.place_id, **self.params,
         )

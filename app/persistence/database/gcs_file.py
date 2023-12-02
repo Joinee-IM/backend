@@ -53,5 +53,5 @@ async def batch_add_with_do(gcs_files: Sequence[do.GCSFile]) -> None:
         sql=fr'INSERT INTO gcs_file'
             fr'            (file_uuid, key, bucket, filename)'
             fr'     VALUES {value_sql}',
-        bucket=BUCKET_NAME, **params
+        bucket=BUCKET_NAME, **params,
     ).execute()

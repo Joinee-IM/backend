@@ -111,5 +111,5 @@ class TestBatchAddWithDo(AsyncTestCase):
                 r'            (file_uuid, key, bucket, filename)'
                 r'     VALUES (%(file_uuid_0)s, %(key_0)s, %(bucket)s, %(filename_0)s),'
                 r' (%(file_uuid_1)s, %(key_1)s, %(bucket)s, %(filename_1)s)',
-            bucket=BUCKET_NAME, **self.params
+            bucket=BUCKET_NAME, **self.params,
         )
