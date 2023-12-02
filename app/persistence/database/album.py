@@ -1,4 +1,5 @@
 from typing import Sequence
+from uuid import UUID
 
 from app.base import do, enums
 from app.persistence.database.util import PostgresQueryExecutor
@@ -21,3 +22,14 @@ async def browse(place_type: enums.PlaceType, place_id: int) -> Sequence[do.Albu
         )
         for id_, place_id, place_type, file_uuid in results
     ]
+
+
+async def batch_add(place_type: enums.PlaceType, place_id: int, uuids: Sequence[UUID]):
+    value_sql = ', '.join(f'(%(place_type)s, %(place_id)s, %(file_uuid_{i})s)' for i, _ in enumerate(uuids))
+    params = {f'file_uuid_{i}': file_uuid for i, file_uuid in enumerate(uuids)}
+    await PostgresQueryExecutor(
+        sql=fr'INSERT INTO album'
+            fr'            (type, place_id, file_uuid)'
+            fr'     VALUES {value_sql}',
+        place_type=place_type, place_id=place_id, **params,
+    ).execute()

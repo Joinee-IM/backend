@@ -1,7 +1,9 @@
+from typing import Sequence
 from uuid import UUID
 
 import app.exceptions as exc
 from app.base import do
+from app.const import BUCKET_NAME
 from app.persistence.database.util import PostgresQueryExecutor
 
 
@@ -40,3 +42,16 @@ async def read(file_uuid: UUID) -> do.GCSFile:
         bucket=bucket,
         filename=filename,
     )
+
+
+async def batch_add_with_do(gcs_files: Sequence[do.GCSFile]) -> None:
+    value_sql = ', '.join(f'(%(file_uuid_{i})s, %(key_{i})s, %(bucket)s, %(filename_{i})s)' for i, _ in enumerate(gcs_files))
+    params = {f'file_uuid_{i}': file.uuid for i, file in enumerate(gcs_files)}
+    params.update({f'key_{i}': file.key for i, file in enumerate(gcs_files)})
+    params.update({f'filename_{i}': file.filename for i, file in enumerate(gcs_files)})
+    await PostgresQueryExecutor(
+        sql=fr'INSERT INTO gcs_file'
+            fr'            (file_uuid, key, bucket, filename)'
+            fr'     VALUES {value_sql}',
+        bucket=BUCKET_NAME, **params,
+    ).execute()
