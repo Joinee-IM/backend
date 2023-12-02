@@ -1,16 +1,16 @@
+from io import BytesIO
 from typing import Sequence
 
-from fastapi import APIRouter, Depends, Query, responses, UploadFile, File
+from fastapi import APIRouter, Depends, File, Query, UploadFile, responses
 from pydantic import BaseModel
-from io import BytesIO
 
-import app.persistence.database as db
-from app.base import enums, do
-from app.persistence.file_storage.gcs import gcs_handler
-from app.utils import Response
-from app.const import ALLOWED_MEDIA_TYPE, BUCKET_NAME
 import app.exceptions as exc
 import app.log as log
+import app.persistence.database as db
+from app.base import do, enums
+from app.const import ALLOWED_MEDIA_TYPE, BUCKET_NAME
+from app.persistence.file_storage.gcs import gcs_handler
+from app.utils import Response
 
 router = APIRouter(
     tags=['Album'],
@@ -46,15 +46,13 @@ async def browse_album(params: BrowseAlbumInput = Depends()) -> Response[BrowseA
 
 @router.post('/album')
 async def batch_add_album(place_type: enums.PlaceType, place_id: int,
-                          files: Sequence[UploadFile] = File(description="Multiple files")):
+                          files: Sequence[UploadFile] = File(...)):
     uuids = []
     for file in files:
         if file.content_type not in ALLOWED_MEDIA_TYPE:
             log.info(f'received content_type {file.content_type}, denied.')
             raise exc.IllegalInput
-
-        content = await file.read()
-        uuids.append(await gcs_handler.upload(file=BytesIO(content), content_type=file.content_type, bucket_name=BUCKET_NAME))
+        uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME))
 
     await db.gcs_file.batch_add_with_do([
         do.GCSFile(

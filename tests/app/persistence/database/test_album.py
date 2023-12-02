@@ -47,3 +47,38 @@ class TestBrowse(AsyncTestCase):
                 r' WHERE place_id = %(place_id)s AND type = %(place_type)s',
             place_id=self.place_id, place_type=self.place_type,
         )
+
+
+class TestBatchAdd(AsyncTestCase):
+    def setUp(self) -> None:
+        self.place_id = 1
+        self.place_type = enums.PlaceType.stadium
+        self.uuids = [
+            UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+            UUID('04321607-1b70-47c4-906a-d4b8f3ef8bcb')
+        ]
+        self.params = {
+            'file_uuid_0': UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+            'file_uuid_1': UUID('04321607-1b70-47c4-906a-d4b8f3ef8bcb'),
+        }
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        result = await album.batch_add(
+            place_type=self.place_type,
+            place_id=self.place_id,
+            uuids=self.uuids
+        )
+
+        self.assertIsNone(result)
+
+        mock_init.assert_called_with(
+            sql=r'INSERT INTO album'
+                r'            (type, place_id, file_uuid)'
+                r'     VALUES (%(place_type)s, %(place_id)s, %(file_uuid_0)s),'
+                r' (%(place_type)s, %(place_id)s, %(file_uuid_1)s)',
+            place_type=self.place_type, place_id=self.place_id, **self.params
+        )

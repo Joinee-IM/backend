@@ -1,10 +1,10 @@
-from uuid import UUID
 from typing import Sequence
+from uuid import UUID
 
 import app.exceptions as exc
 from app.base import do
-from app.persistence.database.util import PostgresQueryExecutor
 from app.const import BUCKET_NAME
+from app.persistence.database.util import PostgresQueryExecutor
 
 
 async def add_with_do(gcs_file: do.GCSFile) -> None:

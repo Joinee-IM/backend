@@ -9,10 +9,10 @@ import app.log as log
 import app.persistence.database as db
 import app.persistence.file_storage as fs
 from app.base import do, enums
+from app.const import ALLOWED_MEDIA_TYPE
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
 from app.utils import Response, context, security
-from app.const import ALLOWED_MEDIA_TYPE
 
 router = APIRouter(
     tags=['Account'],
