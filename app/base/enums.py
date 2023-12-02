@@ -82,3 +82,10 @@ class ViewProviderVenueSortBy(StrEnum):
     court_count = 'court_count'
     area = 'area'
     is_published = 'is_published'
+
+
+class ViewProviderCourtSortBy(StrEnum):
+    stadium_name = 'stadium_name'
+    venue_name = 'venue_name'
+    number = 'number'
+    is_published = 'is_published'

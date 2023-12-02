@@ -320,7 +320,7 @@ class TestBrowseProviderVenues(AsyncTestCase):
         mock_fetch_all.return_value = self.raw_venues
         mock_fetch_one.return_value = self.total_count,
 
-        result = await view.browse_provider_venues(
+        result = await view.browse_provider_venue(
             owner_id=self.owner_id,
             stadium_id=self.stadium_id,
             is_published=self.is_published,
@@ -332,3 +332,59 @@ class TestBrowseProviderVenues(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
         mock_init.assert_called()
+
+
+class TestBrowseProviderCourt(AsyncTestCase):
+    def setUp(self) -> None:
+        self.owner_id = 1
+        self.stadium_id = 1
+        self.venue_id = 1
+        self.is_published = True
+        self.sort_by = enums.ViewProviderCourtSortBy.stadium_name
+        self.order = enums.Sorter.asc
+        self.limit = 10
+        self.offset = 0
+
+        self.raw_courts = [
+            (1, 's1', 'v1', 1, True),
+            (2, 's2', 'v2', 2, False),
+        ]
+        self.total_count = 1
+        self.courts = [
+            vo.ViewProviderCourt(
+                court_id=1,
+                stadium_name='s1',
+                venue_name='v1',
+                court_number=1,
+                is_published=True,
+            ),
+            vo.ViewProviderCourt(
+                court_id=2,
+                stadium_name='s2',
+                venue_name='v2',
+                court_number=2,
+                is_published=False,
+            ),
+        ]
+        self.expect_result = self.courts, self.total_count
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch_one: AsyncMock, mock_fetch_all: AsyncMock, mock_init: Mock):
+        mock_fetch_all.return_value = self.raw_courts
+        mock_fetch_one.return_value = self.total_count,
+
+        result = await view.browse_provider_court(
+            owner_id=self.owner_id,
+            stadium_id=self.stadium_id,
+            venue_id=self.venue_id,
+            is_published=self.is_published,
+            sort_by=self.sort_by,
+            order=self.order,
+            limit=self.limit,
+            offset=self.offset,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        self.assertEqual(mock_init.call_count, 2)

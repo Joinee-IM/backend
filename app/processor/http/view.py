@@ -119,7 +119,7 @@ async def view_provider_venue(params: ViewProviderVenueParams = Depends(),
     if account.role is not enums.RoleType.provider:
         raise exc.NoPermission
 
-    venues, total_count = await db.view.browse_provider_venues(
+    venues, total_count = await db.view.browse_provider_venue(
         owner_id=account.id,
         stadium_id=params.stadium_id,
         is_published=params.is_published,
@@ -131,6 +131,49 @@ async def view_provider_venue(params: ViewProviderVenueParams = Depends(),
 
     return Response(data=ViewProviderVenueOutput(
         data=venues,
+        total_count=total_count,
+        limit=params.limit,
+        offset=params.offset,
+    ))
+
+
+class ViewProviderCourtParams(BaseModel):
+    stadium_id: int | None = Query(default=None)
+    venue_id: int | None = Query(default=None)
+    is_published: bool | None = Query(default=None)
+    sort_by: enums.ViewProviderCourtSortBy = Query(default=enums.ViewProviderCourtSortBy.stadium_name)
+    order: enums.Sorter = Query(default=enums.Sorter.asc)
+    limit: int | None = Query(default=None)
+    offset: int | None = Query(default=None)
+
+
+class ViewProviderCourtOutput(BaseModel):
+    data: Sequence[vo.ViewProviderCourt]
+    total_count: int
+    limit: int | None
+    offset: int | None
+
+
+@router.get('/view/court/provider')
+async def view_provider_court(params: ViewProviderCourtParams = Depends(),
+                              _=Depends(get_auth_token)) -> Response[ViewProviderCourtOutput]:
+    account = await db.account.read(account_id=context.account.id)
+
+    if account.role is not enums.RoleType.provider:
+        raise exc.NoPermission
+
+    court, total_count = await db.view.browse_provider_court(
+        owner_id=account.id,
+        stadium_id=params.stadium_id,
+        is_published=params.is_published,
+        sort_by=params.sort_by,
+        order=params.order,
+        limit=params.limit,
+        offset=params.offset,
+    )
+
+    return Response(data=ViewProviderCourtOutput(
+        data=court,
         total_count=total_count,
         limit=params.limit,
         offset=params.offset,
