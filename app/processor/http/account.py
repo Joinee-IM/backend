@@ -12,6 +12,7 @@ from app.base import do, enums
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
 from app.utils import Response, context, security
+from app.const import ALLOWED_MEDIA_TYPE
 
 router = APIRouter(
     tags=['Account'],
@@ -60,7 +61,7 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     if context.account.id != account_id:
         raise exc.NoPermission
 
-    if image.content_type not in ['image/jpeg', 'image/png']:
+    if image.content_type not in ALLOWED_MEDIA_TYPE:
         log.info(f'received content_type {image.content_type}, denied.')
         raise exc.IllegalInput
 
