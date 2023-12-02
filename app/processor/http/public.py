@@ -91,7 +91,7 @@ class AddAccountOutput:
 class AddAccountInput(BaseModel):
     email: EmailStr
     password: str
-    gender: GenderType | None = GenderType.unrevealed
+    gender: GenderType | None = None
     role: RoleType
 
     @property
