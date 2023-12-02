@@ -117,10 +117,12 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
 
     reservations, _ = await db.reservation.browse(
         court_id=court_id,
-        time_ranges=[vo.DateTimeRange(
-            start_time=data.start_time,
-            end_time=data.end_time,
-        )],
+        time_ranges=[
+            vo.DateTimeRange(
+                start_time=data.start_time,
+                end_time=data.end_time,
+            ),
+        ],
     )
 
     if reservations:

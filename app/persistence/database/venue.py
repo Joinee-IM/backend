@@ -50,7 +50,7 @@ async def browse(
     record_count, = await PostgresQueryExecutor(
         sql=fr'SELECT COUNT(*)'
             fr'  FROM ({sql}) AS tbl',
-        **params
+        **params,
     ).fetch_one()
 
     return [
@@ -79,9 +79,11 @@ async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
     ).fetch_one()
 
     try:
-        (id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area,
+        (
+            id_, stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate, fee_type, area,
             current_user_count, capacity, sport_equipments, facilities, court_count, court_type, sport_id,
-            is_published) = result
+            is_published,
+        ) = result
     except TypeError:
         raise exc.NotFound
 

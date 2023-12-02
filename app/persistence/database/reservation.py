@@ -5,9 +5,11 @@ import asyncpg
 
 import app.exceptions as exc
 from app.base import do, enums, vo
-from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters,
-                                           pg_pool_handler)
+from app.persistence.database.util import (
+    PostgresQueryExecutor,
+    generate_query_parameters,
+    pg_pool_handler,
+)
 
 
 async def browse(
@@ -59,7 +61,7 @@ async def browse(
             ])})""")
             params.update({
                 f'end_time_{i}': time_range.end_time,
-                f'start_time_{i}': time_range.start_time
+                f'start_time_{i}': time_range.start_time,
             })
 
     or_query = ' OR '.join(raw_or_query)

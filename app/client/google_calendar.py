@@ -34,8 +34,10 @@ class GoogleCalendar:
 
     async def build_connection(self):
         access_token, refresh_token = await db.account.get_google_token(account_id=self.id)
-        token_dict = {'access_token': access_token, 'refresh_token': refresh_token,
-                      'client_id': self.config.CLIENT_ID, 'client_secret': self.config.CLIENT_SECRET}
+        token_dict = {
+            'access_token': access_token, 'refresh_token': refresh_token,
+            'client_id': self.config.CLIENT_ID, 'client_secret': self.config.CLIENT_SECRET,
+        }
         scopes = ["https://www.googleapis.com/auth/calendar"]
         creds = Credentials.from_authorized_user_info(token_dict, scopes)
         if not creds.valid:
@@ -80,7 +82,7 @@ class GoogleCalendar:
 
 async def add_google_calendar_event(
     reservation_id: int, start_time: NaiveDatetime, end_time: NaiveDatetime,
-    account_id: int, stadium_id: int, member_ids: Sequence[int] = None
+    account_id: int, stadium_id: int, member_ids: Sequence[int] = None,
 ):
     if not member_ids:
         member_ids = []
@@ -108,7 +110,7 @@ async def add_google_calendar_event(
 
 
 async def update_google_calendar_event(
-    reservation_id: int, member_id: int
+    reservation_id: int, member_id: int,
 ):
     reservation = await db.reservation.read(reservation_id=reservation_id)
     manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
@@ -117,7 +119,9 @@ async def update_google_calendar_event(
     if reservation.google_event_id:
         calendar = GoogleCalendar(account_id=manager_id, config=google_config)
         await calendar.build_connection()
-        calendar.update_calendar_event(data=UpdateEventInput(
-            event_id=reservation.google_event_id,
-            member_email=Email(email=member.email),
-        ))
+        calendar.update_calendar_event(
+            data=UpdateEventInput(
+                event_id=reservation.google_event_id,
+                member_email=Email(email=member.email),
+            ),
+        )

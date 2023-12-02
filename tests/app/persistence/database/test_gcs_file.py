@@ -78,12 +78,14 @@ class TestBatchAddWithDo(AsyncTestCase):
                 uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
                 key='fad08f83-6ad7-429f-baa6-b1c3abf4991c',
                 bucket='bucket',
-                filename='fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+                filename='fad08f83-6ad7-429f-baa6-b1c3abf4991c',
+            ),
             GCSFile(
                 uuid=UUID('04321607-1b70-47c4-906a-d4b8f3ef8bcb'),
                 key='04321607-1b70-47c4-906a-d4b8f3ef8bcb',
                 bucket='bucket',
-                filename='04321607-1b70-47c4-906a-d4b8f3ef8bcb'),
+                filename='04321607-1b70-47c4-906a-d4b8f3ef8bcb',
+            ),
         ]
         self.params = {
             'file_uuid_0': UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),

@@ -66,7 +66,7 @@ class TestBrowseVenue(AsyncTestCase):
         self.expect_result = venue.Response(
             data=venue.BrowseVenueOutput(
                 data=self.venues, total_count=self.total_count,
-                limit=self.params.limit, offset=self.params.offset
+                limit=self.params.limit, offset=self.params.offset,
             ),
         )
 
@@ -122,7 +122,7 @@ class TestReadVenue(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
         mock_read.assert_called_with(
-            venue_id=self.venue_id
+            venue_id=self.venue_id,
         )
 
 
@@ -221,7 +221,7 @@ class TestEditVenue(AsyncTestCase):
                     weekday=1,
                     start_time=time(10, 27),
                     end_time=time(20, 27),
-                )
+                ),
             ],
         )
         self.expect_result = Response()
@@ -230,8 +230,10 @@ class TestEditVenue(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.edit', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
-                              mock_read_venue: AsyncMock, mock_context: MockContext):
+    async def test_happy_path(
+        self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
+        mock_read_venue: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
         mock_read_venue.return_value = self.venue
         mock_read_stadium.return_value = self.stadium
@@ -252,8 +254,10 @@ class TestEditVenue(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.edit', new_callable=AsyncMock)
-    async def test_no_permission(self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
-                                 mock_read_venue: AsyncMock, mock_context: MockContext):
+    async def test_no_permission(
+        self, mock_edit: AsyncMock, mock_read_stadium: AsyncMock,
+        mock_read_venue: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.wrong_context
         mock_read_venue.return_value = self.venue
         mock_read_stadium.return_value = self.stadium

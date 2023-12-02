@@ -3,9 +3,11 @@ from typing import Sequence
 import asyncpg
 
 from app.base import do
-from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters,
-                                           pg_pool_handler)
+from app.persistence.database.util import (
+    PostgresQueryExecutor,
+    generate_query_parameters,
+    pg_pool_handler,
+)
 
 
 async def batch_add(reservation_id: int, member_ids: Sequence[int], manager_id: int | None = None) -> None:

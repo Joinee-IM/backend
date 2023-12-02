@@ -15,7 +15,7 @@ class TestMiddleware(AsyncTestCase):
             'method': 'GET',
             'headers': [],
             'path': self.path,
-            'query_string': self.params
+            'query_string': self.params,
         })
 
     @patch('app.log.info', new_callable=Mock)
@@ -27,7 +27,7 @@ class TestMiddleware(AsyncTestCase):
                 'request': {
                     'method': self.request.method,
                     'path': self.request.url.path,
-                    'params': self.request.query_params
-                }
-            }
+                    'params': self.request.query_params,
+                },
+            },
         )

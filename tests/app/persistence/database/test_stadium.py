@@ -63,8 +63,8 @@ class TestBrowse(AsyncTestCase):
                         weekday=1,
                         start_time=time(10, 27),
                         end_time=time(20, 27),
-                    )
-                ]
+                    ),
+                ],
             ),
             vo.ViewStadium(
                 id=2,
@@ -88,8 +88,8 @@ class TestBrowse(AsyncTestCase):
                         weekday=1,
                         start_time=time(10, 27),
                         end_time=time(20, 27),
-                    )
-                ]
+                    ),
+                ],
             ),
         ], self.total_count
 
@@ -251,8 +251,8 @@ class TestRead(AsyncTestCase):
                     weekday=1,
                     start_time=time(10, 27),
                     end_time=time(20, 27),
-                )
-            ]
+                ),
+            ],
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)

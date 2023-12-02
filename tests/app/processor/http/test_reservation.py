@@ -46,12 +46,14 @@ class TestBrowseReservation(AsyncTestCase):
                 is_cancelled=False,
             ),
         ]
-        self.expect_result = Response(data=reservation.BrowseReservationOutput(
-            data=self.reservations,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=reservation.BrowseReservationOutput(
+                data=self.reservations,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock):
@@ -144,8 +146,10 @@ class TestJoinReservation(AsyncTestCase):
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
-                              mock_update_event: AsyncMock):
+    async def test_happy_path(
+        self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
+        mock_update_event: AsyncMock,
+    ):
         mock_context._context = self.context
         mock_read.return_value = self.reservation
 
@@ -190,7 +194,7 @@ class TestDeleteReservation(AsyncTestCase):
                 account_id=self.account_id,
                 is_joined=True,
                 is_manager=True,
-            )
+            ),
         ]
         self.expect_result = Response()
 
@@ -257,7 +261,7 @@ class TestEditReservation(AsyncTestCase):
                 account_id=self.account_id,
                 is_manager=True,
                 is_joined=True,
-            )
+            ),
         ]
         self.no_permission_reservation_member = [
             do.ReservationMember(
@@ -265,7 +269,7 @@ class TestEditReservation(AsyncTestCase):
                 account_id=self.account_id,
                 is_manager=False,
                 is_joined=True,
-            )
+            ),
         ]
         self.reservation = do.Reservation(
             id=1,
@@ -344,10 +348,12 @@ class TestEditReservation(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
-                              mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
-                              mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
-                              mock_context: MockContext):
+    async def test_happy_path(
+        self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+        mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+        mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+        mock_context: MockContext,
+    ):
         mock_context._context = self.context
 
         mock_browse_member.return_value = self.reservation_member
@@ -382,10 +388,12 @@ class TestEditReservation(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
-    async def test_court_reserve(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
-                                 mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
-                                 mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
-                                 mock_context: MockContext):
+    async def test_court_reserve(
+        self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+        mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+        mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+        mock_context: MockContext,
+    ):
         mock_context._context = self.context
 
         mock_browse_member.return_value = self.reservation_member
@@ -410,10 +418,12 @@ class TestEditReservation(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
-    async def test_illegal_input_time(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
-                                      mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
-                                      mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
-                                      mock_context: MockContext):
+    async def test_illegal_input_time(
+        self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+        mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+        mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+        mock_context: MockContext,
+    ):
         mock_context._context = self.wrong_time_context
 
         mock_browse_member.return_value = self.reservation_member
@@ -439,10 +449,12 @@ class TestEditReservation(AsyncTestCase):
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.edit', new_callable=AsyncMock)
-    async def test_no_permission(self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
-                                 mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
-                                 mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
-                                 mock_context: MockContext):
+    async def test_no_permission(
+        self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
+        mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
+        mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
+        mock_context: MockContext,
+    ):
         mock_context._context = self.wrong_time_context
 
         mock_browse_member.return_value = self.no_permission_reservation_member

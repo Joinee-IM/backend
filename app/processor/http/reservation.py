@@ -92,8 +92,10 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
 
 @router.delete('/reservation/{reservation_id}')
 async def delete_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
-    reservation_member = await db.reservation_member.browse(reservation_id=reservation_id,
-                                                            account_id=context.account.id)
+    reservation_member = await db.reservation_member.browse(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
 
     if not reservation_member or not reservation_member[0].is_manager:
         raise exc.NoPermission
@@ -113,8 +115,10 @@ class EditReservationInput(BaseModel):
 
 @router.patch('/reservation/{reservation_id}')
 async def edit_reservation(reservation_id: int, data: EditReservationInput, _=Depends(get_auth_token)) -> Response:
-    reservation_member = await db.reservation_member.browse(reservation_id=reservation_id,
-                                                            account_id=context.account.id)
+    reservation_member = await db.reservation_member.browse(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
 
     if not reservation_member or not reservation_member[0].is_manager:
         raise exc.NoPermission
@@ -131,10 +135,12 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
 
     reservations, _ = await db.reservation.browse(
         court_id=court.id,
-        time_ranges=[vo.DateTimeRange(
-            start_time=start_time,
-            end_time=end_time,
-        )]
+        time_ranges=[
+            vo.DateTimeRange(
+                start_time=start_time,
+                end_time=end_time,
+            ),
+        ],
     )
 
     if len(reservations) >= 1 and reservation not in reservations:

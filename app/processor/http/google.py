@@ -84,5 +84,5 @@ async def batch_download_files(data: BatchDownloadInput, _=Depends(get_auth_toke
                 sign_url=await gcs_handler.sign_url(filename=str(file_uuid)),
             )
             for file_uuid in data.file_uuids
-        ]
+        ],
     )

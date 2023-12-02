@@ -8,7 +8,9 @@ BUCKET_NAME = 'cloud-native-storage-db'
 
 async def upload(file: typing.IO, file_uuid: typing.Optional[UUID] = uuid4(), content_type: str = None)\
         -> tuple[UUID, str]:
-    return await gcs_handler.upload(file=file,
-                                    key=file_uuid,
-                                    bucket_name=BUCKET_NAME,
-                                    content_type=content_type), BUCKET_NAME
+    return await gcs_handler.upload(
+        file=file,
+        key=file_uuid,
+        bucket_name=BUCKET_NAME,
+        content_type=content_type,
+    ), BUCKET_NAME

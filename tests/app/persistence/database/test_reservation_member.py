@@ -47,7 +47,7 @@ class TestBrowse(AsyncTestCase):
                 account_id=1,
                 is_manager=True,
                 is_joined=True,
-            )
+            ),
         ]
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)

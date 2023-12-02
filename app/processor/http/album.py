@@ -39,20 +39,22 @@ async def browse_album(params: BrowseAlbumInput = Depends()) -> Response[BrowseA
             urls=[
                 await gcs_handler.sign_url(filename=str(album.file_uuid))
                 for album in albums
-            ]
-        )
+            ],
+        ),
     )
 
 
 @router.post('/album')
-async def batch_add_album(place_type: enums.PlaceType, place_id: int,
-                          files: Sequence[UploadFile] = File(...)):
+async def batch_add_album(
+    place_type: enums.PlaceType, place_id: int,
+    files: Sequence[UploadFile] = File(...),
+):
     uuids = []
     for file in files:
         if file.content_type not in ALLOWED_MEDIA_TYPE:
             log.info(f'received content_type {file.content_type}, denied.')
             raise exc.IllegalInput
-        uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME,))
+        uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME))
 
     await db.gcs_file.batch_add_with_do([
         do.GCSFile(
@@ -74,6 +76,6 @@ async def batch_add_album(place_type: enums.PlaceType, place_id: int,
             urls=[
                 await gcs_handler.sign_url(filename=str(uuid))
                 for uuid in uuids
-            ]
-        )
+            ],
+        ),
     )
