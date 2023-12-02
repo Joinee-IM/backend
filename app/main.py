@@ -8,10 +8,13 @@ with open(f'logging-{ENV}.yaml', 'r') as conf:
     import logging.config
     logging.config.dictConfig(log_config)
 
-from fastapi import FastAPI
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.responses import JSONResponse
 
+import app.exceptions as exc
 from app import log
 from app.config import app_config
 
@@ -84,9 +87,23 @@ async def app_shutdown():
     # await redis_pool_handler.close()
 
 
-from app.middleware import envelope
+@app.exception_handler(exc.AckException)
+async def exception_handler(_: Request, exc_: exc.AckException):
+    log.info(exc_)
+    return JSONResponse(
+        status_code=exc_.status_code,
+        content={'data': None, 'error': exc_.__class__.__name__},
+    )
 
-app.middleware('http')(envelope.middleware)
+
+@app.exception_handler(RequestValidationError)
+async def validation_exception_handler(_: Request, exc_: RequestValidationError):
+    log.info(exc_)
+    return JSONResponse(
+        status_code=422,
+        content={'data': None, 'error': 'IllegalInput'},
+    )
+
 
 from app.middleware import logging
 
@@ -95,10 +112,6 @@ app.middleware('http')(logging.middleware)
 from app.middleware import auth
 
 app.middleware('http')(auth.middleware)
-
-import starlette_context.middleware
-
-app.add_middleware(starlette_context.middleware.RawContextMiddleware)
 
 from app.processor import http
 
@@ -109,3 +122,7 @@ from starlette.middleware.sessions import SessionMiddleware
 from app.config import google_config
 
 app.add_middleware(SessionMiddleware, secret_key=google_config.SESSION_KEY)
+
+import starlette_context.middleware
+
+app.add_middleware(starlette_context.middleware.RawContextMiddleware)
