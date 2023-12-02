@@ -142,7 +142,7 @@ class TestJoinReservation(AsyncTestCase):
         )
         self.expect_result = Response(data=True)
 
-    @patch('app.client.google_calendar.update_google_calendar_event', new_callable=AsyncMock)
+    @patch('app.client.google_calendar.add_google_calendar_event_member', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)

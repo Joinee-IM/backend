@@ -82,7 +82,7 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
         member_ids=[account_id],
     )
 
-    await google_calendar.update_google_calendar_event(
+    await google_calendar.add_google_calendar_event_member(
         reservation_id=reservation.id,
         member_id=account_id,
     )
