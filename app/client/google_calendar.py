@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -16,12 +16,13 @@ class Email(BaseModel):
 class AddEventInput(BaseModel):
     start_time: NaiveDatetime
     end_time: NaiveDatetime
-    member_emails: Sequence[Email]
-    stadium_name: str
-    summary: str
+    location: str
+    event_id: Optional[str] = None
+    all_emails: Optional[Sequence[Email]] = None
+    summary: Optional[str] = None
 
 
-class UpdateEventInput(BaseModel):
+class AddEventMemberInput(BaseModel):
     event_id: str
     member_email: Email
 
@@ -44,10 +45,10 @@ class GoogleCalendar:
             creds.refresh(Request())
         self.service = build('calendar', 'v3', credentials=creds)
 
-    def add_calendar_event(self, data: AddEventInput) -> dict:
+    def add_event(self, data: AddEventInput) -> dict:
         event = {
             'summary': data.summary,
-            'location': data.stadium_name,
+            'location': data.location,
             'start': {
                 'dateTime': data.start_time.isoformat(),
                 'timeZone': 'Asia/Taipei',
@@ -56,7 +57,7 @@ class GoogleCalendar:
                 'dateTime': data.end_time.isoformat(),
                 'timeZone': 'Asia/Taipei',
             },
-            'attendees': [email.model_dump() for email in data.member_emails],
+            'attendees': [email.model_dump() for email in data.all_emails],
             'reminders': {
                 'useDefault': False,
                 'overrides': [
@@ -70,7 +71,7 @@ class GoogleCalendar:
 
         return event
 
-    def add_calendar_event_member(self, data: UpdateEventInput) -> None:
+    def add_event_member(self, data: AddEventMemberInput) -> None:
         event = self.service.events().get(calendarId='primary', eventId=data.event_id).execute()
 
         attendees = event.get("attendees", [])
@@ -79,32 +80,37 @@ class GoogleCalendar:
 
         self.service.events().update(calendarId='primary', eventId=data.event_id, body=event).execute()
 
+    def update_event(self, data: AddEventInput) -> None:
+        event = self.service.events().get(calendarId='primary', eventId=data.event_id).execute()
+
+        event['location'] = data.location
+        event['start']['dateTime'] = data.start_time.isoformat()
+        event['end']['dateTime'] = data.end_time.isoformat()
+
+        self.service.events().update(calendarId='primary', eventId=data.event_id, body=event).execute()
+
 
 async def add_google_calendar_event(
     reservation_id: int, start_time: NaiveDatetime, end_time: NaiveDatetime,
-    account_id: int, stadium_id: int, member_ids: Sequence[int] = None,
+    account_id: int, location: str, member_ids: Sequence[int] = None,
 ):
     if not member_ids:
         member_ids = []
 
-    # get stadium name
-    stadium = await db.stadium.read(stadium_id=stadium_id)
-
-    # get member emails
-    member_emails = []
+    all_emails = []
     for account_id in [*member_ids, account_id]:
         user = await db.account.read(account_id=account_id)
-        member_emails.append(Email(email=user.email))
+        all_emails.append(Email(email=user.email))
 
     event = AddEventInput(
         start_time=start_time, end_time=end_time,
-        member_emails=member_emails, stadium_name=stadium.name,
+        all_emails=all_emails, location=location,
         summary="[Joinee Reservation] Exercise",
     )
 
     calendar = GoogleCalendar(account_id=account_id, config=google_config)
     await calendar.build_connection()
-    result = calendar.add_calendar_event(data=event)
+    result = calendar.add_event(data=event)
 
     await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result['id'])
 
@@ -119,9 +125,28 @@ async def add_google_calendar_event_member(
     if reservation.google_event_id:
         calendar = GoogleCalendar(account_id=manager_id, config=google_config)
         await calendar.build_connection()
-        calendar.add_calendar_event_member(
-            data=UpdateEventInput(
+        calendar.add_event_member(
+            data=AddEventMemberInput(
                 event_id=reservation.google_event_id,
                 member_email=Email(email=member.email),
+            ),
+        )
+
+
+async def update_google_event(
+    reservation_id: int, location: str, start_time: NaiveDatetime, end_time: NaiveDatetime,
+):
+    reservation = await db.reservation.read(reservation_id=reservation_id)
+    manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
+
+    if reservation.google_event_id:
+        calendar = GoogleCalendar(account_id=manager_id, config=google_config)
+        await calendar.build_connection()
+        calendar.update_event(
+            data=AddEventInput(
+                event_id=reservation.google_event_id,
+                start_time=start_time,
+                end_time=end_time,
+                location=location,
             ),
         )

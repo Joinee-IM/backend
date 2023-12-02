@@ -202,6 +202,31 @@ class TestAddReservation(AsyncTestCase):
             vacancy=1,
             member_ids=[2],
         )
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address1',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                ),
+            ],
+        )
         self.court = do.Court(
             id=1,
             venue_id=1,
@@ -281,8 +306,10 @@ class TestAddReservation(AsyncTestCase):
         }
         self.wrong_account_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
+        self.location = f"{self.stadium.name} {self.venue.name} 第 {self.court.number} {self.venue.court_type}"
 
     @freeze_time('2023-10-10')
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.client.google_calendar.add_google_calendar_event', new_callable=AsyncMock)
     @patch('app.processor.http.court.context', new_callable=MockContext)
@@ -296,6 +323,7 @@ class TestAddReservation(AsyncTestCase):
         self, mock_batch_add: AsyncMock, mock_add: AsyncMock, mock_read_venue: AsyncMock,
         mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
         mock_context: MockContext, mock_add_event: AsyncMock, mock_read_account: AsyncMock,
+        mock_read_stadium: AsyncMock,
     ):
         mock_context._context = self.context
         mock_browse_reservation.return_value = None, 0
@@ -304,6 +332,7 @@ class TestAddReservation(AsyncTestCase):
         mock_read_venue.return_value = self.venue
         mock_add.return_value = self.reservation_id
         mock_read_account.return_value = self.account
+        mock_read_stadium.return_value = self.stadium
 
         result = await court.add_reservation(court_id=self.court_id, data=self.data)
 
@@ -319,6 +348,7 @@ class TestAddReservation(AsyncTestCase):
         )
         mock_read_court.assert_called_with(court_id=self.court_id)
         mock_read_venue.assert_called_with(venue_id=self.court.venue_id)
+        mock_read_stadium.assert_called_with(stadium_id=self.venue.stadium_id)
         mock_add.assert_called_with(
             court_id=self.court_id,
             venue_id=self.venue.id,
@@ -341,7 +371,7 @@ class TestAddReservation(AsyncTestCase):
             start_time=self.data.start_time,
             end_time=self.data.end_time,
             account_id=self.account_id,
-            stadium_id=self.venue.stadium_id,
+            location=self.location,
             member_ids=self.data.member_ids,
         )
 

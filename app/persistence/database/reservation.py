@@ -255,7 +255,7 @@ async def edit(
         'start_time': (start_time, 'start_time = %(start_time)s'),
         'end_time': (end_time, 'end_time = %(end_time)s'),
         'vacancy': (vacancy, 'vacancy = %(vacancy)s'),
-        'technical_levels': (technical_levels, 'technical_levels = %(technical_levels)s'),
+        'technical_level': (technical_levels, 'technical_level = %(technical_level)s'),
         'remark': (remark, 'remark = %(remark)s'),
     }
 
