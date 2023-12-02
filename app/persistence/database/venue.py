@@ -24,7 +24,7 @@ async def browse(
         'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
         'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
         'is_reservable': (is_reservable, 'is_reservable = %(is_reservable)s'),
-        'is_published': (True if not include_unpublished else None, 'is_published = %(is_published)s'),
+        'is_published': (True if not include_unpublished else None, 'venue.is_published = %(is_published)s AND court.is_published = %(is_published)s'),  # noqa
     }
     query, params = generate_query_parameters(criteria_dict=criteria_dict)
 
@@ -33,16 +33,18 @@ async def browse(
     order_sql = f'{sort_by.lower()} {order},'
 
     sql = (
-        fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+        fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
         fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-        fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
+        fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, court_type, sport_id, venue.is_published'
         fr'  FROM venue'
+        fr'  LEFT JOIN court ON court.venue_id = venue.id'
         fr' {where_sql}'
-        fr' ORDER BY {order_sql} venue.id'
+        fr' GROUP BY venue.id'
     )
 
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
+            fr' ORDER BY {order_sql} venue.id'
             fr' LIMIT %(limit)s OFFSET %(offset)s',
         limit=limit, offset=offset, **params,
     ).fetch_all()
@@ -69,12 +71,16 @@ async def browse(
 
 async def read(venue_id: int, include_unpublished: bool = False) -> do.Venue:
     result = await PostgresQueryExecutor(
-        sql=fr'SELECT id, stadium_id, name, floor, reservation_interval, is_reservable,'
+        sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
             fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-            fr'       sport_equipments, facilities, court_count, court_type, sport_id, is_published'
+            fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
+            fr'       court_type, sport_id, venue.is_published'
             fr'  FROM venue'
+            fr'  LEFT JOIN court ON court.venue_id = venue.id'
             fr' WHERE venue.id = %(venue_id)s'
-            fr'{" AND is_published" if not include_unpublished else ""}',
+            fr'{" AND venue.is_published" if not include_unpublished else ""}'
+            fr'{" AND court.is_published" if not include_unpublished else ""}'
+            fr' GROUP BY venue.id',
         venue_id=venue_id,
     ).fetch_one()
 

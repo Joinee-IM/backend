@@ -4,7 +4,7 @@ from unittest.mock import patch
 import app.exceptions as exc
 from app.base import do, enums, vo
 from app.processor.http import venue
-from app.utils import Response, AuthedAccount
+from app.utils import AuthedAccount, Response
 from tests import AsyncMock, AsyncTestCase, MockContext
 
 
