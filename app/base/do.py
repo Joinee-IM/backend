@@ -15,7 +15,7 @@ class Account(BaseModel):
     id: int
     email: EmailStr
     nickname: str
-    gender: enums.GenderType
+    gender: enums.GenderType | None
     image_uuid: Optional[UUID]
     role: enums.RoleType
     is_verified: bool
