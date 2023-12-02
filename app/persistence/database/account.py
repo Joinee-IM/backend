@@ -61,8 +61,8 @@ async def read(account_id: int) -> do.Account:
         raise exc.NotFound
 
     return do.Account(
-        id=id_, email=email, nickname=nickname, gender=GenderType(gender), image_uuid=image_uuid,
-        role=RoleType(role), is_verified=is_verified, is_google_login=is_google_login,
+        id=id_, email=email, nickname=nickname, gender=gender, image_uuid=image_uuid,
+        role=role, is_verified=is_verified, is_google_login=is_google_login,
     )
 
 
