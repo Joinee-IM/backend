@@ -7,7 +7,7 @@ from app.utils.context import context
 
 
 async def get_auth_token(
-    token: Annotated[str | None, Cookie()] = None,
+    token: Annotated[str | None, Cookie(include_in_schema=False)] = None,
     auth_token: Annotated[str | None, Header(convert_underscores=True)] = None,
 ):
     account = None
