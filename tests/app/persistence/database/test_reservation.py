@@ -218,7 +218,7 @@ class TestRead(AsyncTestCase):
             remark='',
             invitation_code='',
             is_cancelled=False,
-            google_event_id=None
+            google_event_id=None,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -258,7 +258,8 @@ class TestReadByCode(AsyncTestCase):
     def setUp(self) -> None:
         self.invitation_code = 'code'
         self.raw_reservation = 1, 1, 1, 1, datetime(2023, 11, 17), datetime(2023, 11, 17), 1, 1, [
-            'ADVANCED'], '', '', False  # noqa
+            'ADVANCED',
+        ], '', '', False  # noqa
         self.reservation = do.Reservation(
             id=1,
             stadium_id=1,

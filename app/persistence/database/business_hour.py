@@ -1,8 +1,10 @@
 from typing import Sequence
 
 from app.base import do, enums, vo
-from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters)
+from app.persistence.database.util import (
+    PostgresQueryExecutor,
+    generate_query_parameters,
+)
 
 
 async def browse(
@@ -28,7 +30,7 @@ async def browse(
             params.update({
                 f'weekday_{i}': time_range.weekday,
                 f'end_time_{i}': time_range.end_time,
-                f'start_time_{i}': time_range.start_time
+                f'start_time_{i}': time_range.start_time,
             })
     or_query = ' OR '.join(raw_or_query)
 

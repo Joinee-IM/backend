@@ -43,7 +43,7 @@ async def browse(
             params.update({
                 f'weekday_{i}': time_range.weekday,
                 f'end_time_{i}': time_range.end_time,
-                f'start_time_{i}': time_range.start_time
+                f'start_time_{i}': time_range.start_time,
             })
 
     or_query = ' OR '.join(raw_or_query)
@@ -137,8 +137,10 @@ async def read(stadium_id: int, include_unpublished: bool = False) -> vo.ViewSta
     ).fetch_one()
 
     try:
-        (id_, name, district_id, contact_number, owner_id, address, description, long, lat, is_published,
-         city, district, sport_names, business_hours) = result
+        (
+            id_, name, district_id, contact_number, owner_id, address, description, long, lat, is_published,
+            city, district, sport_names, business_hours,
+        ) = result
     except TypeError:
         raise exc.NotFound
 
@@ -200,7 +202,8 @@ async def edit(
 
     raw_insert_sql = ', '.join(
         f'(%(place_id)s, %(place_type)s, %(weekday_{i})s, %(start_time_{i})s, %(end_time_{i})s)' for i, time_range in
-        enumerate(time_ranges))
+        enumerate(time_ranges)
+    )
     raw_params = {f'weekday_{i}': time_range.weekday for i, time_range in enumerate(time_ranges)}
     raw_params.update({f'start_time_{i}': time_range.start_time for i, time_range in enumerate(time_ranges)})
     raw_params.update({f'end_time_{i}': time_range.end_time for i, time_range in enumerate(time_ranges)})

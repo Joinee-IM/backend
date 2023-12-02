@@ -34,7 +34,7 @@ async def browse(venue_id: int, include_unpublished: bool = False) -> Sequence[d
             id=id_,
             venue_id=venue_id,
             number=number,
-            is_published=is_published
+            is_published=is_published,
         )
         for id_, venue_id, number, is_published in results
     ]

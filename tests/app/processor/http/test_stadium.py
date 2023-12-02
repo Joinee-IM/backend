@@ -48,8 +48,8 @@ class TestBrowseStadium(AsyncTestCase):
                         weekday=1,
                         start_time=time(10, 27),
                         end_time=time(20, 27),
-                    )
-                ]
+                    ),
+                ],
             ),
             vo.ViewStadium(
                 id=2,
@@ -73,17 +73,19 @@ class TestBrowseStadium(AsyncTestCase):
                         weekday=1,
                         start_time=time(10, 27),
                         end_time=time(20, 27),
-                    )
-                ]
+                    ),
+                ],
             ),
         ]
         self.total_count = 1
-        self.expect_result = Response(data=stadium.BrowseStadiumOutput(
-            data=self.stadiums,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=stadium.BrowseStadiumOutput(
+                data=self.stadiums,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.persistence.database.stadium.browse', new_callable=AsyncMock)
     async def test_happy_path(self, mock_browse: AsyncMock):
@@ -128,8 +130,8 @@ class TestReadStadium(AsyncTestCase):
                     weekday=1,
                     start_time=time(10, 27),
                     end_time=time(20, 27),
-                )
-            ]
+                ),
+            ],
         )
         self.expect_result = Response(data=self.stadium)
 
@@ -141,7 +143,7 @@ class TestReadStadium(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
         mock_read.assert_called_with(
-            stadium_id=self.stadium_id
+            stadium_id=self.stadium_id,
         )
 
 
@@ -185,8 +187,8 @@ class TestEditStadium(AsyncTestCase):
                     weekday=1,
                     start_time=time(10, 27),
                     end_time=time(20, 27),
-                )
-            ]
+                ),
+            ],
         )
         self.expect_result = Response()
 

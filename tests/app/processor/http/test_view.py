@@ -33,12 +33,14 @@ class TestViewMyReservation(AsyncTestCase):
                 status=enums.ReservationStatus.finished,
             ),
         ]
-        self.expect_result = Response(data=view.ViewMyReservationOutput(
-            data=self.reservations,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=view.ViewMyReservationOutput(
+                data=self.reservations,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.view.browse_my_reservation', new_callable=AsyncMock)
@@ -101,12 +103,14 @@ class TestViewProviderStadium(AsyncTestCase):
             ),
         ]
         self.total_count = 1
-        self.expect_result = Response(data=view.ViewProviderStadiumOutput(
-            data=self.stadiums,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=view.ViewProviderStadiumOutput(
+                data=self.stadiums,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
@@ -193,12 +197,14 @@ class TestViewProviderVenue(AsyncTestCase):
                 is_published=True,
             ),
         ]
-        self.expect_result = Response(data=view.ViewProviderVenueOutput(
-            data=self.venues,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=view.ViewProviderVenueOutput(
+                data=self.venues,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
@@ -268,12 +274,14 @@ class TestViewProviderCourt(AsyncTestCase):
                 is_published=False,
             ),
         ]
-        self.expect_result = Response(data=view.ViewProviderCourtOutput(
-            data=self.courts,
-            total_count=self.total_count,
-            limit=self.params.limit,
-            offset=self.params.offset,
-        ))
+        self.expect_result = Response(
+            data=view.ViewProviderCourtOutput(
+                data=self.courts,
+                total_count=self.total_count,
+                limit=self.params.limit,
+                offset=self.params.offset,
+            ),
+        )
 
     @patch('app.processor.http.view.context', new_callable=MockContext)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)

@@ -230,8 +230,10 @@ class TestEditPassword(AsyncTestCase):
     @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
     @patch('app.processor.http.account.security.hash_password', new_callable=Mock)
     @patch('app.persistence.database.account.edit', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_edit: AsyncMock, mock_hash: Mock, mock_verify: Mock,
-                              mock_read_by_email: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+    async def test_happy_path(
+        self, mock_edit: AsyncMock, mock_hash: Mock, mock_verify: Mock,
+        mock_read_by_email: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
         mock_read.return_value = self.account
         mock_read_by_email.return_value = None, self.pass_hash, None, None
@@ -251,8 +253,10 @@ class TestEditPassword(AsyncTestCase):
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
-    async def test_wrong_password(self, mock_verify: Mock, mock_read_by_email: AsyncMock,
-                                  mock_read: AsyncMock, mock_context: MockContext):
+    async def test_wrong_password(
+        self, mock_verify: Mock, mock_read_by_email: AsyncMock,
+        mock_read: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
         mock_read.return_value = self.account
         mock_read_by_email.return_value = None, self.pass_hash, None, None

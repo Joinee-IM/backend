@@ -16,12 +16,12 @@ class TestBrowse(AsyncTestCase):
             do.District(
                 id=1,
                 name='大安區',
-                city_id=1
+                city_id=1,
             ),
             do.District(
                 id=2,
                 name='信義區',
-                city_id=1
+                city_id=1,
             ),
         ]
 

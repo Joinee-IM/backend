@@ -16,6 +16,6 @@ async def browse(city_id: int) -> Sequence[do.District]:
         do.District(
             id=id_,
             name=name,
-            city_id=city_id
+            city_id=city_id,
         ) for id_, name, city_id in results
     ]

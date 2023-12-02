@@ -112,7 +112,7 @@ class TestBrowse(AsyncTestCase):
                     fr' AND is_published = %(is_published)s'
                     fr' ORDER BY current_user_count DESC, venue.id) AS tbl',
                 **self.params,
-            )
+            ),
         ])
 
 

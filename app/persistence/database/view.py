@@ -1,8 +1,10 @@
 from typing import Sequence
 
 from app.base import enums, vo
-from app.persistence.database.util import (PostgresQueryExecutor,
-                                           generate_query_parameters)
+from app.persistence.database.util import (
+    PostgresQueryExecutor,
+    generate_query_parameters,
+)
 from app.utils.reservation_status import compose_reservation_status
 
 
