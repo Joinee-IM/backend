@@ -385,6 +385,7 @@ class TestEdit(AsyncTestCase):
             technical_levels=self.technical_levels,
             remark=self.remark,
         )
+        mock_init.assert_called_once()
 
         self.assertIsNone(result)
 

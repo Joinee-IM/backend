@@ -69,8 +69,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY stadium_name DESC'
-                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                    r' ORDER BY stadium_name DESC'
+                    r' LIMIT %(limit)s OFFSET %(offset)s',
                 account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
@@ -90,7 +90,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY stadium_name DESC) AS tbl',
+                    r' ORDER BY stadium_name DESC) AS tbl',
                 account_id=self.account_id,
             ),
         ])
@@ -130,8 +130,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY (start_time, is_cancelled) DESC'
-                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                    r' ORDER BY (start_time, is_cancelled) DESC'
+                    r' LIMIT %(limit)s OFFSET %(offset)s',
                 account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
@@ -151,7 +151,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY (start_time, is_cancelled) DESC) AS tbl',
+                    r' ORDER BY (start_time, is_cancelled) DESC) AS tbl',
                 account_id=self.account_id,
             ),
         ])
@@ -191,8 +191,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY start_time DESC'
-                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                    r' ORDER BY start_time DESC'
+                    r' LIMIT %(limit)s OFFSET %(offset)s',
                 account_id=self.account_id, limit=self.limit, offset=self.offset,
             ),
             call(
@@ -212,7 +212,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r' INNER JOIN reservation_member'
                     r'         ON reservation_member.reservation_id = reservation.id'
                     r'        AND reservation_member.account_id = %(account_id)s'
-                    fr' ORDER BY start_time DESC) AS tbl',
+                    r' ORDER BY start_time DESC) AS tbl',
                 account_id=self.account_id,
             ),
         ])
@@ -276,6 +276,7 @@ class TestBrowseProviderStadium(AsyncTestCase):
         )
 
         self.assertEqual(result, self.expect_result)
+        self.assertEqual(mock_init.call_count, 2)
 
 
 class TestBrowseProviderVenues(AsyncTestCase):

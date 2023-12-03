@@ -38,7 +38,7 @@ class SMTPHandler(metaclass=mcs.Singleton):
             ] = aiosmtplib.smtp._default,  # noqa
     ):
         client = await self.get_client()
-        responses, data_log = await client.send_message(
+        responses, _ = await client.send_message(
             message, sender=sender, recipients=recipients,
             mail_options=mail_options, rcpt_options=rcpt_options,
             timeout=timeout,

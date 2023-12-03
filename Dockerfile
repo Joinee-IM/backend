@@ -1,5 +1,5 @@
 # `python-base` sets up all our shared environment variables
-FROM python:3.10 as python-base
+FROM python:3.10 AS python-base
 
     # python
 ENV PYTHONUNBUFFERED=1 \
@@ -33,13 +33,14 @@ ENV PATH="$POETRY_HOME/bin:$VENV_PATH/bin:$PATH"
 
 
 # `builder-base` stage is used to build deps + create our virtual environment
-FROM python-base as builder-base
+FROM python-base AS builder-base
 RUN apt-get update \
     && apt-get install --no-install-recommends -y \
         # deps for installing poetry
         curl \
         # deps for building python deps
-        build-essential
+        build-essential \
+    && apt-get clean
 
 # install poetry - respects $POETRY_VERSION & $POETRY_HOME
 RUN pip install poetry==${POETRY_VERSION}
@@ -53,7 +54,7 @@ RUN poetry install --only main
 
 
 # `production` image used for runtime
-FROM python-base as production
+FROM python-base AS production
 ENV FASTAPI_ENV=production
 COPY --from=builder-base $PYSETUP_PATH $PYSETUP_PATH
 COPY . /app/

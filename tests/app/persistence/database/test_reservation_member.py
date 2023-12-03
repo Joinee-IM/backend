@@ -64,8 +64,8 @@ class TestBrowse(AsyncTestCase):
         mock_init.assert_called_with(
             sql=r'SELECT reservation_id, account_id, is_manager, is_joined'
                 r'  FROM reservation_member'
-                fr' WHERE reservation_id = %(reservation_id)s'
-                fr' AND account_id = %(account_id)s'
+                r' WHERE reservation_id = %(reservation_id)s'
+                r' AND account_id = %(account_id)s'
                 r' ORDER BY is_manager, account_id',
             **self.params,
         )
