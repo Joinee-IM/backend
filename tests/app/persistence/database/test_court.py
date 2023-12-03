@@ -112,3 +112,25 @@ class TestBrowse(AsyncTestCase):
                 ' WHERE venue_id = %(venue_id)s',
             venue_id=self.venue_id,
         )
+
+
+class TestEdit(AsyncTestCase):
+    def setUp(self) -> None:
+        self.court_id = 1
+        self.is_published = True
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock):
+        result = await court.edit(
+            court_id=self.court_id,
+            is_published=self.is_published,
+        )
+        self.assertIsNone(result)
+        mock_execute.assert_called_once()
+
+    async def test_no_update(self):
+        result = await court.edit(
+            court_id=self.court_id,
+            is_published=None,
+        )
+        self.assertIsNone(result)
