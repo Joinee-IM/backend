@@ -243,5 +243,7 @@ async def add(
         contact_number: str,
         description: str,
         business_hour: Sequence[vo.WeekTimeRange],
+        long: str,
+        lat: str,
 ):
     pass

@@ -8,6 +8,7 @@ import app.persistence.database as db
 from app.base import vo, enums
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
+from app.client.google_maps import google_maps
 
 router = APIRouter(
     tags=['Stadium'],
@@ -98,6 +99,9 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
     if context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
+    google_maps.build_connection()
+    long, lat = google_maps.get_long_lat(address=data.address)
+
     await db.stadium.add(
         name=data.name,
         address=data.address,
@@ -106,6 +110,8 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
         contact_number=data.contact_number,
         description=data.description,
         business_hour=data.business_hour,
+        long=long,
+        lat=lat,
     )
 
     return Response()
