@@ -14,17 +14,19 @@ class TestEncodeJWT(TestCase):
     def setUp(self) -> None:
         self.account_id = 1
         self.expire = timedelta(seconds=1)
+        self.role = RoleType.normal
 
     @freeze_time('2023-10-25')
     @patch('app.utils.security._jwt_encoder', new_callable=Mock)
     def test_happy_path(self, mock_encoder: Mock):
         mock_encoder.return_value = 'mock-token'
-        result = security.encode_jwt(self.account_id, self.expire)
+        result = security.encode_jwt(account_id=self.account_id, role=self.role, expire=self.expire)
 
         self.assertEqual(result, 'mock-token')
         mock_encoder.assert_called_with({
             'account_id': self.account_id,
             'expire': '2023-10-25T00:00:01',
+            'role': self.role,
         })
 
 
@@ -36,12 +38,14 @@ class TestDecodeJWT(TestCase):
         self.decoded = {
             'account_id': self.account_id,
             'expire': '2023-10-25T00:00:01',
+            'role': self.role,
         }
         self.request_time = datetime(2023, 10, 25)
         self.late_request_time = datetime(2023, 10, 26)
         self.expect_output = security.AuthedAccount(
             id=self.account_id,
             time=self.request_time,
+            role=self.role,
         )
 
     @freeze_time('2023-10-25')

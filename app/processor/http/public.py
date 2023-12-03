@@ -55,7 +55,7 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
     if not verify_password(data.password, pass_hash):
         raise exc.LoginFailed
 
-    token = encode_jwt(account_id=account_id)
+    token = encode_jwt(account_id=account_id, role=role)
     response.set_cookie(key="account_id", value=str(account_id), httponly=True, samesite='none', secure=True)
     response.set_cookie(key="token", value=str(token), httponly=True, samesite='none', secure=True)
     return Response(data=LoginOutput(account_id=account_id, token=token))

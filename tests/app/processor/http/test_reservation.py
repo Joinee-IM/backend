@@ -109,7 +109,7 @@ class TestReadReservation(AsyncTestCase):
 
 class TestJoinReservation(AsyncTestCase):
     def setUp(self) -> None:
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.invitation_code = 'code'
         self.account_id = 1
         self.reservation = do.Reservation(
@@ -187,7 +187,7 @@ class TestDeleteReservation(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,
@@ -240,11 +240,11 @@ class TestEditReservation(AsyncTestCase):
         self.reservation_id = 1
         self.account_id = 1
         self.context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider),
             'REQUEST_TIME': datetime(2023, 11, 11),
         }
         self.wrong_time_context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider),
             'REQUEST_TIME': datetime(2023, 11, 30),
         }
         self.data = reservation.EditReservationInput(
@@ -481,7 +481,7 @@ class TestLeaveReservation(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.only_one_reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,

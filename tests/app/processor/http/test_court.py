@@ -272,14 +272,14 @@ class TestAddReservation(AsyncTestCase):
         self.reservation_id = 1
         self.invitation_code = 'code'
         self.context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
             'REQUEST_TIME': datetime(2023, 11, 17),
         }
         self.illegal_time_context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
             'REQUEST_TIME': datetime(2023, 11, 30),
         }
-        self.wrong_account_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.wrong_account_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
 
     @freeze_time('2023-10-10')
