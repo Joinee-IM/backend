@@ -1,16 +1,16 @@
 import googlemaps
+from typing import Tuple
 from app.config import GoogleConfig, google_config
-
 
 class GoogleMaps:
     def __init__(self, config: GoogleConfig):
         self.service = None
         self.config = config
 
-    def build_connection(self):
+    def build_connection(self) -> None:
         self.service = googlemaps.Client(client_id=self.config.CLIENT_ID, client_secret=self.config.CLIENT_SECRET)
 
-    def get_long_lat(self, address: str):
+    def get_long_lat(self, address: str) -> Tuple[float, float]:
         geocode_result = self.service.geocode(address=address)
         return geocode_result["geometry"]["location"]["lng"], geocode_result["geometry"]["location"]["lat"]
 
