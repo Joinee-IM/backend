@@ -1,11 +1,11 @@
-from typing import Sequence
+from typing import Sequence, Optional
 
 from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
-from app.base import do, enums
+from app.base import do, enums, vo
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
 
@@ -94,3 +94,60 @@ async def edit_venue(venue_id: int, data: EditVenueInput, _=Depends(get_auth_tok
         **data.model_dump(),
     )
     return Response()
+
+
+class AddVenueInput(BaseModel):
+    stadium_id: int
+    name: str
+    floor: str
+    reservation_interval: Optional[int]
+    is_reservable: bool
+    is_chargeable: bool
+    fee_rate: Optional[float]
+    fee_type: Optional[enums.FeeType]
+    area: int
+    capacity: int
+    sport_equipments: Optional[str]
+    facilities: Optional[str]
+    court_count: int
+    court_type: str
+    sport_id: int
+    business_hours: Sequence[vo.WeekTimeRange]
+
+
+class AddVenueOutput(BaseModel):
+    id: int
+
+
+@router.post('/venue')
+async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[AddVenueOutput]:
+    stadium = await db.stadium.read(stadium_id=data.stadium_id)
+
+    if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
+        raise exc.NoPermission
+
+    id_ = await db.venue.add(
+        stadium_id=data.stadium_id,
+        name=data.name,
+        floor=data.floor,
+        reservation_interval=data.reservation_interval,
+        is_reservable=data.is_reservable,
+        is_chargeable=data.is_chargeable,
+        fee_rate=data.fee_rate,
+        fee_type=data.fee_type,
+        area=data.area,
+        capacity=data.capacity,
+        sport_equipments=data.sport_equipments,
+        facilities=data.facilities,
+        court_count=data.court_count,
+        court_type=data.court_type,
+        sport_id=data.sport_id,
+    )
+
+    # await db.business_hour.batch_add(
+    #     place_type=enums.PlaceType.venue,
+    #     place_id=id_,
+    #     business_hours=data.business_hours,
+    # )
+
+    return Response(data=AddVenueOutput(id=id_))
