@@ -164,3 +164,23 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
             location=location,
         )
     return Response(data=AddReservationOutput(id=reservation_id))
+
+
+class EditCourtInput(BaseModel):
+    is_published: bool | None = None
+
+
+@router.patch('/court/{court_id}')
+async def edit_court(court_id: int, data: EditCourtInput, _=Depends(get_auth_token)) -> Response:
+    court = await db.court.read(court_id=court_id, include_unpublished=True)
+    venue = await db.venue.read(venue_id=court.venue_id, include_unpublished=True)
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id, include_unpublished=True)
+
+    if stadium.owner_id != context.account.id:
+        raise exc.NoPermission
+
+    await db.court.edit(
+        court_id=court_id,
+        is_published=data.is_published,
+    )
+    return Response()
