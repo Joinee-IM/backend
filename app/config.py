@@ -65,6 +65,7 @@ class GoogleConfig:
     SERVER_URL = env_values.get('GOOGLE_SERVER_URL')
     CLIENT_KWARGS = env_values.get('GOOGLE_CLIENT_KWARGS')
     SESSION_KEY = env_values.get('GOOGLE_SESSION_KEY', '')
+    API_KEY = env_values.get('GOOGLE_API_KEY')
 
 
 pg_config = PGConfig()

@@ -1,14 +1,14 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
-from app.base import vo, enums
+from app.base import enums, vo
+from app.client.google_maps import google_maps
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
-from app.client.google_maps import google_maps
 
 router = APIRouter(
     tags=['Stadium'],
@@ -114,4 +114,11 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
         lat=lat,
     )
 
-    return Response()
+    return Response(data=True)
+
+
+@router.post('/validate_address')
+async def validate_address(address: str) -> Response:
+    google_maps.build_connection()
+    _ = google_maps.get_long_lat(address=address)
+    return Response(data=True)

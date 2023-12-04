@@ -1,6 +1,10 @@
-import googlemaps
 from typing import Tuple
+
+import googlemaps
+
+import app.exceptions as exc
 from app.config import GoogleConfig, google_config
+
 
 class GoogleMaps:
     def __init__(self, config: GoogleConfig):
@@ -8,11 +12,19 @@ class GoogleMaps:
         self.config = config
 
     def build_connection(self) -> None:
-        self.service = googlemaps.Client(client_id=self.config.CLIENT_ID, client_secret=self.config.CLIENT_SECRET)
+        self.service = googlemaps.Client(key=self.config.API_KEY)
 
     def get_long_lat(self, address: str) -> Tuple[float, float]:
         geocode_result = self.service.geocode(address=address)
-        return geocode_result["geometry"]["location"]["lng"], geocode_result["geometry"]["location"]["lat"]
+        print(geocode_result)
+
+        try:
+            if geocode_result[0]["geometry"]["location_type"] == "ROOFTOP":
+                return geocode_result[0]["geometry"]["location"]["lng"], geocode_result[0]["geometry"]["location"]["lat"]
+            else:
+                raise exc.NotFound
+        except (KeyError, IndexError):
+            raise exc.NotFound
 
 
 google_maps = GoogleMaps(config=google_config)
