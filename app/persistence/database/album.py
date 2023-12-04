@@ -33,3 +33,16 @@ async def batch_add(place_type: enums.PlaceType, place_id: int, uuids: Sequence[
             fr'     VALUES {value_sql}',
         place_type=place_type, place_id=place_id, **params,
     ).execute()
+
+
+async def batch_delete(place_type: enums.PlaceType, place_id: int, uuids: Sequence[UUID]):
+    params = {fr'uuid_{i}': uuid for i, uuid in enumerate(uuids)}
+    in_sql = ", ".join([fr'%({param})s' for param in params])
+
+    await PostgresQueryExecutor(
+        sql=fr'DELETE FROM album'
+            fr' WHERE place_id = %(place_id)s'
+            fr'   AND type = %(place_type)s'
+            fr'   AND file_uuid IN ({in_sql})',
+        place_id=place_id, place_type=place_type, **params,
+    ).execute()

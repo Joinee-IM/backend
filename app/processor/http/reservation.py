@@ -82,7 +82,7 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
         member_ids=[account_id],
     )
 
-    await google_calendar.update_google_calendar_event(
+    await google_calendar.add_google_calendar_event_member(
         reservation_id=reservation.id,
         member_id=account_id,
     )
@@ -156,6 +156,15 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
         vacancy=data.vacancy,
         technical_levels=data.technical_levels,
         remark=data.remark,
+    )
+
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id)
+    location = f"{stadium.name} {venue.name} 第 {court.number} {venue.court_type}"
+    await google_calendar.update_google_event(
+        reservation_id=reservation_id,
+        location=location,
+        start_time=start_time,
+        end_time=end_time,
     )
 
     return Response()

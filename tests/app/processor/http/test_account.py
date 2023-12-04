@@ -15,8 +15,8 @@ from tests import AsyncMock, AsyncTestCase, Mock, MockContext
 
 class TestReadAccount(AsyncTestCase):
     def setUp(self) -> None:
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.account_id = 1
         self.account = do.Account(
             id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
@@ -57,8 +57,8 @@ class TestReadAccount(AsyncTestCase):
 class TestEditAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.happy_path_data = account.EditAccountInput(
             nickname='nickname',
             gender=GenderType.male,
@@ -105,8 +105,8 @@ class TestUploadAccountImage(AsyncTestCase):
         self.accept_image: UploadFile = UploadFile(File('asdf'), headers=self.accept_header)
         self.reject_image: UploadFile = UploadFile(File('asdf'), headers=self.reject_header)
 
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
 
         self.file_uuid = UUID('262b3702-1891-4e18-958e-82ebe758b0c9')
         self.bucket_name = 'bucket'
@@ -211,8 +211,8 @@ class TestSearchAccount(AsyncTestCase):
 class TestEditPassword(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.data = account.EditPasswordInput(
             old_password='old',
             new_password='new',

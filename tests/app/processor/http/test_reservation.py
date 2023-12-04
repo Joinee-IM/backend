@@ -1,4 +1,4 @@
-from datetime import datetime
+from datetime import datetime, time
 
 from freezegun import freeze_time
 
@@ -109,7 +109,7 @@ class TestReadReservation(AsyncTestCase):
 
 class TestJoinReservation(AsyncTestCase):
     def setUp(self) -> None:
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.invitation_code = 'code'
         self.account_id = 1
         self.reservation = do.Reservation(
@@ -142,7 +142,7 @@ class TestJoinReservation(AsyncTestCase):
         )
         self.expect_result = Response(data=True)
 
-    @patch('app.client.google_calendar.update_google_calendar_event', new_callable=AsyncMock)
+    @patch('app.client.google_calendar.add_google_calendar_event_member', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
@@ -187,7 +187,7 @@ class TestDeleteReservation(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,
@@ -240,11 +240,11 @@ class TestEditReservation(AsyncTestCase):
         self.reservation_id = 1
         self.account_id = 1
         self.context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider),
             'REQUEST_TIME': datetime(2023, 11, 11),
         }
         self.wrong_time_context = {
-            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4)),
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.provider),
             'REQUEST_TIME': datetime(2023, 11, 30),
         }
         self.data = reservation.EditReservationInput(
@@ -306,6 +306,31 @@ class TestEditReservation(AsyncTestCase):
             facilities='facility',
             is_published=True,
         )
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address1',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                ),
+            ],
+        )
         self.reservations = [
             do.Reservation(
                 id=1,
@@ -339,8 +364,11 @@ class TestEditReservation(AsyncTestCase):
             ),
         ]
         self.expect_result = Response()
+        self.location = f"{self.stadium.name} {self.venue.name} 第 {self.court.number} {self.venue.court_type}"
 
     @freeze_time('2023-11-11')
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.client.google_calendar.update_google_event', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
@@ -352,7 +380,7 @@ class TestEditReservation(AsyncTestCase):
         self, mock_edit: AsyncMock, mock_browse_reservation: AsyncMock,
         mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
         mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
-        mock_context: MockContext,
+        mock_context: MockContext, mock_update_event: AsyncMock, mock_read_stadium: AsyncMock,
     ):
         mock_context._context = self.context
 
@@ -361,6 +389,7 @@ class TestEditReservation(AsyncTestCase):
         mock_read_court.return_value = self.court
         mock_read_venue.return_value = self.venue
         mock_browse_reservation.return_value = self.reservations, None
+        mock_read_stadium.return_value = self.stadium
 
         result = await reservation.edit_reservation(
             reservation_id=self.reservation_id,
@@ -368,6 +397,7 @@ class TestEditReservation(AsyncTestCase):
         )
 
         self.assertEqual(result, self.expect_result)
+        mock_read_stadium.assert_called_with(stadium_id=self.venue.stadium_id)
         mock_edit.assert_called_with(
             reservation_id=self.reservation_id,
             court_id=self.court.id,
@@ -378,6 +408,12 @@ class TestEditReservation(AsyncTestCase):
             vacancy=self.data.vacancy,
             technical_levels=self.data.technical_levels,
             remark=self.data.remark,
+        )
+        mock_update_event.assert_called_with(
+            reservation_id=self.reservation_id,
+            location=self.location,
+            start_time=self.data.start_time,
+            end_time=self.data.end_time,
         )
 
     @freeze_time('2023-11-11')
@@ -481,7 +517,7 @@ class TestLeaveReservation(AsyncTestCase):
     def setUp(self) -> None:
         self.reservation_id = 1
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.only_one_reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,

@@ -36,7 +36,7 @@ async def auth(request: Request):
         token_google = await oauth_handler.authorize_access_token(request=request)
         user_email = token_google['userinfo']['email']
         try:
-            account_id, *_ = await db.account.read_by_email(email=user_email)
+            account_id, _, role, _ = await db.account.read_by_email(email=user_email)
             await db.account.update_google_token(
                 account_id=account_id,
                 access_token=token_google['access_token'],
@@ -51,7 +51,7 @@ async def auth(request: Request):
                 access_token=token_google['access_token'],
                 refresh_token=token_google['refresh_token'],
             )
-        token = encode_jwt(account_id=account_id)
+        token = encode_jwt(account_id=account_id, role=role)
         response = RedirectResponse(url=f"{service_config.url}", status_code=303)
         response.set_cookie(key="account_id", value=str(account_id), samesite='none', secure=True, httponly=True)
         response.set_cookie(key="token", value=str(token), samesite='none', secure=True, httponly=True)

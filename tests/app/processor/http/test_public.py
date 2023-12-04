@@ -60,6 +60,7 @@ class TestLogin(AsyncTestCase):
         )
         mock_encode.assert_called_with(
             account_id=self.account_id,
+            role=self.role,
         )
 
         self.assertEqual(result, Response(data=self.expect_output))

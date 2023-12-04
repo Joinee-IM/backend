@@ -4,6 +4,7 @@ from unittest.mock import patch
 from fastapi import Request, Response
 from freezegun import freeze_time
 
+from app.base.enums import RoleType
 from app.config import AppConfig
 from app.middleware.auth import middleware
 from app.utils.security import AuthedAccount
@@ -40,7 +41,7 @@ class TestMiddleware(AsyncTestCase):
                 'headers': [(b'auth-token', b'token'), (b'origin', b'http://localhost:3000')],
             },
         )
-        self.jwt_result = AuthedAccount(id=1, time=datetime(2023, 10, 18))
+        self.jwt_result = AuthedAccount(id=1, time=datetime(2023, 10, 18), role=RoleType.normal)
         self.context_expect_result_with_auth_token = {
             'REQUEST_TIME': self.now,
             'REQUEST_UUID': self.uuid,
