@@ -5,7 +5,6 @@ from app.persistence.database.util import (
     PostgresQueryExecutor,
     generate_query_parameters,
 )
-from app.utils import Response
 
 
 async def browse(
