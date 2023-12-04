@@ -16,7 +16,6 @@ class GoogleMaps:
 
     def get_long_lat(self, address: str) -> Tuple[float, float]:
         geocode_result = self.service.geocode(address=address)
-        print(geocode_result)
 
         try:
             if geocode_result[0]["geometry"]["location_type"] == "ROOFTOP":

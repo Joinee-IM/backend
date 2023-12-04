@@ -236,14 +236,16 @@ async def edit(
 
 
 async def add(
-        name: str,
-        address: str,
-        district_id: int,
-        owner_id: int,
-        contact_number: str,
-        description: str,
-        business_hour: Sequence[vo.WeekTimeRange],
-        long: float,
-        lat: float,
-):
-    pass
+        name: str, address: str, district_id: int,
+        owner_id: int, contact_number: str, description: str, long: float, lat: float,
+) -> int:
+    id_ = await PostgresQueryExecutor(
+        sql=r'INSERT INTO stadium(name, district_id, owner_id, address, contact_number, description, long,'
+            r'                        lat, is_published)'
+            r'                 VALUES(%(name)s, %(district_id)s, %(owner_id)s, %(address)s, %(contact_number)s,'
+            r'                        %(description)s, %(long)s, %(lat)s, %(is_published)s)'
+            r'  RETURNING id',
+        name=name, district_id=district_id, owner_id=owner_id, address=address, contact_number=contact_number,
+        description=description, long=long, lat=lat, is_published=True,
+    ).fetch_one()
+    return id_

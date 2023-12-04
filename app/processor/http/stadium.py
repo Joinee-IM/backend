@@ -94,6 +94,10 @@ class AddStadiumInput(BaseModel):
     description: Optional[str] = None
 
 
+class AddStadiumOutput(BaseModel):
+    id: int
+
+
 @router.post('/stadium')
 async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Response:
     if context.account.role != enums.RoleType.provider:
@@ -102,19 +106,24 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
     google_maps.build_connection()
     long, lat = google_maps.get_long_lat(address=data.address)
 
-    await db.stadium.add(
+    id_, = await db.stadium.add(
         name=data.name,
         address=data.address,
         district_id=data.district_id,
         owner_id=context.account.id,
         contact_number=data.contact_number,
         description=data.description,
-        business_hour=data.business_hour,
         long=long,
         lat=lat,
     )
 
-    return Response(data=True)
+    await db.business_hour.add(
+        place_type=enums.PlaceType.stadium,
+        place_id=id_,
+        business_hours=data.business_hour,
+    )
+
+    return Response(data=AddStadiumOutput(id=id_))
 
 
 @router.post('/validate_address')
