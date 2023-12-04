@@ -66,7 +66,7 @@ async def edit(
 
 
 async def batch_add(venue_id: int, add: int, start_from: int):
-    numbers = range(start_from, start_from+add)
+    numbers = range(start_from, start_from + add)
     value_sql = ', '.join(f'(%(venue_id)s, %(number_{i})s, %(is_published)s)' for i, _ in enumerate(numbers))
     params = {f'number_{i}': number for i, number in enumerate(numbers)}
     await PostgresQueryExecutor(

@@ -134,3 +134,38 @@ class TestEdit(AsyncTestCase):
             is_published=None,
         )
         self.assertIsNone(result)
+
+
+class TestBatchAdd(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.add = 3
+        self.start_from = 3
+
+        self.params = {
+            'number_0': 3,
+            'number_1': 4,
+            'number_2': 5,
+        }
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute, mock_init):
+        mock_execute.return_value = None
+
+        result = await court.batch_add(
+            venue_id=self.venue_id,
+            add=self.add,
+            start_from=self.start_from,
+        )
+
+        self.assertIsNone(result)
+
+        mock_init.assert_called_with(
+            sql=fr'INSERT INTO court'
+                fr'            (venue_id, number, is_published)'
+                fr'     VALUES (%(venue_id)s, %(number_0)s, %(is_published)s),'
+                fr' (%(venue_id)s, %(number_1)s, %(is_published)s),'
+                fr' (%(venue_id)s, %(number_2)s, %(is_published)s)',
+            venue_id=self.venue_id, is_published=True, **self.params,
+        )
