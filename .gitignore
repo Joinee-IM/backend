@@ -163,3 +163,4 @@ config/
 
 .DS_Store
 gcp-service-account.json
+.scannerwork/

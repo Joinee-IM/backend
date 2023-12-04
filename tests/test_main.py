@@ -5,9 +5,6 @@ from tests import AsyncMock, AsyncTestCase, Mock
 
 
 class TestStartUp(AsyncTestCase):
-    def setUp(self) -> None:
-        pass
-
     @patch('app.persistence.database.pg_pool_handler.initialize', new_callable=AsyncMock)
     @patch('app.persistence.email.smtp_handler.initialize', new_callable=AsyncMock)
     @patch('app.client.oauth.oauth_handler.initialize', new_callable=Mock)

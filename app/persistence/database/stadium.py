@@ -50,7 +50,10 @@ async def browse(
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 
-    where_sql += (' AND ' if where_sql else 'WHERE ') + or_query if or_query else ''
+    if or_query and where_sql:
+        where_sql = where_sql + ' AND ' + or_query
+    elif or_query:
+        where_sql = 'WHERE ' + or_query
 
     sql = (
         fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'

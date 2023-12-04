@@ -15,9 +15,6 @@ class MockSMTPConfig(SMTPConfig):
 
 
 class TestSMTPHandler(AsyncTestCase):
-    def setUp(self) -> None:
-        pass
-
     @patch('aiosmtplib.SMTP', new_callable=AsyncMock)
     async def test_initialize(self, mock_smtp: AsyncMock):
         smtp_handler = email.SMTPHandler()

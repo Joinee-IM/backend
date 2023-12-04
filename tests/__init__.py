@@ -25,10 +25,10 @@ class MockContext(Context):
         self._context = {'REQUEST_UUID': 'test_uuid'}
 
     def get_request_time(self):
-        return self._context.get(self.REQUEST_TIME)
+        return self._context.get(self.REQUEST_TIME_KEY)
 
     def get_request_uuid(self):
-        return self._context.get(self.REQUEST_UUID)
+        return self._context.get(self.REQUEST_UUID_KEY)
 
     def get_account(self) -> AuthedAccount:
         return self._context.get(self.CONTEXT_AUTHED_ACCOUNT_KEY)  # noqa

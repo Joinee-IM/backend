@@ -91,31 +91,31 @@ class TestBrowse(AsyncTestCase):
         self.assertEqual(result, self.venues)
         mock_init.assert_has_calls([
             call(
-                sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-                    fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, court_type, sport_id, venue.is_published'  # noqa
-                    fr'  FROM venue'
-                    fr'  LEFT JOIN court ON court.venue_id = venue.id'
-                    fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
-                    fr' AND venue.is_published = %(is_published)s'
-                    fr' AND court.is_published = %(is_published)s'
-                    fr' GROUP BY venue.id'
-                    fr' ORDER BY current_user_count DESC, venue.id'
-                    fr' LIMIT %(limit)s OFFSET %(offset)s',
+                sql=r'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                    r'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
+                    r'       sport_equipments, facilities, COUNT(court.*) AS court_count, court_type, sport_id, venue.is_published'  # noqa
+                    r'  FROM venue'
+                    r'  LEFT JOIN court ON court.venue_id = venue.id'
+                    r' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    r' AND venue.is_published = %(is_published)s'
+                    r' AND court.is_published = %(is_published)s'
+                    r' GROUP BY venue.id'
+                    r' ORDER BY current_user_count DESC, venue.id'
+                    r' LIMIT %(limit)s OFFSET %(offset)s',
                 limit=self.limit, offset=self.offset, **self.params,
             ),
             call(
-                sql=fr'SELECT COUNT(*)'
-                    fr'  FROM ('
-                    fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                    fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-                    fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, court_type, sport_id, venue.is_published'  # noqa
-                    fr'  FROM venue'
-                    fr'  LEFT JOIN court ON court.venue_id = venue.id'
-                    fr' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
-                    fr' AND venue.is_published = %(is_published)s'
-                    fr' AND court.is_published = %(is_published)s'
-                    fr' GROUP BY venue.id) AS tbl',
+                sql=r'SELECT COUNT(*)'
+                    r'  FROM ('
+                    r'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                    r'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
+                    r'       sport_equipments, facilities, COUNT(court.*) AS court_count, court_type, sport_id, venue.is_published'  # noqa
+                    r'  FROM venue'
+                    r'  LEFT JOIN court ON court.venue_id = venue.id'
+                    r' WHERE name LIKE %(name)s AND sport_id = %(sport_id)s AND is_reservable = %(is_reservable)s'
+                    r' AND venue.is_published = %(is_published)s'
+                    r' AND court.is_published = %(is_published)s'
+                    r' GROUP BY venue.id) AS tbl',
                 **self.params,
             ),
         ])
@@ -155,16 +155,16 @@ class TestRead(AsyncTestCase):
 
         self.assertEqual(result, self.venue)
         mock_init.assert_called_with(
-            sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-                fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
-                fr'       court_type, sport_id, venue.is_published'
-                fr'  FROM venue'
-                fr'  LEFT JOIN court ON court.venue_id = venue.id'
-                fr' WHERE venue.id = %(venue_id)s'
-                fr' AND venue.is_published'
-                fr' AND court.is_published'
-                fr' GROUP BY venue.id',
+            sql=r'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                r'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
+                r'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
+                r'       court_type, sport_id, venue.is_published'
+                r'  FROM venue'
+                r'  LEFT JOIN court ON court.venue_id = venue.id'
+                r' WHERE venue.id = %(venue_id)s'
+                r' AND venue.is_published'
+                r' AND court.is_published'
+                r' GROUP BY venue.id',
             venue_id=self.venue_id,
         )
 
@@ -177,16 +177,16 @@ class TestRead(AsyncTestCase):
             await venue.read(venue_id=self.venue_id)
 
         mock_init.assert_called_with(
-            sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
-                fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
-                fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
-                fr'       court_type, sport_id, venue.is_published'
-                fr'  FROM venue'
-                fr'  LEFT JOIN court ON court.venue_id = venue.id'
-                fr' WHERE venue.id = %(venue_id)s'
-                fr' AND venue.is_published'
-                fr' AND court.is_published'
-                fr' GROUP BY venue.id',
+            sql=r'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
+                r'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
+                r'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
+                r'       court_type, sport_id, venue.is_published'
+                r'  FROM venue'
+                r'  LEFT JOIN court ON court.venue_id = venue.id'
+                r' WHERE venue.id = %(venue_id)s'
+                r' AND venue.is_published'
+                r' AND court.is_published'
+                r' GROUP BY venue.id',
             venue_id=self.venue_id,
         )
 
