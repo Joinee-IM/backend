@@ -331,7 +331,7 @@ class TestAdd(AsyncTestCase):
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
     @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
     async def test_happy_path(self, mock_fetch, mock_init):
-        mock_fetch.return_value = 1
+        mock_fetch.return_value = 1,
 
         result = await stadium.add(
            name=self.name, address=self.address, district_id=self.district_id, owner_id=self.owner_id,
