@@ -23,8 +23,7 @@ class GoogleMaps:
         try:
             if geocode_result[0]["geometry"]["location_type"] == "ROOFTOP":
                 return geocode_result[0]["geometry"]["location"]["lng"], geocode_result[0]["geometry"]["location"]["lat"]
-            else:
-                raise exc.NotFound
+            raise exc.NotFound
         except (KeyError, IndexError):
             raise exc.NotFound
 

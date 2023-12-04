@@ -99,7 +99,7 @@ class AddStadiumOutput(BaseModel):
 
 
 @router.post('/stadium')
-async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Response:
+async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Response[AddStadiumOutput]:
     if context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
@@ -126,6 +126,6 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
 
 
 @router.post('/validate_address')
-async def validate_address(address: str) -> Response:
+async def validate_address(address: str) -> Response[bool]:
     _ = google_maps.get_long_lat(address=address)
     return Response(data=True)

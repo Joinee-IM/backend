@@ -59,7 +59,7 @@ async def browse(
     ]
 
 
-async def batch_add(place_type: enums.PlaceType, place_id: int, business_hours=Sequence[vo.WeekTimeRange]) -> Response:
+async def batch_add(place_type: enums.PlaceType, place_id: int, business_hours=Sequence[vo.WeekTimeRange]) -> None:
     value_sql = ', '.join(f'(%(place_id)s, %(place_type)s, %(weekday_{i})s, %(start_time_{i})s, %(end_time_{i})s)' for i, _ in enumerate(business_hours))
     params = {f'weekday_{i}': business_hour.weekday for i, business_hour in enumerate(business_hours)}
     params.update({f'start_time_{i}': business_hour.start_time for i, business_hour in enumerate(business_hours)})
