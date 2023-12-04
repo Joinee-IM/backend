@@ -89,7 +89,7 @@ class AddStadiumInput(BaseModel):
     name: str
     address: str
     district_id: int
-    business_hour: Sequence[vo.WeekTimeRange]
+    business_hours: Sequence[vo.WeekTimeRange]
     contact_number: Optional[str] = None
     description: Optional[str] = None
 
@@ -103,10 +103,9 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
     if context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
-    google_maps.build_connection()
     long, lat = google_maps.get_long_lat(address=data.address)
 
-    id_, = await db.stadium.add(
+    id_ = await db.stadium.add(
         name=data.name,
         address=data.address,
         district_id=data.district_id,
@@ -117,10 +116,10 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
         lat=lat,
     )
 
-    await db.business_hour.add(
+    await db.business_hour.batch_add(
         place_type=enums.PlaceType.stadium,
         place_id=id_,
-        business_hours=data.business_hour,
+        business_hours=data.business_hours,
     )
 
     return Response(data=AddStadiumOutput(id=id_))
@@ -128,6 +127,5 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
 
 @router.post('/validate_address')
 async def validate_address(address: str) -> Response:
-    google_maps.build_connection()
     _ = google_maps.get_long_lat(address=address)
     return Response(data=True)

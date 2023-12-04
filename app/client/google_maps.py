@@ -15,6 +15,9 @@ class GoogleMaps:
         self.service = googlemaps.Client(key=self.config.API_KEY)
 
     def get_long_lat(self, address: str) -> Tuple[float, float]:
+        if self.service is None:
+            self.build_connection()
+
         geocode_result = self.service.geocode(address=address)
 
         try:
