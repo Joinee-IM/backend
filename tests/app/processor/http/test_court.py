@@ -573,3 +573,107 @@ class TestEditCourt(AsyncTestCase):
 
         mock_edit.assert_not_called()
         mock_context.reset_context()
+
+
+class TestBatchAddCourt(AsyncTestCase):
+    def setUp(self) -> None:
+        self.venue_id = 1
+        self.add = 3
+
+        self.data = court.AddCourtInput(
+            venue_id=self.venue_id,
+            add=self.add,
+        )
+
+        self.expect_result = Response(data=True)
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
+
+        self.venue = do.Venue(
+            id=1,
+            stadium_id=1,
+            name='name',
+            floor='floor',
+            reservation_interval=1,
+            is_reservable=True,
+            is_chargeable=True,
+            area=1,
+            capacity=1,
+            current_user_count=1,
+            court_count=2,
+            court_type='場',
+            sport_id=1,
+            fee_rate=1,
+            fee_type=enums.FeeType.per_hour,
+            sport_equipments='equipment',
+            facilities='facility',
+            is_published=True,
+        )
+        self.stadium = vo.ViewStadium(
+            id=1,
+            name='name',
+            district_id=1,
+            contact_number='0800092000',
+            description='desc',
+            owner_id=1,
+            address='address1',
+            long=3.14,
+            lat=1.59,
+            is_published=True,
+            city='city1',
+            district='district1',
+            sports=['sport1'],
+            business_hours=[
+                do.BusinessHour(
+                    id=1,
+                    place_id=1,
+                    type=enums.PlaceType.stadium,
+                    weekday=1,
+                    start_time=time(10, 27),
+                    end_time=time(20, 27),
+                ),
+            ],
+        )
+
+    @patch('app.persistence.database.court.batch_add', new_callable=AsyncMock)
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    async def test_happy_path(
+        self, mock_read_venue: AsyncMock, mock_read_stadium: AsyncMock, mock_context: MockContext,
+        mock_court_batch_add: AsyncMock,
+    ):
+        mock_context._context = self.context
+        mock_read_venue.return_value = self.venue
+        mock_read_stadium.return_value = self.stadium
+
+        result = await court.batch_add_court(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+
+        mock_read_venue.assert_called_with(venue_id=self.venue_id)
+        mock_read_stadium.assert_called_with(stadium_id=self.venue.stadium_id)
+        mock_court_batch_add.assert_called_with(
+            venue_id=self.venue_id,
+            add=self.add,
+            start_from=self.venue.court_count + 1,
+        )
+        mock_context.reset_context()
+
+    @patch('app.persistence.database.court.batch_add', new_callable=AsyncMock)
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
+    async def test_no_permission(
+        self, mock_read_venue: AsyncMock, mock_read_stadium: AsyncMock, mock_context: MockContext,
+        mock_court_batch_add: AsyncMock,
+    ):
+        mock_context._context = self.wrong_context
+        mock_read_venue.return_value = self.venue
+        mock_read_stadium.return_value = self.stadium
+
+        with self.assertRaises(exc.NoPermission):
+            await court.batch_add_court(data=self.data)
+
+        mock_court_batch_add.assert_not_called()
+        mock_context.reset_context()

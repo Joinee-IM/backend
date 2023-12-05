@@ -184,3 +184,21 @@ async def edit_court(court_id: int, data: EditCourtInput, _=Depends(get_auth_tok
         is_published=data.is_published,
     )
     return Response()
+
+
+class AddCourtInput(BaseModel):
+    venue_id: int
+    add: int
+
+
+@router.post('/court')
+async def batch_add_court(data: AddCourtInput, _=Depends(get_auth_token)) -> Response[bool]:
+    venue = await db.venue.read(venue_id=data.venue_id)
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id)
+
+    if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
+        raise exc.NoPermission
+
+    await db.court.batch_add(venue_id=data.venue_id, add=data.add, start_from=venue.court_count + 1)
+
+    return Response(data=True)
