@@ -44,12 +44,22 @@ jobs:
         location: ${{ env.GKE_REGION }}
         project_id: ${{ env.PROJECT_ID }}
 
-    # Build and push the Docker image
-    - name: Build
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v2
+
+    - name: Setup GAR Config
       run: |-
-        docker build --platform=linux/amd64 -t asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }} .
         gcloud auth configure-docker asia-east1-docker.pkg.dev
-        docker push asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }}
+
+    # Build, push, and cache the Docker image
+    - name: Build
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        push: true
+        tags: asia-east1-docker.pkg.dev/tw-rd-sa-zoe-lin/cloud-native-repository/cloud-native-backend:${{ github.run_id }}
+        cache-from: type=gha
+        cache-to: type=gha, mode=max
 
     - name: Deploy
       run: |-
