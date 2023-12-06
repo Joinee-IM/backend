@@ -145,11 +145,16 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
         member_count=data.member_count,
         vacancy=data.vacancy,
     )
-    await db.reservation_member.batch_add(
-        reservation_id=reservation_id,
-        member_ids=list(data.member_ids) + [account_id],
-        manager_id=account_id,
-    )
+    members = [
+        do.ReservationMember(
+            reservation_id=reservation_id,
+            account_id=member_id,
+            is_manager=member_id == account_id,
+            status=enums.ReservationMemberStatus.joined if member_id == account_id else enums.ReservationMemberStatus.invited,  # noqa
+            source=enums.ReservationMemberSource.invitation_code,
+        ) for member_id in list(data.member_ids) + [account_id]
+    ]
+    await db.reservation_member.batch_add_with_do(members=members)
 
     account = await db.account.read(account_id=account_id)
     stadium = await db.stadium.read(stadium_id=venue.stadium_id)

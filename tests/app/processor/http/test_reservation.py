@@ -112,6 +112,13 @@ class TestJoinReservation(AsyncTestCase):
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.invitation_code = 'code'
         self.account_id = 1
+        self.member = do.ReservationMember(
+            reservation_id=1,
+            account_id=self.account_id,
+            is_manager=False,
+            status=enums.ReservationMemberStatus.joined,
+            source=enums.ReservationMemberSource.invitation_code,
+        )
         self.reservation = do.Reservation(
             id=1,
             stadium_id=1,
@@ -145,7 +152,7 @@ class TestJoinReservation(AsyncTestCase):
     @patch('app.client.google_calendar.add_google_calendar_event_member', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation.read_by_code', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.batch_add_with_do', new_callable=AsyncMock)
     async def test_happy_path(
         self, mock_add: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
         mock_update_event: AsyncMock,
@@ -158,8 +165,7 @@ class TestJoinReservation(AsyncTestCase):
         self.assertEqual(result, self.expect_result)
         mock_read.assert_called_with(invitation_code=self.invitation_code)
         mock_add.assert_called_with(
-            reservation_id=self.reservation.id,
-            member_ids=[self.account_id],
+            members=[self.member],
         )
         mock_update_event.assert_called_with(
             reservation_id=self.reservation.id,
@@ -192,8 +198,9 @@ class TestDeleteReservation(AsyncTestCase):
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
-                is_joined=True,
                 is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
         ]
         self.expect_result = Response()
@@ -260,7 +267,8 @@ class TestEditReservation(AsyncTestCase):
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
                 is_manager=True,
-                is_joined=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
         ]
         self.no_permission_reservation_member = [
@@ -268,7 +276,8 @@ class TestEditReservation(AsyncTestCase):
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
                 is_manager=False,
-                is_joined=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
         ]
         self.reservation = do.Reservation(
@@ -522,22 +531,25 @@ class TestLeaveReservation(AsyncTestCase):
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
-                is_joined=True,
                 is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
         ]
         self.reservation_members = [
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=self.account_id,
-                is_joined=True,
                 is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
             do.ReservationMember(
                 reservation_id=self.reservation_id,
                 account_id=2,
-                is_joined=True,
                 is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
             ),
         ]
         self.expect_result = Response()

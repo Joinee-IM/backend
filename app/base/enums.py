@@ -89,3 +89,14 @@ class ViewProviderCourtSortBy(StrEnum):
     venue_name = 'venue_name'
     number = 'number'
     is_published = 'is_published'
+
+
+class ReservationMemberStatus(StrEnum):
+    joined = 'JOINED'
+    invited = 'INVITED'
+    rejected = 'REJECTED'
+
+
+class ReservationMemberSource(StrEnum):
+    search = 'SEARCH'
+    invitation_code = 'INVITATION_CODE'
