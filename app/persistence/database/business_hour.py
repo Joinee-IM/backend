@@ -59,3 +59,17 @@ async def browse(
         )
         for id_, place_id, type_, weekday, start_time, end_time in results
     ]
+
+
+async def batch_add(place_type: enums.PlaceType, place_id: int, business_hours=Sequence[vo.WeekTimeRange]) -> None:
+    value_sql = ', '.join(f'(%(place_id)s, %(place_type)s, %(weekday_{i})s, %(start_time_{i})s, %(end_time_{i})s)' for i, _ in enumerate(business_hours))
+    params = {f'weekday_{i}': business_hour.weekday for i, business_hour in enumerate(business_hours)}
+    params.update({f'start_time_{i}': business_hour.start_time for i, business_hour in enumerate(business_hours)})
+    params.update({f'end_time_{i}': business_hour.end_time for i, business_hour in enumerate(business_hours)})
+
+    await PostgresQueryExecutor(
+        sql=fr'INSERT INTO business_hour'
+            fr'            (place_id, type, weekday, start_time, end_time)'
+            fr'     VALUES {value_sql}',
+        place_id=place_id, place_type=place_type, **params,
+    ).execute()

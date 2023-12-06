@@ -312,3 +312,39 @@ class TestRead(AsyncTestCase):
                 r' ORDER BY stadium.id',
             place_type=enums.PlaceType.stadium, stadium_id=self.stadium_id,
         )
+
+
+class TestAdd(AsyncTestCase):
+    def setUp(self) -> None:
+        self.stadium_id = 1
+        self.name = 'stadium'
+        self.address = '台北市大安區羅斯福路四段1號'
+        self.district_id = 1
+        self.owner_id = 1
+        self.contact_number = '0800000000'
+        self.description = 'desc'
+        self.long = 121.5397518
+        self.lat = 25.0173405
+
+        self.expect_result = self.stadium_id
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch, mock_init):
+        mock_fetch.return_value = 1,
+
+        result = await stadium.add(
+           name=self.name, address=self.address, district_id=self.district_id, owner_id=self.owner_id,
+           contact_number=self.contact_number, description=self.description, long=self.long, lat=self.lat,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_init.assert_called_with(
+            sql=r'INSERT INTO stadium(name, district_id, owner_id, address, contact_number, description, long,'
+                r'                        lat, is_published)'
+                r'                 VALUES(%(name)s, %(district_id)s, %(owner_id)s, %(address)s, %(contact_number)s,'
+                r'                        %(description)s, %(long)s, %(lat)s, %(is_published)s)'
+                r'  RETURNING id',
+            name=self.name, district_id=self.district_id, owner_id=self.owner_id, address=self.address,
+            contact_number=self.contact_number, description=self.description, long=self.long, lat=self.lat, is_published=True,
+        )
