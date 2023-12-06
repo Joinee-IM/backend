@@ -43,14 +43,18 @@ async def auth(request: Request):
                 refresh_token=token_google['refresh_token'],
             )
         except exc.NotFound:
-            role = enums.RoleType(request.query_params.get('state'))
-            account_id = await db.account.add(
-                email=user_email, is_google_login=True,
-                nickname=user_email.split("@")[0],
-                role=role,
-                access_token=token_google['access_token'],
-                refresh_token=token_google['refresh_token'],
-            )
+            try:
+                role = enums.RoleType(request.query_params.get('state'))
+                account_id = await db.account.add(
+                    email=user_email, is_google_login=True,
+                    nickname=user_email.split("@")[0],
+                    role=role,
+                    access_token=token_google['access_token'],
+                    refresh_token=token_google['refresh_token'],
+                )
+            except ValueError:  # no role & no account
+                return RedirectResponse(url=f"{service_config.url}?error=LoginFailed", status_code=303)
+
         token = encode_jwt(account_id=account_id, role=role)
         response = RedirectResponse(url=f"{service_config.url}", status_code=303)
         response.set_cookie(key="account_id", value=str(account_id), samesite='none', secure=True, httponly=True)
