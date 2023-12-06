@@ -13,7 +13,7 @@ from tests import AsyncMock, AsyncTestCase, Mock
 
 class TestDefaultPage(AsyncTestCase):
     def setUp(self) -> None:
-        self.expect_result = '<a href="/docs">/docs</a>'
+        self.expect_result = '<a href="/api/docs">/api/docs</a>'
 
     async def test_happy_path(self):
         result = await public.default_page()

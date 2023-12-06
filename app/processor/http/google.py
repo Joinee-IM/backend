@@ -26,7 +26,7 @@ async def google_login(request: Request, role: enums.RoleType | None = None):
     return await oauth_handler.login(request=request, state=role)
 
 
-@router.get('/auth')
+@router.get('/auth_callback')
 async def auth(request: Request):
     search_str = 'access_denied'
     if search_str.encode('utf-8') in request['query_string']:
