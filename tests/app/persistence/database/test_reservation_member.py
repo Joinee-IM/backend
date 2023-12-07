@@ -93,3 +93,27 @@ class TestBrowse(AsyncTestCase):
                 r' ORDER BY is_manager, account_id',
             **self.params,
         )
+
+
+class TestReject(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
+        mock_execute.return_value = None
+
+        result = await reservation_member.reject(
+            account_id=self.account_id,
+            reservation_id=self.reservation_id,
+        )
+
+        self.assertIsNone(result)
+        mock_init.assert_called_with(
+            sql=r"UPDATE reservation_member"
+                r"   SET status = %(status)s"
+                r" WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s",
+            reservation_id=self.reservation_id, account_id=self.account_id, status=enums.ReservationMemberStatus.rejected,
+        )
