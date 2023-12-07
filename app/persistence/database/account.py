@@ -4,7 +4,7 @@ from uuid import UUID
 import asyncpg
 
 import app.exceptions as exc
-from app.base import do
+from app.base import do, enums
 from app.base.enums import GenderType, RoleType
 from app.persistence.database import pg_pool_handler
 from app.persistence.database.util import PostgresQueryExecutor
@@ -19,28 +19,32 @@ async def add(
     is_google_login: bool = False,
     access_token: Optional[str] = None,
     refresh_token: Optional[str] = None,
+    is_verified: bool = False,
 ) -> int:
     id_, = await PostgresQueryExecutor(
         sql=r'INSERT INTO account'
-            r'            (email, pass_hash, nickname, gender, role, is_google_login, access_token, refresh_token)'
+            r'            (email, pass_hash, nickname, gender, role, is_google_login, '
+            r'             access_token, refresh_token, is_verified)'
             r'     VALUES (%(email)s, %(pass_hash)s, %(nickname)s, %(gender)s, %(role)s, %(is_google_login)s,'
-            r'             %(access_token)s, %(refresh_token)s)'
+            r'             %(access_token)s, %(refresh_token)s, %(is_verified)s)'
             r'  RETURNING id',
         email=email, pass_hash=pass_hash, nickname=nickname, gender=gender, role=role,
         is_google_login=is_google_login, access_token=access_token, refresh_token=refresh_token,
+        is_verified=is_verified,
     ).fetch_one()
     return id_
 
 
-async def read_by_email(email: str) -> tuple[int, str, RoleType, bool]:
+async def read_by_email(email: str, include_unverified: bool = False) -> tuple[int, str, RoleType, bool]:
     """
     :return: (account_id, pass_hash, role)
     """
     try:
         id_, pass_hash, role, is_verified = await PostgresQueryExecutor(
-            sql=r'SELECT id, pass_hash, role, is_verified'
-                r'  FROM account'
-                r' WHERE email = %(email)s',
+            sql=fr'SELECT id, pass_hash, role, is_verified'
+                fr'  FROM account'
+                fr' WHERE email = %(email)s'
+                fr'{" AND is_verified" if not include_unverified else ""}',
             email=email,
         ).fetch_one()
     except TypeError:
@@ -105,6 +109,7 @@ async def edit(
     nickname: Optional[str] = None,
     gender: Optional[GenderType] = None,
     image_uuid: Optional[UUID] = None,
+    role: enums.RoleType | None = None,
 ) -> None:
     to_update = {}
     if pass_hash:
@@ -115,6 +120,8 @@ async def edit(
         to_update['gender'] = gender
     if image_uuid:
         to_update['image_uuid'] = image_uuid
+    if role:
+        to_update['role'] = role
 
     if not to_update:
         return

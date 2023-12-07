@@ -12,7 +12,7 @@ from app.client.oauth import oauth_handler
 from app.config import service_config
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
-from app.utils import Response
+from app.utils import Response, update_cookie
 from app.utils.security import encode_jwt
 
 router = APIRouter(
@@ -51,14 +51,26 @@ async def auth(request: Request):
                     role=role,
                     access_token=token_google['access_token'],
                     refresh_token=token_google['refresh_token'],
+                    is_verified=True,
                 )
             except ValueError:  # no role & no account
-                return RedirectResponse(url=f"{service_config.url}?error=LoginFailed", status_code=303)
+                role = enums.RoleType.normal
+                account_id = await db.account.add(
+                    email=user_email, is_google_login=True,
+                    nickname=user_email.split("@")[0],
+                    role=enums.RoleType.normal,
+                    access_token=token_google['access_token'],
+                    refresh_token=token_google['refresh_token'],
+                    is_verified=True,
+                )
+                token = encode_jwt(account_id=account_id, role=role)
+                response = RedirectResponse(url=f"{service_config.url}?error=LoginFailed", status_code=303)
+                response = update_cookie(response=response, account_id=account_id, token=token)
+                return response
 
         token = encode_jwt(account_id=account_id, role=role)
         response = RedirectResponse(url=f"{service_config.url}", status_code=303)
-        response.set_cookie(key="account_id", value=str(account_id), samesite='none', secure=True, httponly=True)
-        response.set_cookie(key="token", value=str(token), samesite='none', secure=True, httponly=True)
+        response = update_cookie(response=response, account_id=account_id, token=token)
         return response
 
 

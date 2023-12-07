@@ -88,6 +88,7 @@ class TestAuth(AsyncTestCase):
             role=self.role,
             access_token=self.access_token,
             refresh_token=self.refresh_token,
+            is_verified=True,
         )
         self.assertIsInstance(result, RedirectResponse)
 

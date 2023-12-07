@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import patch
 from uuid import UUID
 
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, responses
 from starlette.datastructures import Headers
 
 import app.exceptions as exc
@@ -57,11 +57,13 @@ class TestReadAccount(AsyncTestCase):
 class TestEditAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
+        self.response = responses.Response()
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.happy_path_data = account.EditAccountInput(
             nickname='nickname',
             gender=GenderType.male,
+            role=RoleType.normal,
         )
         self.expect_result = account.Response(data=True)
 
@@ -70,13 +72,17 @@ class TestEditAccount(AsyncTestCase):
     async def test_happy_path(self, mock_edit: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
 
-        result = await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+        result = await account.edit_account(
+            account_id=self.account_id, data=self.happy_path_data,
+            response=self.response,
+        )
         self.assertEqual(result, self.expect_result)
 
         mock_edit.assert_called_with(
             account_id=self.account_id,
             nickname=self.happy_path_data.nickname,
             gender=self.happy_path_data.gender,
+            role=self.happy_path_data.role,
         )
         mock_context.reset_context()
 
@@ -85,7 +91,10 @@ class TestEditAccount(AsyncTestCase):
         mock_context._context = self.wrong_context
 
         with self.assertRaises(exc.NoPermission):
-            await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+            await account.edit_account(
+                account_id=self.account_id, data=self.happy_path_data,
+                response=self.response,
+            )
 
         mock_context.reset_context()
 
