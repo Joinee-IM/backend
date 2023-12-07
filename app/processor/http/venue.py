@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
@@ -144,10 +144,16 @@ async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[
         sport_id=data.sport_id,
     )
 
-    # await db.business_hour.batch_add(
-    #     place_type=enums.PlaceType.venue,
-    #     place_id=id_,
-    #     business_hours=data.business_hours,
-    # )
+    await db.business_hour.batch_add(
+        place_type=enums.PlaceType.venue,
+        place_id=id_,
+        business_hours=data.business_hours,
+    )
+
+    await db.court.batch_add(
+        venue_id=id_,
+        add=data.court_count,
+        start_from=1,
+    )
 
     return Response(data=AddVenueOutput(id=id_))

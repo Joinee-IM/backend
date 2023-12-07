@@ -1,4 +1,4 @@
-from typing import Sequence, Optional
+from typing import Optional, Sequence
 
 import app.exceptions as exc
 from app.base import do, enums

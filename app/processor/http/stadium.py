@@ -125,7 +125,12 @@ async def add_stadium(data: AddStadiumInput, _=Depends(get_auth_token)) -> Respo
     return Response(data=AddStadiumOutput(id=id_))
 
 
+class ValidateAddressOutput(BaseModel):
+    long: float
+    lat: float
+
+
 @router.post('/validate_address')
-async def validate_address(address: str) -> Response[bool]:
-    _ = google_maps.get_long_lat(address=address)
-    return Response(data=True)
+async def validate_address(address: str) -> Response[ValidateAddressOutput]:
+    long, lat = google_maps.get_long_lat(address=address)
+    return Response(data=ValidateAddressOutput(long=long, lat=lat))

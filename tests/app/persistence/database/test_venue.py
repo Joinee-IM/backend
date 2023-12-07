@@ -228,3 +228,55 @@ class TestEdit(AsyncTestCase):
         )
         self.assertIsNone(result)
         mock_execute.assert_called_once()
+
+
+class TestAdd(AsyncTestCase):
+    def setUp(self) -> None:
+        self.stadium_id = 1
+        self.name = '桌球室'
+        self.floor = '4'
+        self.reservation_interval = 3
+        self.is_reservable = True
+        self.is_chargeable = True
+        self.fee_rate = 300
+        self.fee_type = enums.FeeType.per_hour
+        self.area = 600
+        self.capacity = 1000
+        self.sport_equipments = '桌球拍'
+        self.facilities = '吹風機'
+        self.court_count = 5
+        self.court_type = '桌'
+        self.sport_id = 1
+
+        self.venue_id = 1
+
+        self.expect_result = self.venue_id
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch, mock_init):
+        mock_fetch.return_value = 1,
+
+        result = await venue.add(
+            stadium_id=self.stadium_id, name=self.name, floor=self.floor, reservation_interval=self.reservation_interval,
+            is_reservable=self.is_reservable, is_chargeable=self.is_chargeable, fee_rate=self.fee_rate,
+            fee_type=self.fee_type, area=self.area, capacity=self.capacity, sport_equipments=self.sport_equipments,
+            facilities=self.facilities, court_count=self.court_count, court_type=self.court_type, sport_id=self.sport_id,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_init.assert_called_with(
+            sql=r'INSERT INTO venue(stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate,'
+                r'                  fee_type, area, capacity, sport_equipments, facilities, court_count, court_type, sport_id, is_published)'
+                r'              VALUES(%(stadium_id)s, %(name)s, %(floor)s, %(reservation_interval)s, %(is_reservable)s,'
+                r'                        %(is_chargeable)s, %(fee_rate)s, %(fee_type)s, %(area)s,'
+                r'                          %(capacity)s, %(sport_equipments)s, %(facilities)s, %(court_count)s, %(court_type)s, %(sport_id)s,'
+                r'                              %(is_published)s)'
+                r'  RETURNING id',
+            stadium_id=self.stadium_id, name=self.name, floor=self.floor, reservation_interval=self.reservation_interval,
+            is_reservable=self.is_reservable,
+            is_chargeable=self.is_chargeable, fee_rate=self.fee_rate, fee_type=self.fee_type, area=self.area,
+            capacity=self.capacity, sport_equipments=self.sport_equipments,
+            facilities=self.facilities, court_count=self.court_count, court_type=self.court_type, sport_id=self.sport_id,
+            is_published=True,
+        )
