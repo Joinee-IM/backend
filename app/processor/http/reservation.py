@@ -196,3 +196,23 @@ async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> R
         await db.reservation.delete(reservation_id=reservation_id)
 
     return Response()
+
+
+def check_invited_member(reservation_members: Sequence[do.ReservationMember], account_id: int):
+    for member in reservation_members:
+        if account_id == member.account_id and member.status == enums.ReservationMemberStatus.invited \
+                and member.source == enums.ReservationMemberSource.invitation_code:
+            return True
+
+    return False
+
+
+@router.post('/reservation/reject-invitation')
+async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
+    result = db.reservation_member.browse(reservation_id=reservation_id)
+
+    if context.account.id == manager_id or not check_invited_member(result, account_id=context.account.id):
+        raise exc.NoPermission
+
+    await db.reservation_member.reject(reservation_id=reservation_id, account_id=context.account.id)
