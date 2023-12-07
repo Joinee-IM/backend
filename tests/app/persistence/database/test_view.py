@@ -19,7 +19,7 @@ class TestBrowseMyReservation(AsyncTestCase):
         self.offset = 0
 
         self.raw_reservation = [
-            (1, datetime(2023, 11, 11), datetime(2023, 11, 17), 'stadium_name', 'venue_name', True, 1, 'IN_PROGRESS', False),
+            (1, datetime(2023, 11, 11), datetime(2023, 11, 17), 'stadium_name', 'venue_name', True, 'manager_name', 1, 'IN_PROGRESS', False),
         ]
         self.total_count = 1
         self.expect_result = [
@@ -30,6 +30,7 @@ class TestBrowseMyReservation(AsyncTestCase):
                 stadium_name='stadium_name',
                 venue_name='venue_name',
                 is_manager=True,
+                manager_name='manager_name',
                 vacancy=1,
                 status=enums.ReservationStatus.in_progress,
             ),
@@ -60,7 +61,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -71,9 +73,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY stadium_name DESC'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -91,7 +98,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -102,9 +110,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY stadium_name DESC) AS tbl',
                 account_id=self.account_id,
@@ -140,7 +153,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -151,9 +165,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY (start_time, is_cancelled) DESC'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -171,7 +190,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -182,9 +202,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY (start_time, is_cancelled) DESC) AS tbl',
                 account_id=self.account_id,
@@ -220,7 +245,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -231,9 +257,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY start_time DESC'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -251,7 +282,8 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'       end_time,'
                     r'       stadium.name AS stadium_name,'
                     r'       venue.name AS venue_name,'
-                    r'       is_manager,'
+                    r'       member.is_manager,'
+                    r'       account.nickname,'
                     r'       vacancy,'
                     r'       CASE'
                     r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -262,9 +294,14 @@ class TestBrowseMyReservation(AsyncTestCase):
                     r'  FROM reservation'
                     r' INNER JOIN venue ON venue.id = reservation.venue_id'
                     r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-                    r' INNER JOIN reservation_member'
-                    r'         ON reservation_member.reservation_id = reservation.id'
-                    r'        AND reservation_member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member member'
+                    r'         ON member.reservation_id = reservation.id'
+                    r'        AND member.account_id = %(account_id)s'
+                    r' INNER JOIN reservation_member manager'
+                    r'         ON manager.reservation_id = reservation.id'
+                    r'        AND manager.is_manager'
+                    r' INNER JOIN account'
+                    r'         ON account.id = manager.account_id'
                     r' '
                     r' ORDER BY start_time DESC) AS tbl',
                 account_id=self.account_id,

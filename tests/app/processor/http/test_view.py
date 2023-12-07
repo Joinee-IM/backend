@@ -47,6 +47,7 @@ class TestViewMyReservation(AsyncTestCase):
                 stadium_name='stadium_name',
                 venue_name='venue_name',
                 is_manager=True,
+                manager_name='manager_name',
                 vacancy=1,
                 status=enums.ReservationStatus.finished,
             ),

@@ -63,7 +63,8 @@ async def browse_my_reservation(
         r'       end_time,'
         r'       stadium.name AS stadium_name,'
         r'       venue.name AS venue_name,'
-        r'       is_manager,'
+        r'       member.is_manager,'
+        r'       account.nickname,'
         r'       vacancy,'
         r'       CASE'
         r'           WHEN is_cancelled THEN %(cancelled)s'
@@ -74,9 +75,14 @@ async def browse_my_reservation(
         r'  FROM reservation'
         r' INNER JOIN venue ON venue.id = reservation.venue_id'
         r' INNER JOIN stadium ON stadium.id = reservation.stadium_id'
-        r' INNER JOIN reservation_member'
-        r'         ON reservation_member.reservation_id = reservation.id'
-        r'        AND reservation_member.account_id = %(account_id)s'
+        r' INNER JOIN reservation_member member'
+        r'         ON member.reservation_id = reservation.id'
+        r'        AND member.account_id = %(account_id)s'
+        r' INNER JOIN reservation_member manager'
+        r'         ON manager.reservation_id = reservation.id'
+        r'        AND manager.is_manager'
+        r' INNER JOIN account'
+        r'         ON account.id = manager.account_id'
         fr' {where_sql}'
         fr' ORDER BY {sort_by} {order}'
     )
@@ -109,11 +115,12 @@ async def browse_my_reservation(
             stadium_name=stadium_name,
             venue_name=venue_name,
             is_manager=is_manager,
+            manager_name=manager_name,
             vacancy=vacancy,
             status=reservation_status,
         )
-        for reservation_id, start_time, end_time, stadium_name, venue_name,
-        is_manager, vacancy, reservation_status, is_cancelled in results
+        for reservation_id, start_time, end_time, stadium_name, venue_name, is_manager,
+        manager_name, vacancy, reservation_status, is_cancelled in results
     ], total_count
 
 
