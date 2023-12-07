@@ -16,9 +16,32 @@ async def batch_add(reservation_id: int, member_ids: Sequence[int], manager_id: 
     params.update({f'is_manager_{i}': member_id == manager_id for i, member_id in enumerate(member_ids)})
     await PostgresQueryExecutor(
         sql=fr'INSERT INTO reservation_member'
-            fr'            (reservation_id, account_id, is_manager, is_joined)'
+            fr'            (reservation_id, account_id, is_manager, status, source)'
             fr'     VALUES {value_sql}',
         reservation_id=reservation_id, is_joined=False, **params,
+    ).execute()
+
+
+async def batch_add_with_do(members: Sequence[do.ReservationMember]) -> None:
+    value_sql = ', '.join(
+        f'(%(reservation_id_{i})s, %(account_id_{i})s, %(is_manager_{i})s, %(status_{i})s, %(source_{i})s)'
+        for i, _ in enumerate(members)
+    )
+    params = {}
+    for i, member in list(enumerate(members)):
+        params.update({
+            f'reservation_id_{i}': member.reservation_id,
+            f'account_id_{i}': member.account_id,
+            f'is_manager_{i}': member.is_manager,
+            f'status_{i}': member.status,
+            f'source_{i}': member.source,
+        })
+
+    await PostgresQueryExecutor(
+        sql=fr'INSERT INTO reservation_member'
+            fr'            (reservation_id, account_id, is_manager, status, source)'
+            fr'     VALUES {value_sql}',
+        **params,
     ).execute()
 
 
@@ -37,7 +60,7 @@ async def browse(
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 
     results = await PostgresQueryExecutor(
-        sql=r'SELECT reservation_id, account_id, is_manager, is_joined'
+        sql=r'SELECT reservation_id, account_id, is_manager, status, source'
             r'  FROM reservation_member'
             fr' {where_sql}'
             r' ORDER BY is_manager, account_id',
@@ -49,8 +72,9 @@ async def browse(
             reservation_id=reservation_id,
             account_id=account_id,
             is_manager=is_manager,
-            is_joined=is_joined,
-        ) for reservation_id, account_id, is_manager, is_joined in results
+            status=status,
+            source=source,
+        ) for reservation_id, account_id, is_manager, status, source in results
     ]
 
 

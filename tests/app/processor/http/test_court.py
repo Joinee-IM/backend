@@ -307,6 +307,22 @@ class TestAddReservation(AsyncTestCase):
         self.wrong_account_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
         self.expect_result = Response(data=court.AddReservationOutput(id=self.reservation_id))
         self.location = f"{self.stadium.name} {self.venue.name} 第 {self.court.number} {self.venue.court_type}"
+        self.members = [
+            do.ReservationMember(
+                account_id=2,
+                reservation_id=self.reservation_id,
+                is_manager=False,
+                status=enums.ReservationMemberStatus.invited,
+                source=enums.ReservationMemberSource.invitation_code,
+            ),
+            do.ReservationMember(
+                account_id=1,
+                reservation_id=self.reservation_id,
+                is_manager=True,
+                status=enums.ReservationMemberStatus.joined,
+                source=enums.ReservationMemberSource.invitation_code,
+            ),
+        ]
 
     @freeze_time('2023-10-10')
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
@@ -318,7 +334,7 @@ class TestAddReservation(AsyncTestCase):
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.add', new_callable=AsyncMock)
-    @patch('app.persistence.database.reservation_member.batch_add', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.batch_add_with_do', new_callable=AsyncMock)
     async def test_happy_path(
         self, mock_batch_add: AsyncMock, mock_add: AsyncMock, mock_read_venue: AsyncMock,
         mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
@@ -362,9 +378,7 @@ class TestAddReservation(AsyncTestCase):
             vacancy=self.data.vacancy,
         )
         mock_batch_add.assert_called_with(
-            reservation_id=self.reservation_id,
-            member_ids=list(self.data.member_ids) + [self.account_id],
-            manager_id=self.account_id,
+            members=self.members,
         )
         mock_add_event.assert_called_with(
             reservation_id=self.reservation_id,

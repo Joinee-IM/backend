@@ -77,9 +77,16 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
     if reservation.vacancy <= 0:
         raise exc.ReservationFull
 
-    await db.reservation_member.batch_add(
-        reservation_id=reservation.id,
-        member_ids=[account_id],
+    await db.reservation_member.batch_add_with_do(
+        members=[
+            do.ReservationMember(
+                reservation_id=reservation.id,
+                account_id=context.account.id,
+                is_manager=False,
+                status=enums.ReservationMemberStatus.joined,
+                source=enums.ReservationMemberSource.invitation_code,
+            ),
+        ],
     )
 
     await google_calendar.add_google_calendar_event_member(
