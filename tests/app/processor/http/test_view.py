@@ -12,14 +12,32 @@ class TestViewMyReservation(AsyncTestCase):
     def setUp(self) -> None:
         self.params = view.ViewMyReservationParams(
             account_id=1,
+            is_manager=True,
+            time_ranges=[
+                vo.DateTimeRange(
+                    start_time=datetime(2023, 11, 11),
+                    end_time=datetime(2023, 11, 12),
+                ),
+            ],
+            has_vacancy=True,
+            member_status=enums.ReservationMemberStatus.joined,
+            reservation_status=enums.ReservationStatus.finished,
+            source=enums.ReservationMemberSource.invitation_code,
             sort_by=enums.ViewMyReservationSortBy.time,
             order=enums.Sorter.desc,
             limit=1,
             offset=0,
         )
         self.total_count = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
+        self.request_time = datetime(2023, 11, 11)
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
+        self.wrong_context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
 
         self.reservations = [
             vo.ViewMyReservation(
@@ -48,11 +66,18 @@ class TestViewMyReservation(AsyncTestCase):
         mock_context._context = self.context
         mock_browse.return_value = self.reservations, self.total_count
 
-        result = await view.view_my_reservation(params=self.params)
+        result = await view.view_my_reservation(data=self.params)
 
         self.assertEqual(result, self.expect_result)
         mock_browse.assert_called_with(
             account_id=self.params.account_id,
+            request_time=self.request_time,
+            is_manager=self.params.is_manager,
+            time_ranges=self.params.time_ranges,
+            has_vacancy=self.params.has_vacancy,
+            member_status=self.params.member_status,
+            reservation_status=self.params.reservation_status,
+            source=self.params.source,
             sort_by=self.params.sort_by,
             order=self.params.order,
             limit=self.params.limit,
@@ -66,7 +91,7 @@ class TestViewMyReservation(AsyncTestCase):
         mock_context._context = self.wrong_context
 
         with self.assertRaises(exc.NoPermission):
-            await view.view_my_reservation(params=self.params)
+            await view.view_my_reservation(data=self.params)
 
         mock_context.reset_context()
 
