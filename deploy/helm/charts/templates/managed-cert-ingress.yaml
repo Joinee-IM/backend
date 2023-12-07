@@ -6,9 +6,42 @@ metadata:
     kubernetes.io/ingress.global-static-ip-name: cloud-native-static-ip
     networking.gke.io/managed-certificates: managed-cert
     kubernetes.io/ingress.class: "gce"
+    ingress.kubernetes.io/enable-cors: "true"
 spec:
   defaultBackend:
     service:
-      name: {{ include "deploy.fullname" . }}
+      name: "cloud-native-frontend"
       port:
-        number: {{ .Values.service.port }}
+        number: 80
+  rules:
+    - host: joinee.ddns.net
+      http:
+        paths:
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "deploy.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+          - path: /google-login
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "deploy.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+          - path: /auth_callback
+            pathType: Prefix
+            backend:
+              service:
+                name: {{ include "deploy.fullname" . }}
+                port:
+                  number: {{ .Values.service.port }}
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: "cloud-native-frontend"
+                port:
+                  number: 80

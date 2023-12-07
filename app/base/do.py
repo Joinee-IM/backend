@@ -121,5 +121,6 @@ class Court(BaseModel):
 class ReservationMember(BaseModel):
     reservation_id: int
     account_id: int
-    is_joined: bool
     is_manager: bool
+    status: enums.ReservationMemberStatus
+    source: enums.ReservationMemberSource

@@ -12,6 +12,7 @@ from fastapi import FastAPI, Request
 from fastapi.exceptions import RequestValidationError
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
+from fastapi.openapi.utils import get_openapi
 from fastapi.responses import JSONResponse
 
 import app.exceptions as exc
@@ -22,7 +23,27 @@ app = FastAPI(
     title=app_config.title,
     docs_url=app_config.docs_url,
     redoc_url=app_config.redoc_url,
+    openapi_url='/api/openapi.json',
 )
+
+
+@app.get("/api/openapi.json", include_in_schema=False)
+async def access_openapi():
+    openapi = get_openapi(
+        title=app.title,
+        version=app.version,
+        description=app.description,
+        routes=app.routes,
+        tags=app.openapi_tags,
+    )
+    openapi["servers"] = [{"url": app.root_path}]
+    return openapi
+
+
+@app.get('/', include_in_schema=False)
+async def health_check():
+    return True
+
 
 app.add_middleware(
     CORSMiddleware,

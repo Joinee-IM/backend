@@ -145,11 +145,16 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
         member_count=data.member_count,
         vacancy=data.vacancy,
     )
-    await db.reservation_member.batch_add(
-        reservation_id=reservation_id,
-        member_ids=list(data.member_ids) + [account_id],
-        manager_id=account_id,
-    )
+    members = [
+        do.ReservationMember(
+            reservation_id=reservation_id,
+            account_id=member_id,
+            is_manager=member_id == account_id,
+            status=enums.ReservationMemberStatus.joined if member_id == account_id else enums.ReservationMemberStatus.invited,  # noqa
+            source=enums.ReservationMemberSource.invitation_code,
+        ) for member_id in list(data.member_ids) + [account_id]
+    ]
+    await db.reservation_member.batch_add_with_do(members=members)
 
     account = await db.account.read(account_id=account_id)
     stadium = await db.stadium.read(stadium_id=venue.stadium_id)
@@ -184,3 +189,21 @@ async def edit_court(court_id: int, data: EditCourtInput, _=Depends(get_auth_tok
         is_published=data.is_published,
     )
     return Response()
+
+
+class AddCourtInput(BaseModel):
+    venue_id: int
+    add: int
+
+
+@router.post('/court')
+async def batch_add_court(data: AddCourtInput, _=Depends(get_auth_token)) -> Response[bool]:
+    venue = await db.venue.read(venue_id=data.venue_id)
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id)
+
+    if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
+        raise exc.NoPermission
+
+    await db.court.batch_add(venue_id=data.venue_id, add=data.add, start_from=venue.court_count + 1)
+
+    return Response(data=True)

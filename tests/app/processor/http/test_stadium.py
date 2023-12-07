@@ -5,7 +5,7 @@ import app.exceptions as exc
 from app.base import do, enums, vo
 from app.processor.http import stadium
 from app.utils import AuthedAccount, Response
-from tests import AsyncMock, AsyncTestCase, MockContext
+from tests import AsyncMock, AsyncTestCase, Mock, MockContext
 
 
 class TestBrowseStadium(AsyncTestCase):
@@ -230,4 +230,92 @@ class TestEditStadium(AsyncTestCase):
             )
 
         mock_edit.assert_not_called()
+        mock_context.reset_context()
+
+
+class TestAddStadium(AsyncTestCase):
+    def setUp(self) -> None:
+        self.data = stadium.AddStadiumInput(
+            name='stadium',
+            address='台北市大安區羅斯福路四段1號',
+            district_id=1,
+            business_hours=[
+                vo.WeekTimeRange(
+                    weekday=1,
+                    start_time=time(8, 0),
+                    end_time=time(12, 0),
+                ),
+                vo.WeekTimeRange(
+                    weekday=1,
+                    start_time=time(14, 0),
+                    end_time=time(18, 0),
+                ),
+                vo.WeekTimeRange(
+                    weekday=2,
+                    start_time=time(8, 0),
+                    end_time=time(18, 0),
+                ),
+            ],
+            contact_number='0800000000',
+            description='hi a new stadium',
+        )
+        self.stadium_id = 1
+
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
+
+        self.expect_output = Response(data=stadium.AddStadiumOutput(id=self.stadium_id))
+
+        self.long = 121.5397518
+        self.lat = 25.0173405
+
+    @patch('app.persistence.database.business_hour.batch_add', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.add', new_callable=AsyncMock)
+    @patch('app.client.google_maps.google_maps.get_long_lat', new_callable=Mock)
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    async def test_happy_path(
+            self, mock_context: AsyncMock,
+            mock_gc_get_long_lat: Mock,
+            mock_add_stadium: Mock,
+            mock_add_hours: AsyncMock,
+    ):
+        mock_context._context = self.context
+        mock_gc_get_long_lat.return_value = (self.long, self.lat)
+        mock_add_stadium.return_value = self.stadium_id
+        mock_add_hours.return_value = None
+
+        result = await stadium.add_stadium(data=self.data)
+
+        self.assertEqual(result, self.expect_output)
+
+        mock_gc_get_long_lat.assert_called_with(address=self.data.address)
+        mock_add_stadium.assert_called_with(
+            name=self.data.name,
+            address=self.data.address,
+            district_id=self.data.district_id,
+            owner_id=self.context['AUTHED_ACCOUNT'].id,
+            contact_number=self.data.contact_number,
+            description=self.data.description,
+            long=self.long,
+            lat=self.lat,
+        )
+        mock_add_hours.assert_called_with(
+            place_type=enums.PlaceType.stadium,
+            place_id=self.stadium_id,
+            business_hours=self.data.business_hours,
+        )
+
+        mock_context.reset_context()
+
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    async def test_no_permission(
+            self, mock_context: AsyncMock,
+    ):
+        mock_context._context = self.wrong_context
+
+        with self.assertRaises(exc.NoPermission):
+            await stadium.add_stadium(
+                data=self.data,
+            )
+
         mock_context.reset_context()
