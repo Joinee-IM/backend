@@ -82,7 +82,7 @@ class TestBrowse(AsyncTestCase):
                     '         ON venue.id = reservation.venue_id'
                     ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                     ' AND is_cancelled = %(is_cancelled)s'
-                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' AND (reservation.start_time < %(end_time_0)s AND reservation.end_time > %(start_time_0)s)'
                     ' ORDER BY start_time',
                 **self.params, limit=None, offset=None,
             ),
@@ -100,7 +100,7 @@ class TestBrowse(AsyncTestCase):
                     '         ON venue.id = reservation.venue_id'
                     ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                     ' AND is_cancelled = %(is_cancelled)s'
-                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' AND (reservation.start_time < %(end_time_0)s AND reservation.end_time > %(start_time_0)s)'
                     ' ORDER BY start_time) AS tbl',
                 **self.params,
             ),
@@ -134,7 +134,7 @@ class TestBrowse(AsyncTestCase):
                     '         ON venue.id = reservation.venue_id'
                     ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                     ' AND is_cancelled = %(is_cancelled)s'
-                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' AND (reservation.start_time < %(end_time_0)s AND reservation.end_time > %(start_time_0)s)'
                     ' ORDER BY start_time',
                 **self.params, limit=None, offset=None,
             ),
@@ -152,7 +152,7 @@ class TestBrowse(AsyncTestCase):
                     '         ON venue.id = reservation.venue_id'
                     ' WHERE court_id = %(court_id)s AND start_time >= %(start_date)s AND end_time <= %(end_date)s'
                     ' AND is_cancelled = %(is_cancelled)s'
-                    ' AND (reservation.start_time <= %(end_time_0)s AND reservation.end_time >= %(start_time_0)s)'
+                    ' AND (reservation.start_time < %(end_time_0)s AND reservation.end_time > %(start_time_0)s)'
                     ' ORDER BY start_time) AS tbl',
                 **self.params,
             ),

@@ -36,8 +36,8 @@ async def browse_my_reservation(
     if time_ranges:
         for i, time_range in list(enumerate(time_ranges)):
             raw_or_query.append(f"""({' AND '.join([
-                f'reservation.start_time <= %(end_time_{i})s',
-                f'reservation.end_time >= %(start_time_{i})s'
+                f'reservation.start_time < %(end_time_{i})s',
+                f'reservation.end_time > %(start_time_{i})s'
             ])})""")
             params.update({
                 f'end_time_{i}': time_range.end_time,

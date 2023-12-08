@@ -56,8 +56,8 @@ async def browse(
         for i, time_range in enumerate(time_ranges):
             time_range: vo.WeekTimeRange
             raw_or_query.append(f"""({' AND '.join([
-                f'reservation.start_time <= %(end_time_{i})s',
-                f'reservation.end_time >= %(start_time_{i})s'
+                f'reservation.start_time < %(end_time_{i})s',
+                f'reservation.end_time > %(start_time_{i})s'
             ])})""")
             params.update({
                 f'end_time_{i}': time_range.end_time,
