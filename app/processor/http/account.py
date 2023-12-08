@@ -12,7 +12,7 @@ from app.base import do, enums
 from app.const import ALLOWED_MEDIA_TYPE
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
-from app.utils import Response, context, security
+from app.utils import Response, context, security, update_cookie
 
 router = APIRouter(
     tags=['Account'],
@@ -43,10 +43,11 @@ async def read_account(account_id: int) -> Response[ReadAccountOutput]:
 class EditAccountInput(BaseModel):
     nickname: str | None = None
     gender: enums.GenderType | None = None
+    role: enums.RoleType | None = None
 
 
 @router.patch('/account/{account_id}')
-async def edit_account(account_id: int, data: EditAccountInput) -> Response[bool]:
+async def edit_account(account_id: int, data: EditAccountInput, response: responses.Response) -> Response[bool]:
     if account_id != context.account.id:
         raise exc.NoPermission
 
@@ -54,7 +55,10 @@ async def edit_account(account_id: int, data: EditAccountInput) -> Response[bool
         account_id=account_id,
         nickname=data.nickname,
         gender=data.gender,
+        role=data.role,
     )
+    token = security.encode_jwt(account_id=account_id, role=data.role)
+    _ = update_cookie(response=response, account_id=account_id, token=token)
     return Response(data=True)
 
 

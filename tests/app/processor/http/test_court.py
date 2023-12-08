@@ -386,7 +386,6 @@ class TestAddReservation(AsyncTestCase):
             end_time=self.data.end_time,
             account_id=self.account_id,
             location=self.location,
-            member_ids=self.data.member_ids,
         )
 
         mock_context.reset_context()

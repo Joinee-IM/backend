@@ -3,7 +3,10 @@ import enum
 import typing
 
 import pydantic
+from fastapi import responses
 
+COOKIE_ACCOUNT_KEY = 'account'
+COOKIE_TOKEN_KEY = 'token'
 T = typing.TypeVar('T')
 
 
@@ -27,3 +30,13 @@ class_enum = enum.Enum('ErrorMessage', {class_name: class_name for class_name in
 class Response(pydantic.BaseModel, typing.Generic[T]):
     data: T | None = None
     error: class_enum | None = None
+
+
+def update_cookie(
+        response: responses.Response,
+        account_id: int,
+        token: str,
+) -> responses.Response:
+    response.set_cookie(key=COOKIE_ACCOUNT_KEY, value=str(account_id), samesite='none', secure=True, httponly=True)
+    response.set_cookie(key=COOKIE_TOKEN_KEY, value=str(token), samesite='none', secure=True, httponly=True)
+    return response

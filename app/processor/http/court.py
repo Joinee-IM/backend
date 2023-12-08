@@ -165,7 +165,6 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
             start_time=data.start_time,
             end_time=data.end_time,
             account_id=account_id,
-            member_ids=data.member_ids,
             location=location,
         )
     return Response(data=AddReservationOutput(id=reservation_id))

@@ -30,7 +30,7 @@ class ViewMyReservationOutput(BaseModel):
     offset: int
 
 
-@router.get('/view/reservation')
+@router.get('/view/my-reservation')
 async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Depends(get_auth_token))\
         -> Response[ViewMyReservationOutput]:
     if context.account.id != params.account_id:
