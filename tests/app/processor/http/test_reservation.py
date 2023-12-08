@@ -604,3 +604,97 @@ class TestLeaveReservation(AsyncTestCase):
             )
         mock_leave.assert_not_called()
         mock_context.reset_context()
+
+
+class TestRejectInvitation(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal)}
+        self.reservation_member = do.ReservationMember(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+            is_manager=False,
+            source=enums.ReservationMemberSource.invitation_code,
+            status=enums.ReservationMemberStatus.invited,
+        )
+        self.wrong_reservation_member_manager = do.ReservationMember(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+            is_manager=True,
+            source=enums.ReservationMemberSource.invitation_code,
+            status=enums.ReservationMemberStatus.joined,
+        )
+        self.wrong_reservation_member_joined = do.ReservationMember(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+            is_manager=False,
+            source=enums.ReservationMemberSource.invitation_code,
+            status=enums.ReservationMemberStatus.joined,
+        )
+        self.expect_result = Response()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.reject', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.read', new_callable=AsyncMock)
+    async def test_happy_path(
+        self, mock_read: AsyncMock, mock_reject: AsyncMock,
+        mock_context: MockContext,
+    ):
+        mock_context._context = self.context
+        mock_read.return_value = self.reservation_member
+        mock_reject.return_value = None
+
+        result = await reservation.reject_invitation(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.expect_result)
+
+        mock_read.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_reject.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.reject', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.read', new_callable=AsyncMock)
+    async def test_no_permission(
+        self, mock_read: AsyncMock, mock_reject: AsyncMock,
+        mock_context: MockContext,
+    ):
+        mock_context._context = self.context
+        mock_read.return_value = self.wrong_reservation_member_manager
+
+        with self.assertRaises(exc.NoPermission):
+            await reservation.reject_invitation(reservation_id=self.reservation_id)
+
+        mock_read.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_reject.assert_not_called()
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation_member.reject', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.read', new_callable=AsyncMock)
+    async def test_no_permission(
+        self, mock_read: AsyncMock, mock_reject: AsyncMock,
+        mock_context: MockContext,
+    ):
+        mock_context._context = self.context
+        mock_read.return_value = self.wrong_reservation_member_joined
+
+        with self.assertRaises(exc.NoPermission):
+            await reservation.reject_invitation(reservation_id=self.reservation_id)
+
+        mock_read.assert_called_with(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+        )
+        mock_reject.assert_not_called()
+        mock_context.reset_context()

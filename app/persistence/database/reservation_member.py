@@ -2,7 +2,8 @@ from typing import Sequence
 
 import asyncpg
 
-from app.base import do
+import app.exceptions as exc
+from app.base import do, enums
 from app.persistence.database.util import (
     PostgresQueryExecutor,
     generate_query_parameters,
@@ -101,3 +102,34 @@ async def leave(reservation_id: int, account_id: int) -> None:
                 r'  AND account_id = (SELECT account_id FROM tmp_tbl)',
                 reservation_id, True,
             )
+
+
+async def reject(reservation_id: int, account_id: int) -> None:
+    await PostgresQueryExecutor(
+        sql=r"UPDATE reservation_member"
+            r"   SET status = %(status)s"
+            r" WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s",
+        reservation_id=reservation_id, account_id=account_id, status=enums.ReservationMemberStatus.rejected,
+    ).execute()
+
+
+async def read(reservation_id: int, account_id: int) -> do.ReservationMember:
+    reservation_member = await PostgresQueryExecutor(
+        sql=r'SELECT reservation_id, account_id, is_manager, status, source'
+            r'  FROM reservation_member'
+            r' WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s',
+        reservation_id=reservation_id, account_id=account_id,
+    ).fetch_one()
+
+    try:
+        reservation_id, account_id, is_manager, status, source = reservation_member
+    except TypeError:
+        raise exc.NotFound
+
+    return do.ReservationMember(
+        reservation_id=reservation_id,
+        account_id=account_id,
+        is_manager=is_manager,
+        status=status,
+        source=source,
+    )
