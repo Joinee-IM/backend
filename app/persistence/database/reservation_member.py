@@ -2,6 +2,7 @@ from typing import Sequence
 
 import asyncpg
 
+import app.exceptions as exc
 from app.base import do, enums
 from app.persistence.database.util import (
     PostgresQueryExecutor,
@@ -110,3 +111,25 @@ async def reject(reservation_id: int, account_id: int) -> None:
             r" WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s",
         reservation_id=reservation_id, account_id=account_id, status=enums.ReservationMemberStatus.rejected,
     ).execute()
+
+
+async def read(reservation_id: int, account_id: int) -> do.ReservationMember:
+    reservation_member = await PostgresQueryExecutor(
+        sql=r'SELECT reservation_id, account_id, is_manager, status, source'
+            r'  FROM reservation_member'
+            r' WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s',
+        reservation_id=reservation_id, account_id=account_id,
+    ).fetch_one()
+
+    try:
+        reservation_id, account_id, is_manager, status, source = reservation_member
+    except TypeError:
+        raise exc.NotFound
+
+    return do.ReservationMember(
+        reservation_id=reservation_id,
+        account_id=account_id,
+        is_manager=is_manager,
+        status=status,
+        source=source,
+    )

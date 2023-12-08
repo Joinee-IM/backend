@@ -209,10 +209,11 @@ def check_invited_member(reservation_members: Sequence[do.ReservationMember], ac
 
 @router.post('/reservation/reject-invitation')
 async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
-    manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
-    result = await db.reservation_member.browse(reservation_id=reservation_id)
+    reservation_member = await db.reservation_member.read(reservation_id=reservation_id, account_id=context.account.id)
 
-    if context.account.id == manager_id or not check_invited_member(result, account_id=context.account.id):
+    if reservation_member.is_manager or reservation_member.status != enums.ReservationMemberStatus.invited:
         raise exc.NoPermission
 
     await db.reservation_member.reject(reservation_id=reservation_id, account_id=context.account.id)
+
+    return Response()
