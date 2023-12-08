@@ -198,15 +198,6 @@ async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> R
     return Response()
 
 
-def check_invited_member(reservation_members: Sequence[do.ReservationMember], account_id: int):
-    for member in reservation_members:
-        if account_id == member.account_id and member.status == enums.ReservationMemberStatus.invited \
-                and member.source == enums.ReservationMemberSource.invitation_code:
-            return True
-
-    return False
-
-
 @router.post('/reservation/reject-invitation')
 async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
     reservation_member = await db.reservation_member.read(reservation_id=reservation_id, account_id=context.account.id)

@@ -117,3 +117,37 @@ class TestReject(AsyncTestCase):
                 r" WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s",
             reservation_id=self.reservation_id, account_id=self.account_id, status=enums.ReservationMemberStatus.rejected,
         )
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self) -> None:
+        self.reservation_id = 1
+        self.account_id = 1
+
+        self.raw_member = 1, 1, False, enums.ReservationMemberStatus.invited, enums.ReservationMemberSource.invitation_code
+
+        self.member = do.ReservationMember(
+            reservation_id=self.reservation_id,
+            account_id=self.account_id,
+            is_manager=False,
+            status=enums.ReservationMemberStatus.invited,
+            source=enums.ReservationMemberSource.invitation_code,
+        )
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_member
+
+        result = await reservation_member.read(
+            account_id=self.account_id,
+            reservation_id=self.reservation_id,
+        )
+
+        self.assertEqual(result, self.member)
+        mock_init.assert_called_with(
+            sql=r'SELECT reservation_id, account_id, is_manager, status, source'
+                r'  FROM reservation_member'
+                r' WHERE reservation_id = %(reservation_id)s and account_id = %(account_id)s',
+            reservation_id=self.reservation_id, account_id=self.account_id,
+        )
