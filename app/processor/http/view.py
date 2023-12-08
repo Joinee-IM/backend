@@ -16,9 +16,15 @@ router = APIRouter(
 
 
 class ViewMyReservationParams(BaseModel):
-    account_id: int = Query()
-    sort_by: enums.ViewMyReservationSortBy = Query(default=enums.ViewMyReservationSortBy.time)
-    order: enums.Sorter = Query(default=enums.Sorter.desc)
+    account_id: int
+    is_manager: bool | None = None
+    time_ranges: Sequence[vo.DateTimeRange] | None = None
+    has_vacancy: bool | None = None
+    member_status: enums.ReservationMemberStatus | None = None
+    reservation_status: enums.ReservationStatus | None = None
+    source: enums.ReservationMemberSource | None = None
+    sort_by: enums.ViewMyReservationSortBy = enums.ViewMyReservationSortBy.time
+    order: enums.Sorter = enums.Sorter.desc
     limit: int = Limit
     offset: int = Offset
 
@@ -30,25 +36,32 @@ class ViewMyReservationOutput(BaseModel):
     offset: int
 
 
-@router.get('/view/my-reservation')
-async def view_my_reservation(params: ViewMyReservationParams = Depends(), _=Depends(get_auth_token))\
+@router.post('/view/my-reservation')
+async def view_my_reservation(data: ViewMyReservationParams, _=Depends(get_auth_token))\
         -> Response[ViewMyReservationOutput]:
-    if context.account.id != params.account_id:
+    if context.account.id != data.account_id:
         raise exc.NoPermission
 
     reservations, total_count = await db.view.browse_my_reservation(
-        account_id=params.account_id,
-        sort_by=params.sort_by,
-        order=params.order,
-        limit=params.limit,
-        offset=params.offset,
+        account_id=data.account_id,
+        request_time=context.request_time,
+        is_manager=data.is_manager,
+        time_ranges=data.time_ranges,
+        has_vacancy=data.has_vacancy,
+        member_status=data.member_status,
+        reservation_status=data.reservation_status,
+        source=data.source,
+        sort_by=data.sort_by,
+        order=data.order,
+        limit=data.limit,
+        offset=data.offset,
     )
     return Response(
         data=ViewMyReservationOutput(
             data=reservations,
             total_count=total_count,
-            limit=params.limit,
-            offset=params.offset,
+            limit=data.limit,
+            offset=data.offset,
         ),
     )
 

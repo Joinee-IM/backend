@@ -1,4 +1,5 @@
 import os
+import traceback
 
 ENV = os.getenv('ENV', 'ci')
 
@@ -27,6 +28,7 @@ app = FastAPI(
 )
 
 
+# noinspection PyUnresolvedReferences
 @app.get("/api/openapi.json", include_in_schema=False)
 async def access_openapi():
     openapi = get_openapi(
@@ -113,6 +115,17 @@ async def exception_handler(_: Request, exc_: exc.AckException):
     log.info(exc_)
     return JSONResponse(
         status_code=exc_.status_code,
+        content={'data': None, 'error': exc_.__class__.__name__},
+    )
+
+
+@app.exception_handler(Exception)
+async def general_exception_handler(_: Request, exc_: Exception):
+    log.error(exc_)
+    traceback_str = traceback.format_exc()
+    log.error(f"Traceback:\n{traceback_str}")
+    return JSONResponse(
+        status_code=500,
         content={'data': None, 'error': exc_.__class__.__name__},
     )
 

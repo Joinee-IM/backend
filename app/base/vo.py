@@ -35,6 +35,7 @@ class ViewMyReservation(BaseModel):
     stadium_name: str
     venue_name: str
     is_manager: bool
+    manager_name: str
     vacancy: int
     status: enums.ReservationStatus
 
