@@ -319,3 +319,22 @@ class TestAddStadium(AsyncTestCase):
             )
 
         mock_context.reset_context()
+
+
+class TestValidateAddress(AsyncTestCase):
+    def setUp(self) -> None:
+        self.address = 'address'
+        self.long = 125.333
+        self.lat = 34.333
+        self.expect_result = Response(data=stadium.ValidateAddressOutput(long=125.333, lat=34.333))
+
+    @patch('app.client.google_maps.google_maps.get_long_lat', new_callable=Mock)
+    async def test_happy_path(self, mock_get: Mock):
+        mock_get.return_value = (self.long, self.lat)
+
+        result = await stadium.validate_address(address=self.address)
+
+        self.assertEqual(result, self.expect_result)
+        mock_get.assert_called_with(
+            address=self.address,
+        )

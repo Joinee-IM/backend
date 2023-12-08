@@ -1,4 +1,4 @@
-from typing import Sequence
+from typing import Optional, Sequence
 
 import app.exceptions as exc
 from app.base import do, enums
@@ -156,3 +156,36 @@ async def edit(
             fr' WHERE id = %(venue_id)s',
         venue_id=venue_id, **params,
     ).execute()
+
+
+async def add(
+    stadium_id: int,
+    name: str,
+    floor: str,
+    reservation_interval: Optional[int],
+    is_reservable: bool,
+    is_chargeable: bool,
+    fee_rate: Optional[float],
+    fee_type: Optional[enums.FeeType],
+    area: int,
+    capacity: int,
+    sport_equipments: Optional[str],
+    facilities: Optional[str],
+    court_count: int,
+    court_type: str,
+    sport_id: int,
+) -> int:
+    id_, = await PostgresQueryExecutor(
+        sql=r'INSERT INTO venue'
+            r'            (stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate,'
+            r'             fee_type, area, capacity, sport_equipments, facilities, court_count, court_type, sport_id, is_published)'
+            r'     VALUES (%(stadium_id)s, %(name)s, %(floor)s, %(reservation_interval)s, %(is_reservable)s,'
+            r'            %(is_chargeable)s, %(fee_rate)s, %(fee_type)s, %(area)s, %(capacity)s,'
+            r'            %(sport_equipments)s, %(facilities)s, %(court_count)s, %(court_type)s, %(sport_id)s,'
+            r'            %(is_published)s)'
+            r'  RETURNING id',
+        stadium_id=stadium_id, name=name, floor=floor, reservation_interval=reservation_interval, is_reservable=is_reservable,
+        is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type, area=area, capacity=capacity, sport_equipments=sport_equipments,
+        facilities=facilities, court_count=court_count, court_type=court_type, sport_id=sport_id, is_published=True,
+    ).fetch_one()
+    return id_
