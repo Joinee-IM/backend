@@ -37,8 +37,8 @@ async def browse(
             time_range: vo.WeekTimeRange
             raw_or_query.append(f"""({' AND '.join([
                 f'business_hour.weekday = %(weekday_{i})s',
-                f'business_hour.start_time <= %(end_time_{i})s',
-                f'business_hour.end_time >= %(start_time_{i})s'
+                f'business_hour.start_time < %(end_time_{i})s',
+                f'business_hour.end_time > %(start_time_{i})s'
             ])})""")
             params.update({
                 f'weekday_{i}': time_range.weekday,
