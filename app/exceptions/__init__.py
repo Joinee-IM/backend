@@ -5,7 +5,6 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 
 import app.const as const
-import app.log as log
 
 from .ack_exception import (
     AckException,
@@ -25,6 +24,8 @@ from .ack_exception import (
 
 
 def register_exception_handlers(app: FastAPI):
+    import app.log as log
+
     @app.exception_handler(LoginFailed)
     @app.exception_handler(LoginExpired)
     def login_failed_exception_handler(_: Request, exc_: LoginFailed | LoginExpired):

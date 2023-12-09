@@ -1,3 +1,4 @@
+import json
 from unittest.mock import patch
 from uuid import UUID
 
@@ -25,7 +26,11 @@ class TestGoogleLogin(AsyncTestCase):
 class TestAuth(AsyncTestCase):
     def setUp(self) -> None:
         self.role = 'PROVIDER'
-        self.request = Request({'type': 'http', 'query_string': {'state': self.role}})
+        self.state = json.dumps({'role': self.role, 'next_url': None})
+        self.next_url = 'next_url'
+        self.state_with_next_url = json.dumps({'role': self.role, 'next_url': self.next_url})
+        self.request = Request({'type': 'http', 'query_string': {'state': self.state}})
+        self.next_url_request = Request({'type': 'http', 'query_string': {'state': self.state_with_next_url}})
         self.email = 'user@user.com'
         self.access_token = 'access_token'
         self.refresh_token = 'refresh_token'
@@ -37,8 +42,6 @@ class TestAuth(AsyncTestCase):
         self.jwt_token = 'jwt'
         self.account_id = 1
         self.read_output = (self.account_id, "mocked_pass_hash", self.role, True)
-        self.expect_result = RedirectResponse(url='http://localhost:8000/login')
-
         self.access_denied_request = Request({'type': 'http', 'query_string': b'access_denied'})
 
     @patch('app.client.oauth.OAuthHandler.authorize_access_token', new_callable=AsyncMock)
@@ -94,6 +97,30 @@ class TestAuth(AsyncTestCase):
 
     async def test_access_denied(self):
         result = await google.auth(request=self.access_denied_request)
+        self.assertIsInstance(result, RedirectResponse)
+
+    @patch('app.client.oauth.OAuthHandler.authorize_access_token', new_callable=AsyncMock)
+    @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
+    @patch('app.persistence.database.account.update_google_token', new_callable=AsyncMock)
+    @patch('app.processor.http.google.encode_jwt', new_callable=Mock)
+    async def test_next_url(
+            self, mock_encode: Mock, mock_update: AsyncMock,
+            mock_read: AsyncMock, mock_authorize: AsyncMock,
+    ):
+        mock_authorize.return_value = self.google_token
+        mock_read.return_value = self.read_output
+        mock_update.return_value = None
+        mock_encode.return_value = self.jwt_token
+
+        result = await google.auth(request=self.next_url_request)
+
+        mock_authorize.assert_called_with(request=self.next_url_request)
+        mock_read.assert_called_with(email=self.email)
+        mock_update.assert_called_with(
+            account_id=self.account_id,
+            access_token=self.access_token,
+            refresh_token=self.refresh_token,
+        )
         self.assertIsInstance(result, RedirectResponse)
 
 

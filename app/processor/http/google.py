@@ -1,3 +1,4 @@
+import json
 from typing import Sequence
 from uuid import UUID
 
@@ -22,8 +23,12 @@ router = APIRouter(
 
 
 @router.get('/google-login')
-async def google_login(request: Request, role: enums.RoleType | None = None):
-    return await oauth_handler.login(request=request, state=role)
+async def google_login(request: Request, role: enums.RoleType | None = None, next_url: str | None = None):
+    state_json = {
+        'role': role,
+        'next_url': next_url,
+    }
+    return await oauth_handler.login(request=request, state=json.dumps(state_json))
 
 
 @router.get('/auth_callback')
@@ -32,49 +37,36 @@ async def auth(request: Request):
     if search_str.encode('utf-8') in request['query_string']:
         response = RedirectResponse(url=f'{service_config.url}/login')
         return response
-    else:
-        token_google = await oauth_handler.authorize_access_token(request=request)
-        user_email = token_google['userinfo']['email']
-        try:
-            account_id, _, role, _ = await db.account.read_by_email(email=user_email)
-            await db.account.update_google_token(
-                account_id=account_id,
-                access_token=token_google['access_token'],
-                refresh_token=token_google['refresh_token'],
-            )
-        except exc.NotFound:
-            try:
-                role = enums.RoleType(request.query_params.get('state'))
-                account_id = await db.account.add(
-                    email=user_email, is_google_login=True,
-                    nickname=user_email.split('@')[0],
-                    role=role,
-                    access_token=token_google['access_token'],
-                    refresh_token=token_google['refresh_token'],
-                    is_verified=True,
-                )
-            except ValueError:  # no role & no account
-                role = enums.RoleType.normal
-                account_id = await db.account.add(
-                    email=user_email, is_google_login=True,
-                    nickname=user_email.split('@')[0],
-                    role=enums.RoleType.normal,
-                    access_token=token_google['access_token'],
-                    refresh_token=token_google['refresh_token'],
-                    is_verified=True,
-                )
-                token = encode_jwt(account_id=account_id, role=role)
-                response = RedirectResponse(
-                    url=f'{service_config.url}?error=LoginFailed&account_id={account_id}',
-                    status_code=303,
-                )
-                response = update_cookie(response=response, account_id=account_id, token=token)
-                return response
 
-        token = encode_jwt(account_id=account_id, role=role)
-        response = RedirectResponse(url=f'{service_config.url}?account_id={account_id}', status_code=303)
-        response = update_cookie(response=response, account_id=account_id, token=token)
-        return response
+    state = json.loads(request.query_params.get('state'))
+    error = 'LoginFailed' if not state['role'] else None
+    role = enums.RoleType(state['role'] or 'NORMAL')
+    next_url = state['next_url'] or service_config.url
+
+    token_google = await oauth_handler.authorize_access_token(request=request)
+    user_email = token_google['userinfo']['email']
+    try:
+        account_id, _, role, _ = await db.account.read_by_email(email=user_email)
+        await db.account.update_google_token(
+            account_id=account_id,
+            access_token=token_google['access_token'],
+            refresh_token=token_google['refresh_token'],
+        )
+        error = None
+    except exc.NotFound:
+        account_id = await db.account.add(
+            email=user_email, is_google_login=True,
+            nickname=user_email.split('@')[0],
+            role=role,
+            access_token=token_google['access_token'],
+            refresh_token=token_google['refresh_token'],
+            is_verified=True,
+        )
+
+    token = encode_jwt(account_id=account_id, role=role)
+    response = RedirectResponse(url=f'{next_url}?{account_id=}&{error=}', status_code=302)
+    response = update_cookie(response=response, account_id=account_id, token=token)
+    return response
 
 
 @router.get('/file/download')
