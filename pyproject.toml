@@ -2,7 +2,7 @@
 name = "Joinee"
 version = "0.1.0"
 description = ""
-authors = ["wsa"]
+authors = ["wsa-2002"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
