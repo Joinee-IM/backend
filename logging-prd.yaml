@@ -23,7 +23,7 @@ handlers:
     class: app.log.LoggingHandlerInherited
     formatter: json
     level: DEBUG
-    name: my-custom-cloud-native-log
+    name: joinee-backend
 root:
   level: INFO
   handlers: [console, cloud]
