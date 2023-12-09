@@ -21,8 +21,8 @@ def register_routers(app: fastapi.FastAPI):
     )
 
     # noinspection PyUnresolvedReferences
-    @app.get("/api/openapi.json", include_in_schema=False)
-    async def access_openapi():
+    @app.get('/api/openapi.json', include_in_schema=False)
+    def access_openapi():
         openapi = get_openapi(
             title=app.title,
             version=app.version,
@@ -30,11 +30,11 @@ def register_routers(app: fastapi.FastAPI):
             routes=app.routes,
             tags=app.openapi_tags,
         )
-        openapi["servers"] = [{"url": app.root_path}]
+        openapi['servers'] = [{'url': app.root_path}]
         return openapi
 
     @app.get('/', include_in_schema=False, response_class=HTMLResponse)
-    async def health_check():
+    def health_check():
         return '<a href="/api/docs">/api/docs</a>'
 
     app.include_router(public.router, prefix='/api')

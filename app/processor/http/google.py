@@ -72,7 +72,7 @@ async def auth(request: Request):
                 return response
 
         token = encode_jwt(account_id=account_id, role=role)
-        response = RedirectResponse(url=f"{service_config.url}", status_code=303)
+        response = RedirectResponse(url=f"{service_config.url}?account_id={account_id}", status_code=303)
         response = update_cookie(response=response, account_id=account_id, token=token)
         return response
 

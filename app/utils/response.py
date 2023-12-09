@@ -5,7 +5,11 @@ import typing
 import pydantic
 from fastapi import responses
 
-from app.const import COOKIE_ACCOUNT_KEY, COOKIE_TOKEN_KEY, EXCEPTION_CLASS_DEFINITION_PATH
+from app.const import (
+    COOKIE_ACCOUNT_KEY,
+    COOKIE_TOKEN_KEY,
+    EXCEPTION_CLASS_DEFINITION_PATH,
+)
 
 T = typing.TypeVar('T')
 
