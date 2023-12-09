@@ -1,6 +1,6 @@
 default: help
 
-.PHONY: help test install coverage run dev build build-x86 docker-run docker-stop docker-rm redis helm
+.PHONY: help test install coverage run dev build build-x86 docker-run docker-stop docker-rm redis
 
 help: # Show help for each of the Makefile recipes.
 	@grep -E '^[a-zA-Z0-9 -]+:.*#'  Makefile | while read -r l; do printf "\033[1;32m$$(echo $$l | cut -f 1 -d':')\033[00m:$$(echo $$l | cut -f 2- -d'#')\n"; done
@@ -49,23 +49,3 @@ docker-rm: # rm cloud-native container
 
 redis: # run redis docker
 	docker run -d --rm --name redis -p 6379:6379 redis
-
-helm: # helm upgrade
-	helm upgrade cloud-native-backend deploy/helm/charts \
-        --install \
-        --namespace=prod  \
-        --values deploy/helm/production/values.yaml \
-        --set image.tag=x86-202310241732
-
-show-url: # show helm deployment's service url
-	NODE_PORT=$(shell kubectl get --namespace prod -o jsonpath="{.spec.ports[0].nodePort}" services cloud-native-backend); \
-	NODE_IP=$(shell kubectl get nodes --namespace prod -o jsonpath="{.items[0].status.addresses[0].address}"); \
-	echo http://$${NODE_IP}:$${NODE_PORT}
-
-cloud-sql-proxy: # start up cloud sql proxy for postgres
-	docker run -d --rm \
-		-v ./config/gcp-service-account.json:/config \
-		-p 127.0.0.1:5432:5432 \
-		--name cloud_sql_proxy \
-		gcr.io/cloudsql-docker/gce-proxy:1.12 /cloud_sql_proxy \
-		-instances=tw-rd-sa-zoe-lin:asia-east1:cloud-native-db-instance=tcp:0.0.0.0:5432 -credential_file=/config
