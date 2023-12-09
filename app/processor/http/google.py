@@ -64,7 +64,10 @@ async def auth(request: Request):
                     is_verified=True,
                 )
                 token = encode_jwt(account_id=account_id, role=role)
-                response = RedirectResponse(url=f"{service_config.url}?error=LoginFailed", status_code=303)
+                response = RedirectResponse(
+                    url=f"{service_config.url}?error=LoginFailed&account_id={account_id}",
+                    status_code=303,
+                )
                 response = update_cookie(response=response, account_id=account_id, token=token)
                 return response
 
