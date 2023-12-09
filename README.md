@@ -10,6 +10,6 @@
     make run
     ```
 
-3. Backend openapi documents should be accessed through http://localhost:8000/docs
+3. Backend openapi documents should be accessed through http://localhost:8000/api/docs
 
 Note: you may check other usages through `make help` command.
