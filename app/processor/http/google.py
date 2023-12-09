@@ -30,7 +30,7 @@ async def google_login(request: Request, role: enums.RoleType | None = None):
 async def auth(request: Request):
     search_str = 'access_denied'
     if search_str.encode('utf-8') in request['query_string']:
-        response = RedirectResponse(url=f"{service_config.url}/login")
+        response = RedirectResponse(url=f'{service_config.url}/login')
         return response
     else:
         token_google = await oauth_handler.authorize_access_token(request=request)
@@ -47,7 +47,7 @@ async def auth(request: Request):
                 role = enums.RoleType(request.query_params.get('state'))
                 account_id = await db.account.add(
                     email=user_email, is_google_login=True,
-                    nickname=user_email.split("@")[0],
+                    nickname=user_email.split('@')[0],
                     role=role,
                     access_token=token_google['access_token'],
                     refresh_token=token_google['refresh_token'],
@@ -57,7 +57,7 @@ async def auth(request: Request):
                 role = enums.RoleType.normal
                 account_id = await db.account.add(
                     email=user_email, is_google_login=True,
-                    nickname=user_email.split("@")[0],
+                    nickname=user_email.split('@')[0],
                     role=enums.RoleType.normal,
                     access_token=token_google['access_token'],
                     refresh_token=token_google['refresh_token'],
@@ -65,14 +65,14 @@ async def auth(request: Request):
                 )
                 token = encode_jwt(account_id=account_id, role=role)
                 response = RedirectResponse(
-                    url=f"{service_config.url}?error=LoginFailed&account_id={account_id}",
+                    url=f'{service_config.url}?error=LoginFailed&account_id={account_id}',
                     status_code=303,
                 )
                 response = update_cookie(response=response, account_id=account_id, token=token)
                 return response
 
         token = encode_jwt(account_id=account_id, role=role)
-        response = RedirectResponse(url=f"{service_config.url}?account_id={account_id}", status_code=303)
+        response = RedirectResponse(url=f'{service_config.url}?account_id={account_id}', status_code=303)
         response = update_cookie(response=response, account_id=account_id, token=token)
         return response
 

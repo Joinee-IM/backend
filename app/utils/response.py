@@ -38,8 +38,8 @@ class Response(pydantic.BaseModel, typing.Generic[T]):
 
 def update_cookie(
         response: responses.Response,
-        account_id: int = "",
-        token: str = "",
+        account_id: int = '',
+        token: str = '',
 ) -> responses.Response:
     response.set_cookie(key=COOKIE_ACCOUNT_KEY, value=str(account_id), samesite='none', secure=True, httponly=True)
     response.set_cookie(key=COOKIE_TOKEN_KEY, value=str(token), samesite='none', secure=True, httponly=True)

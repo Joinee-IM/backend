@@ -39,7 +39,7 @@ class GoogleCalendar:
             'access_token': access_token, 'refresh_token': refresh_token,
             'client_id': self.config.CLIENT_ID, 'client_secret': self.config.CLIENT_SECRET,
         }
-        scopes = ["https://www.googleapis.com/auth/calendar"]
+        scopes = ['https://www.googleapis.com/auth/calendar']
         creds = Credentials.from_authorized_user_info(token_dict, scopes)
         if not creds.valid:
             creds.refresh(Request())
@@ -67,14 +67,14 @@ class GoogleCalendar:
             },
         }
 
-        event = self.service.events().insert(calendarId='primary', body=event, sendUpdates="all").execute()
+        event = self.service.events().insert(calendarId='primary', body=event, sendUpdates='all').execute()
 
         return event
 
     def add_event_member(self, data: AddEventMemberInput) -> None:
         event = self.service.events().get(calendarId='primary', eventId=data.event_id).execute()
 
-        attendees = event.get("attendees", [])
+        attendees = event.get('attendees', [])
         attendees.append(data.member_email.model_dump())
         event['attendees'] = attendees
 
@@ -105,7 +105,7 @@ async def add_google_calendar_event(
     event = AddEventInput(
         start_time=start_time, end_time=end_time,
         all_emails=all_emails, location=location,
-        summary="[Joinee Reservation] Exercise",
+        summary='[Joinee Reservation] Exercise',
     )
 
     calendar = GoogleCalendar(account_id=account_id, config=google_config)

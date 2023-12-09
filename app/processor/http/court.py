@@ -158,7 +158,7 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
 
     account = await db.account.read(account_id=account_id)
     stadium = await db.stadium.read(stadium_id=venue.stadium_id)
-    location = f"{stadium.name} {venue.name} 第 {court.number} {venue.court_type}"
+    location = f'{stadium.name} {venue.name} 第 {court.number} {venue.court_type}'
     if account.is_google_login:
         await google_calendar.add_google_calendar_event(
             reservation_id=reservation_id,

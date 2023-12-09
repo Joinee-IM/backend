@@ -21,8 +21,8 @@ class GoogleMaps:
         geocode_result = self.service.geocode(address=address)
 
         try:
-            if geocode_result[0]["geometry"]["location_type"] == "ROOFTOP":
-                return geocode_result[0]["geometry"]["location"]["lng"], geocode_result[0]["geometry"]["location"]["lat"]
+            if geocode_result[0]['geometry']['location_type'] == 'ROOFTOP':
+                return geocode_result[0]['geometry']['location']['lng'], geocode_result[0]['geometry']['location']['lat']
             raise exc.NotFound
         except (KeyError, IndexError):
             raise exc.NotFound
