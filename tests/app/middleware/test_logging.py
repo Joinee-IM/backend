@@ -23,7 +23,8 @@ class TestMiddleware(AsyncTestCase):
         await logging.middleware(self.request, AsyncMock())
 
         mock_info.assert_called_with(
-            msg='', extra={
+            msg=f'{self.request.method} {self.request.url.path}, params: {self.request.query_params},',
+            extra={
                 'request': {
                     'method': self.request.method,
                     'path': self.request.url.path,
