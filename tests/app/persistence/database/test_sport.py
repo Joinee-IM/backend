@@ -34,3 +34,18 @@ class TestBrowse(AsyncTestCase):
             sql=r'SELECT sport.id, sport.name'
                 r'  FROM sport',
         )
+
+
+class TestRead(AsyncTestCase):
+    def setUp(self):
+        self.sport_id = 1
+        self.raw_sport = 1, 'name'
+        self.sport = do.Sport(id=1, name='name')
+
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_one', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock):
+        mock_fetch.return_value = self.raw_sport
+
+        result = await sport.read(sport_id=self.sport_id)
+
+        self.assertEqual(result, self.sport)

@@ -53,10 +53,20 @@ async def browse_venue(params: VenueSearchParameters = Depends()) -> Response[Br
     )
 
 
+class ReadVenueOutput(do.Venue):
+    sport_name: str
+
+
 @router.get('/venue/{venue_id}')
-async def read_venue(venue_id: int) -> Response[do.Venue]:
+async def read_venue(venue_id: int) -> Response[ReadVenueOutput]:
     venue = await db.venue.read(venue_id=venue_id)
-    return Response(data=venue)
+    sport = await db.sport.read(sport_id=venue.sport_id)
+    return Response(
+        data=ReadVenueOutput(
+            **venue.model_dump(),
+            sport_name=sport.name,
+        ),
+    )
 
 
 @router.get('/venue/{venue_id}/court')

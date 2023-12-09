@@ -112,11 +112,19 @@ class TestReadVenue(AsyncTestCase):
             facilities='facility',
             is_published=True,
         )
-        self.expect_result = Response(data=self.venue)
+        self.sport = do.Sport(id=1, name='name')
+        self.expect_result = Response(
+            data=venue.ReadVenueOutput(
+                **self.venue.model_dump(),
+                sport_name=self.sport.name,
+            ),
+        )
 
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read: AsyncMock):
+    @patch('app.persistence.database.sport.read', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_read_sport: AsyncMock, mock_read: AsyncMock):
         mock_read.return_value = self.venue
+        mock_read_sport.return_value = self.sport
 
         result = await venue.read_venue(venue_id=self.venue_id)
 
