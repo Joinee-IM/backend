@@ -147,8 +147,8 @@ async def search(query: str) -> Sequence[do.Account]:
 
     return [
         do.Account(
-            id=id_, email=email, nickname=nickname, gender=GenderType(gender), image_uuid=image_uuid,
-            role=RoleType(role), is_verified=is_verified, is_google_login=is_google_login,
+            id=id_, email=email, nickname=nickname, gender=gender, image_uuid=image_uuid,
+            role=role, is_verified=is_verified, is_google_login=is_google_login,
         )
         for id_, email, nickname, gender, image_uuid, role, is_verified, is_google_login in results
     ]

@@ -44,7 +44,7 @@ class TestBrowse(AsyncTestCase):
                 end_time=end_time,
                 member_count=member_count,
                 vacancy=vacancy,
-                technical_level=[enums.TechnicalType(t) for t in technical_level],
+                technical_level=technical_level,  # type: ignore
                 remark=remark,
                 invitation_code=invitation_code,
                 is_cancelled=is_cancelled,
