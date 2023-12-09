@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel
@@ -90,8 +90,8 @@ class AddStadiumInput(BaseModel):
     address: str
     district_id: int
     business_hours: Sequence[vo.WeekTimeRange]
-    contact_number: Optional[str] = None
-    description: Optional[str] = None
+    contact_number: str | None = None
+    description: str | None = None
 
 
 class AddStadiumOutput(BaseModel):

@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Optional, Sequence
+from typing import Sequence
 
 import asyncpg
 
@@ -23,7 +23,7 @@ async def browse(
         end_date: date | None = None,
         technical_level: enums.TechnicalType | None = None,
         has_vacancy: bool | None = None,
-        is_cancelled: Optional[bool] = False,
+        is_cancelled: bool | None = False,
         limit: int | None = None,
         offset: int | None = None,
         sort_by: enums.BrowseReservationSortBy = None,

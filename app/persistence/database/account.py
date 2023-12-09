@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 from uuid import UUID
 
 import asyncpg
@@ -12,13 +12,13 @@ from app.persistence.database.util import PostgresQueryExecutor
 
 async def add(
     email: str,
-    pass_hash: Optional[str] = None,
-    nickname: Optional[str] = None,
+    pass_hash: str | None = None,
+    nickname: str | None = None,
     gender: GenderType = None,
     role: RoleType = RoleType.normal,
     is_google_login: bool = False,
-    access_token: Optional[str] = None,
-    refresh_token: Optional[str] = None,
+    access_token: str | None = None,
+    refresh_token: str | None = None,
     is_verified: bool = False,
 ) -> int:
     id_, = await PostgresQueryExecutor(
@@ -105,10 +105,10 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
 
 async def edit(
     account_id: int,
-    pass_hash: Optional[str] = None,
-    nickname: Optional[str] = None,
-    gender: Optional[GenderType] = None,
-    image_uuid: Optional[UUID] = None,
+    pass_hash: str | None = None,
+    nickname: str | None = None,
+    gender: GenderType | None = None,
+    image_uuid: UUID | None = None,
     role: enums.RoleType | None = None,
 ) -> None:
     to_update = {}

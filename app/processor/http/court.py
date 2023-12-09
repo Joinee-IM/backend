@@ -1,5 +1,5 @@
 from datetime import date, datetime, timedelta
-from typing import Optional, Sequence
+from typing import Sequence
 
 from fastapi import APIRouter, Depends, responses
 from pydantic import BaseModel, NaiveDatetime
@@ -91,7 +91,7 @@ class AddReservationInput(BaseModel):
     start_time: NaiveDatetime
     end_time: NaiveDatetime
     technical_level: Sequence[enums.TechnicalType] = []
-    remark: Optional[str]
+    remark: str | None
     member_count: int
     vacancy: int = -1
     member_ids: Sequence[int] = []

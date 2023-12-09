@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 from fastapi import APIRouter, Depends, Query, responses
 from pydantic import BaseModel
@@ -100,15 +100,15 @@ class AddVenueInput(BaseModel):
     stadium_id: int
     name: str
     floor: str
-    reservation_interval: Optional[int]
+    reservation_interval: int | None
     is_reservable: bool
     is_chargeable: bool
-    fee_rate: Optional[float]
-    fee_type: Optional[enums.FeeType]
+    fee_rate: float | None
+    fee_type: enums.FeeType | None
     area: int
     capacity: int
-    sport_equipments: Optional[str]
-    facilities: Optional[str]
+    sport_equipments: str | None
+    facilities: str | None
     court_count: int
     court_type: str
     sport_id: int

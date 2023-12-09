@@ -1,4 +1,4 @@
-from typing import Optional, Sequence
+from typing import Sequence
 
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
@@ -17,9 +17,9 @@ class AddEventInput(BaseModel):
     start_time: NaiveDatetime
     end_time: NaiveDatetime
     location: str
-    event_id: Optional[str] = None
-    all_emails: Optional[Sequence[Email]] = None
-    summary: Optional[str] = None
+    event_id: str | None = None
+    all_emails: Sequence[Email] | None = None
+    summary: str | None = None
 
 
 class AddEventMemberInput(BaseModel):

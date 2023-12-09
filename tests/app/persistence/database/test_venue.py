@@ -268,7 +268,8 @@ class TestAdd(AsyncTestCase):
         mock_init.assert_called_with(
             sql=r'INSERT INTO venue'
                 r'            (stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate,'
-                r'             fee_type, area, capacity, sport_equipments, facilities, court_count, court_type, sport_id, is_published)'
+                r'             fee_type, area, capacity, sport_equipments, facilities, court_count, court_type,'
+                r'             sport_id, is_published)'
                 r'     VALUES (%(stadium_id)s, %(name)s, %(floor)s, %(reservation_interval)s, %(is_reservable)s,'
                 r'            %(is_chargeable)s, %(fee_rate)s, %(fee_type)s, %(area)s, %(capacity)s,'
                 r'            %(sport_equipments)s, %(facilities)s, %(court_count)s, %(court_type)s, %(sport_id)s,'

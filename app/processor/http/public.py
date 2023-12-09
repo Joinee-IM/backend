@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -23,7 +22,7 @@ async def default_page():
 
 
 class HealthCheckOutput(BaseModel):
-    health: Optional[str] = 'ok'
+    health: str | None = 'ok'
 
 
 @router.get('/health')

@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 import starlette_context
@@ -36,7 +35,7 @@ class Context(metaclass=mcs.Singleton):
     def set_request_uuid(self, request_uuid: UUID) -> None:
         self._context[self.REQUEST_UUID_KEY] = request_uuid
 
-    def get_request_uuid(self) -> Optional[UUID]:
+    def get_request_uuid(self) -> UUID | None:
         return self._context.get(self.REQUEST_UUID_KEY) if self._context.exists() else None
 
     @property
@@ -46,7 +45,7 @@ class Context(metaclass=mcs.Singleton):
     def set_request_time(self, request_time: datetime) -> None:
         self._context[self.REQUEST_TIME_KEY] = request_time
 
-    def get_request_time(self) -> Optional[datetime]:
+    def get_request_time(self) -> datetime | None:
         return self._context.get(self.REQUEST_TIME_KEY) if self._context.exists() else None
 
 

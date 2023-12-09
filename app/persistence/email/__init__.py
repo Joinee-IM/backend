@@ -29,13 +29,11 @@ class SMTPHandler(metaclass=mcs.Singleton):
                 aiosmtplib.smtp.email.message.EmailMessage,
                 aiosmtplib.smtp.email.message.Message,
             ],
-            sender: aiosmtplib.smtp.Optional[str] = None,
-            recipients: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Union[str, aiosmtplib.smtp.Sequence[str]]] = None,
-            mail_options: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Iterable[str]] = None,
-            rcpt_options: aiosmtplib.smtp.Optional[aiosmtplib.smtp.Iterable[str]] = None,
-            timeout: aiosmtplib.smtp.Optional[
-                aiosmtplib.smtp.Union[float, aiosmtplib.smtp.Default]
-            ] = aiosmtplib.smtp._default,  # noqa
+            sender: str | None = None,
+            recipients: aiosmtplib.smtp.Union[str, aiosmtplib.smtp.Sequence[str]] | None = None,
+            mail_options: aiosmtplib.smtp.Iterable[str] | None = None,
+            rcpt_options: aiosmtplib.smtp.Iterable[str] | None = None,
+            timeout: aiosmtplib.smtp.Union[float, aiosmtplib.smtp.Default] | None = aiosmtplib.smtp._default,  # noqa
     ):
         client = await self.get_client()
         responses, _ = await client.send_message(
