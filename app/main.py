@@ -9,14 +9,11 @@ with open(f'logging-{ENV}.yaml', 'r') as conf:
     import logging.config
     logging.config.dictConfig(log_config)
 
-from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
 from fastapi.openapi.utils import get_openapi
-from fastapi.responses import JSONResponse
 
-import app.exceptions as exc
 from app import log
 from app.config import app_config
 
@@ -109,35 +106,9 @@ async def app_shutdown():
     # from app.persistence.redis import redis_pool_handler
     # await redis_pool_handler.close()
 
+from app.exceptions import register_exception_handlers
 
-@app.exception_handler(exc.AckException)
-async def exception_handler(_: Request, exc_: exc.AckException):
-    log.info(exc_)
-    return JSONResponse(
-        status_code=exc_.status_code,
-        content={'data': None, 'error': exc_.__class__.__name__},
-    )
-
-
-@app.exception_handler(Exception)
-async def general_exception_handler(_: Request, exc_: Exception):
-    log.error(exc_)
-    traceback_str = traceback.format_exc()
-    log.error(f"Traceback:\n{traceback_str}")
-    return JSONResponse(
-        status_code=500,
-        content={'data': None, 'error': exc_.__class__.__name__},
-    )
-
-
-@app.exception_handler(RequestValidationError)
-async def validation_exception_handler(_: Request, exc_: RequestValidationError):
-    log.info(exc_)
-    return JSONResponse(
-        status_code=422,
-        content={'data': None, 'error': 'IllegalInput'},
-    )
-
+register_exception_handlers(app)
 
 from app.middleware import logging
 

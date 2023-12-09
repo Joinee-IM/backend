@@ -50,7 +50,7 @@ async def read_by_email(email: str, include_unverified: bool = False) -> tuple[i
     except TypeError:
         raise exc.NotFound
 
-    return id_, pass_hash, RoleType(role), is_verified
+    return id_, pass_hash, role, is_verified
 
 
 async def read(account_id: int) -> do.Account:

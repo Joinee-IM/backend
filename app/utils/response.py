@@ -5,8 +5,8 @@ import typing
 import pydantic
 from fastapi import responses
 
-COOKIE_ACCOUNT_KEY = 'account'
-COOKIE_TOKEN_KEY = 'token'
+from app.const import COOKIE_ACCOUNT_KEY, COOKIE_TOKEN_KEY
+
 T = typing.TypeVar('T')
 
 
@@ -23,7 +23,7 @@ class ClassNameExtractor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-class_names: typing.List[str] = ClassNameExtractor('app/exceptions/__init__.py').class_names
+class_names: typing.List[str] = ClassNameExtractor('app/exceptions/ack_exception.py').class_names
 class_enum = enum.Enum('ErrorMessage', {class_name: class_name for class_name in class_names})
 
 
@@ -34,8 +34,8 @@ class Response(pydantic.BaseModel, typing.Generic[T]):
 
 def update_cookie(
         response: responses.Response,
-        account_id: int,
-        token: str,
+        account_id: int = "",
+        token: str = "",
 ) -> responses.Response:
     response.set_cookie(key=COOKIE_ACCOUNT_KEY, value=str(account_id), samesite='none', secure=True, httponly=True)
     response.set_cookie(key=COOKIE_TOKEN_KEY, value=str(token), samesite='none', secure=True, httponly=True)
