@@ -54,8 +54,9 @@ async def browse_stadium(params: StadiumSearchParameters) -> Response[BrowseStad
 
 
 @router.get('/stadium/{stadium_id}')
-async def read_stadium(stadium_id: int) -> Response[vo.ViewStadium]:
-    stadium = await db.stadium.read(stadium_id=stadium_id)
+async def read_stadium(stadium_id: int, _=Depends(get_auth_token)) -> Response[vo.ViewStadium]:
+    include_unpublished = context.account.role is enums.RoleType.provider
+    stadium = await db.stadium.read(stadium_id=stadium_id, include_unpublished=include_unpublished)
     return Response(data=stadium)
 
 

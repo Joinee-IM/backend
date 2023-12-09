@@ -91,6 +91,7 @@ class TestBrowseVenue(AsyncTestCase):
 
 class TestReadVenue(AsyncTestCase):
     def setUp(self) -> None:
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.venue_id = 1
         self.venue = do.Venue(
             id=1,
@@ -120,22 +121,27 @@ class TestReadVenue(AsyncTestCase):
             ),
         )
 
+    @patch('app.processor.http.venue.context', new_callable=MockContext)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
     @patch('app.persistence.database.sport.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read_sport: AsyncMock, mock_read: AsyncMock):
+    async def test_happy_path(self, mock_read_sport: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
         mock_read.return_value = self.venue
         mock_read_sport.return_value = self.sport
+        mock_context._context = self.context
 
         result = await venue.read_venue(venue_id=self.venue_id)
 
         self.assertEqual(result, self.expect_result)
         mock_read.assert_called_with(
             venue_id=self.venue_id,
+            include_unpublished=True,
         )
+        mock_context.reset_context()
 
 
 class TestBrowseCourt(AsyncTestCase):
     def setUp(self) -> None:
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.venue_id = 1
         self.courts = [
             do.Court(
@@ -155,16 +161,20 @@ class TestBrowseCourt(AsyncTestCase):
             data=self.courts,
         )
 
+    @patch('app.processor.http.venue.context', new_callable=MockContext)
     @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_browse: AsyncMock):
+    async def test_happy_path(self, mock_browse: AsyncMock, mock_context: MockContext):
         mock_browse.return_value = self.courts
+        mock_context._context = self.context
 
         result = await venue.browse_court_by_venue_id(venue_id=self.venue_id)
 
         self.assertEqual(result, self.expect_result)
         mock_browse.assert_called_with(
             venue_id=self.venue_id,
+            include_unpublished=True,
         )
+        mock_context.reset_context()
 
 
 class TestEditVenue(AsyncTestCase):

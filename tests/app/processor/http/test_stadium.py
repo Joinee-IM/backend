@@ -107,6 +107,7 @@ class TestBrowseStadium(AsyncTestCase):
 
 class TestReadStadium(AsyncTestCase):
     def setUp(self) -> None:
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
         self.stadium_id = 1
         self.stadium = vo.ViewStadium(
             id=1,
@@ -135,16 +136,20 @@ class TestReadStadium(AsyncTestCase):
         )
         self.expect_result = Response(data=self.stadium)
 
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read: AsyncMock):
+    async def test_happy_path(self, mock_read: AsyncMock, mock_context: MockContext):
         mock_read.return_value = self.stadium
+        mock_context._context = self.context
 
         result = await stadium.read_stadium(stadium_id=self.stadium_id)
 
         self.assertEqual(result, self.expect_result)
         mock_read.assert_called_with(
             stadium_id=self.stadium_id,
+            include_unpublished=True,
         )
+        mock_context.reset_context()
 
 
 class TestEditStadium(AsyncTestCase):
