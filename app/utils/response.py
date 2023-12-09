@@ -5,7 +5,7 @@ import typing
 import pydantic
 from fastapi import responses
 
-from app.const import COOKIE_ACCOUNT_KEY, COOKIE_TOKEN_KEY
+from app.const import COOKIE_ACCOUNT_KEY, COOKIE_TOKEN_KEY, EXCEPTION_CLASS_DEFINITION_PATH
 
 T = typing.TypeVar('T')
 
@@ -23,7 +23,7 @@ class ClassNameExtractor(ast.NodeVisitor):
         self.generic_visit(node)
 
 
-class_names: typing.List[str] = ClassNameExtractor('app/exceptions/ack_exception.py').class_names
+class_names: typing.List[str] = ClassNameExtractor(EXCEPTION_CLASS_DEFINITION_PATH).class_names
 class_enum = enum.Enum('ErrorMessage', {class_name: class_name for class_name in class_names})
 
 

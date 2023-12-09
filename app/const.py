@@ -6,3 +6,5 @@ BUCKET_NAME = 'cloud-native-storage-db'
 
 COOKIE_ACCOUNT_KEY = 'account_id'
 COOKIE_TOKEN_KEY = 'token'
+
+EXCEPTION_CLASS_DEFINITION_PATH = 'app/exceptions/ack_exception.py'

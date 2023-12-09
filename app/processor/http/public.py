@@ -17,7 +17,7 @@ from app.utils.security import encode_jwt, hash_password, verify_password
 router = APIRouter(tags=['Public'])
 
 
-@router.get('/', status_code=200, response_class=responses.HTMLResponse)
+@router.get('/', status_code=200, response_class=responses.HTMLResponse, include_in_schema=False)
 async def default_page():
     return '<a href="/api/docs">/api/docs</a>'
 

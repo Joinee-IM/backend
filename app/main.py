@@ -1,5 +1,4 @@
 import os
-import traceback
 
 ENV = os.getenv('ENV', 'ci')
 
@@ -12,7 +11,6 @@ with open(f'logging-{ENV}.yaml', 'r') as conf:
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.middleware.gzip import GZipMiddleware
-from fastapi.openapi.utils import get_openapi
 
 from app import log
 from app.config import app_config
@@ -23,25 +21,6 @@ app = FastAPI(
     redoc_url=app_config.redoc_url,
     openapi_url='/api/openapi.json',
 )
-
-
-# noinspection PyUnresolvedReferences
-@app.get("/api/openapi.json", include_in_schema=False)
-async def access_openapi():
-    openapi = get_openapi(
-        title=app.title,
-        version=app.version,
-        description=app.description,
-        routes=app.routes,
-        tags=app.openapi_tags,
-    )
-    openapi["servers"] = [{"url": app.root_path}]
-    return openapi
-
-
-@app.get('/', include_in_schema=False)
-async def health_check():
-    return True
 
 
 app.add_middleware(
