@@ -165,14 +165,16 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
         remark=data.remark,
     )
 
-    stadium = await db.stadium.read(stadium_id=venue.stadium_id)
-    location = f'{stadium.name} {venue.name} 第 {court.number} {venue.court_type}'
-    await google_calendar.update_google_event(
-        reservation_id=reservation_id,
-        location=location,
-        start_time=start_time,
-        end_time=end_time,
-    )
+    manager = await db.account.read(account_id=context.account.id)
+    if manager.is_google_login:
+        stadium = await db.stadium.read(stadium_id=venue.stadium_id)
+        location = f'{stadium.name} {venue.name} 第 {court.number} {venue.court_type}'
+        await google_calendar.update_google_event(
+            reservation_id=reservation_id,
+            location=location,
+            start_time=start_time,
+            end_time=end_time,
+        )
 
     return Response()
 

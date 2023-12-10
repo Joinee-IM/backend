@@ -1,4 +1,5 @@
 from datetime import datetime, time
+from uuid import UUID
 
 from freezegun import freeze_time
 
@@ -340,6 +341,11 @@ class TestEditReservation(AsyncTestCase):
                 ),
             ],
         )
+        self.account = do.Account(
+            id=self.account_id, email='email@gmail.com', nickname='1',
+            gender=enums.GenderType.female, image_uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+            role=enums.RoleType.normal, is_verified=True, is_google_login=True,
+        )
         self.reservations = [
             do.Reservation(
                 id=1,
@@ -376,6 +382,7 @@ class TestEditReservation(AsyncTestCase):
         self.location = f"{self.stadium.name} {self.venue.name} 第 {self.court.number} {self.venue.court_type}"
 
     @freeze_time('2023-11-11')
+    @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.client.google_calendar.update_google_event', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
@@ -390,6 +397,7 @@ class TestEditReservation(AsyncTestCase):
         mock_read_venue: AsyncMock, mock_read_court: AsyncMock,
         mock_read_reservation: AsyncMock, mock_browse_member: AsyncMock,
         mock_context: MockContext, mock_update_event: AsyncMock, mock_read_stadium: AsyncMock,
+        mock_read_account: AsyncMock,
     ):
         mock_context._context = self.context
 
@@ -398,6 +406,7 @@ class TestEditReservation(AsyncTestCase):
         mock_read_court.return_value = self.court
         mock_read_venue.return_value = self.venue
         mock_browse_reservation.return_value = self.reservations, None
+        mock_read_account.return_value = self.account
         mock_read_stadium.return_value = self.stadium
 
         result = await reservation.edit_reservation(

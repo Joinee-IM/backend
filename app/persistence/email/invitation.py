@@ -5,11 +5,14 @@ from app.config import service_config, smtp_config
 from app.persistence.email import smtp_handler
 
 
-async def send(to: str, meet_code: str, subject='Invitation from Joinee'):
+async def send(meet_code: str, to: str | None = None, subject='Invitation from Joinee', bcc: str | None = None):
     message = MIMEMultipart()
     message['From'] = f'{smtp_config.username}@{smtp_config.host}'
-    message['To'] = to
     message['Subject'] = subject
+    if to is not None:
+        message["To"] = to
+    if bcc is not None:
+        message["Bcc"] = bcc
     body = f"""
         <html>
             <body>

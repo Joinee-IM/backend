@@ -163,3 +163,23 @@ async def get_google_token(account_id: int) -> tuple[str, str]:
     ).fetch_one()
 
     return access_token, refresh_token
+
+
+async def batch_read(account_ids: Sequence[int], include_unverified: bool = False) -> Sequence[do.Account]:
+    params = {fr'account_{i}': uuid for i, uuid in enumerate(account_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    results = await PostgresQueryExecutor(
+        sql=fr'SELECT id, email, nickname, gender, image_uuid, role, is_verified, is_google_login'
+            fr'  FROM account'
+            fr' WHERE id IN ({in_sql})'
+            fr'{" AND is_verified" if not include_unverified else ""}',
+        **params,
+    ).fetch_all()
+    return [
+        do.Account(
+            id=id_, email=email, nickname=nickname, gender=gender, image_uuid=image_uuid,
+            role=role, is_verified=is_verified, is_google_login=is_google_login,
+        )
+        for id_, email, nickname, gender, image_uuid, role, is_verified, is_google_login in results
+    ]

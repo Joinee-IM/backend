@@ -6,6 +6,7 @@ from pydantic import BaseModel, NaiveDatetime
 
 import app.exceptions as exc
 import app.persistence.database as db
+import app.persistence.email as email
 from app.base import do, enums, vo
 from app.client import google_calendar
 from app.middleware.headers import get_auth_token
@@ -159,6 +160,11 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     account = await db.account.read(account_id=account_id)
     stadium = await db.stadium.read(stadium_id=venue.stadium_id)
     location = f'{stadium.name} {venue.name} 第 {court.number} {venue.court_type}'
+    invitees = await db.account.batch_read(account_ids=data.member_ids)
+    await email.invitation.send(
+        meet_code=invite_code,
+        bcc=', '.join(invitee.email for invitee in invitees),
+    )
     if account.is_google_login:
         await google_calendar.add_google_calendar_event(
             reservation_id=reservation_id,

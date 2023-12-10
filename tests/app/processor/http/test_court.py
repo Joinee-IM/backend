@@ -294,6 +294,13 @@ class TestAddReservation(AsyncTestCase):
             gender=enums.GenderType.female, image_uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
             role=enums.RoleType.normal, is_verified=True, is_google_login=True,
         )
+        self.member_accounts = [
+            do.Account(
+                id=self.account_id, email='email@gmail.com', nickname='1',
+                gender=enums.GenderType.female, image_uuid=UUID('fad08f83-6ad7-429f-baa6-b1c3abf4991c'),
+                role=enums.RoleType.normal, is_verified=True, is_google_login=True,
+            ),
+        ]
         self.reservation_id = 1
         self.invitation_code = 'code'
         self.context = {
@@ -325,6 +332,8 @@ class TestAddReservation(AsyncTestCase):
         ]
 
     @freeze_time('2023-10-10')
+    @patch('app.persistence.email.invitation.send', new_callable=AsyncMock)
+    @patch('app.persistence.database.account.batch_read', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.client.google_calendar.add_google_calendar_event', new_callable=AsyncMock)
@@ -339,7 +348,7 @@ class TestAddReservation(AsyncTestCase):
         self, mock_batch_add: AsyncMock, mock_add: AsyncMock, mock_read_venue: AsyncMock,
         mock_read_court: AsyncMock, mock_generate: Mock, mock_browse_reservation: AsyncMock,
         mock_context: MockContext, mock_add_event: AsyncMock, mock_read_account: AsyncMock,
-        mock_read_stadium: AsyncMock,
+        mock_read_stadium: AsyncMock, mock_batch_read: AsyncMock, mock_send_email: AsyncMock,
     ):
         mock_context._context = self.context
         mock_browse_reservation.return_value = None, 0
@@ -349,6 +358,7 @@ class TestAddReservation(AsyncTestCase):
         mock_add.return_value = self.reservation_id
         mock_read_account.return_value = self.account
         mock_read_stadium.return_value = self.stadium
+        mock_batch_read.return_value = self.member_accounts
 
         result = await court.add_reservation(court_id=self.court_id, data=self.data)
 
@@ -386,6 +396,10 @@ class TestAddReservation(AsyncTestCase):
             end_time=self.data.end_time,
             account_id=self.account_id,
             location=self.location,
+        )
+        mock_send_email.assert_called_with(
+            meet_code=self.invitation_code,
+            bcc=', '.join(member.email for member in self.member_accounts),
         )
 
         mock_context.reset_context()
