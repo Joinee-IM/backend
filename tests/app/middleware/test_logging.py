@@ -18,7 +18,7 @@ class TestMiddleware(AsyncTestCase):
             'query_string': self.params,
         })
 
-    @patch('app.log.info', new_callable=Mock)
+    @patch('app.log.logger.info', new_callable=Mock)
     async def test_happy_path(self, mock_info: Mock):
         await logging.middleware(self.request, AsyncMock())
 

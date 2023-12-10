@@ -14,5 +14,5 @@ async def get_auth_token(
     account = None
     if token or auth_token:
         account = security.decode_jwt(token or auth_token, context.request_time)
-    log.info(f'account: {account}')
+    log.logger.info(f'account: {account}')
     context.set_account(account)

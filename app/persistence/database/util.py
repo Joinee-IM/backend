@@ -57,7 +57,7 @@ class PostgresQueryExecutor(QueryExecutor):
             key=lambda item: int(item[1].replace('$', '')),
         )
         positional_args = [named_args[named_arg] for named_arg, _ in positional_items]
-        log.info((formatted_query, positional_args))
+        log.logger.info((formatted_query, positional_args))
         return formatted_query, positional_args
 
     async def fetch_all(self):

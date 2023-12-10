@@ -68,7 +68,7 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
         raise exc.NoPermission
 
     if image.content_type not in ALLOWED_MEDIA_TYPE:
-        log.info(f'received content_type {image.content_type}, denied.')
+        log.logger.info(f'received content_type {image.content_type}, denied.')
         raise exc.IllegalInput
 
     file_uuid = uuid4()

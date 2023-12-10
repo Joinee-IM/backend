@@ -36,30 +36,30 @@ app.add_middleware(GZipMiddleware, minimum_size=1000)
 
 @app.on_event('startup')
 async def app_startup():
-    log.info('app start.')
+    log.logger.info('app start.')
 
-    log.info('initializing database')
+    log.logger.info('initializing database')
     from app.config import pg_config
     from app.persistence.database import pg_pool_handler
     await pg_pool_handler.initialize(db_config=pg_config)
-    log.info('initialized database')
+    log.logger.info('initialized database')
 
-    log.info('initializing smtp')
+    log.logger.info('initializing smtp')
     from app.config import smtp_config
     from app.persistence.email import smtp_handler
     await smtp_handler.initialize(smtp_config=smtp_config)
-    log.info('initialized smtp')
+    log.logger.info('initialized smtp')
 
-    log.info('initializing gcs')
+    log.logger.info('initializing gcs')
     from app.persistence.file_storage.gcs import gcs_handler
     gcs_handler.initialize()
-    log.info('initialized gcs')
+    log.logger.info('initialized gcs')
 
-    log.info('initializing oauth')
+    log.logger.info('initializing oauth')
     from app.client.oauth import oauth_handler
     from app.config import google_config
     oauth_handler.initialize(google_config=google_config)
-    log.info('initialized oauth')
+    log.logger.info('initialized oauth')
 
     # if redis needed
     # from app.config import redis_config
@@ -69,17 +69,17 @@ async def app_startup():
 
 @app.on_event('shutdown')
 async def app_shutdown():
-    log.info('app shutdown')
+    log.logger.info('app shutdown')
 
-    log.info('closing database')
+    log.logger.info('closing database')
     from app.persistence.database import pg_pool_handler
     await pg_pool_handler.close()
-    log.info('closed database')
+    log.logger.info('closed database')
 
-    log.info('closing smtp')
+    log.logger.info('closing smtp')
     from app.persistence.email import smtp_handler
     await smtp_handler.close()
-    log.info('closed smtp')
+    log.logger.info('closed smtp')
 
     # if redis needed
     # from app.persistence.redis import redis_pool_handler

@@ -18,7 +18,6 @@ class TestAddWithDo(AsyncTestCase):
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.execute', AsyncMock(return_value=None))
-    @patch('app.log.context', AsyncTestCase.context)
     async def test_happy_path(self):
         await gcs_file.add_with_do(self.gcs_file)
 

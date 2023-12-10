@@ -4,7 +4,7 @@ import app.log as log
 
 
 async def middleware(request: Request, call_next):
-    log.info(
+    log.logger.info(
         msg=f'{request.method} {request.url.path}, params: {request.query_params},',
         extra={
             'request': {

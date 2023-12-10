@@ -63,7 +63,7 @@ async def batch_add_album(
     uuids = []
     for file in files:
         if file.content_type not in ALLOWED_MEDIA_TYPE:
-            log.info(f'received content_type {file.content_type}, denied.')
+            log.logger.info(f'received content_type {file.content_type}, denied.')
             raise exc.IllegalInput
         uuids.append(await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME))
 

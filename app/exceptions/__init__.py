@@ -39,7 +39,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(AckException)
     def exception_handler(_: Request, exc_: AckException):
-        log.info(exc_)
+        log.logger.info(exc_)
         return JSONResponse(
             status_code=exc_.status_code,
             content={'data': None, 'error': exc_.__class__.__name__},
@@ -57,7 +57,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(RequestValidationError)
     def validation_exception_handler(_: Request, exc_: RequestValidationError):
-        log.info(exc_)
+        log.logger.info(exc_)
         return JSONResponse(
             status_code=422,
             content={'data': None, 'error': 'IllegalInput'},
