@@ -174,7 +174,7 @@ class TestSearch(AsyncTestCase):
                 r' WHERE (email LIKE %(query)s'
                 r'    OR nickname LIKE %(query)s)'
                 r'   AND is_verified = %(is_verified)s',
-            query=self.query, is_verified=True,
+            query=f'%{self.query}%', is_verified=True,
         )
 
 

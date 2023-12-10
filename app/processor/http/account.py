@@ -79,7 +79,7 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     return Response(data=True)
 
 
-@router.get('/account/search')
+@router.post('/account/search')
 async def search_account(query: str) -> Response[Sequence[do.Account]]:
     accounts = await db.account.search(query=query)
     return Response(data=accounts)

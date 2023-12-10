@@ -142,7 +142,7 @@ async def search(query: str) -> Sequence[do.Account]:
             r' WHERE (email LIKE %(query)s'
             r'    OR nickname LIKE %(query)s)'
             r'   AND is_verified = %(is_verified)s',
-        query=query, is_verified=True,
+        query=f'%{query}%', is_verified=True,
     ).fetch_all()
 
     return [
