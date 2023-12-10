@@ -195,6 +195,9 @@ class TestUploadAccountImage(AsyncTestCase):
 class TestSearchAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.query = 'query'
+        self.data = account.SearchAccountInput(
+            query=self.query,
+        )
         self.accounts = [
             do.Account(
                 id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
@@ -209,7 +212,7 @@ class TestSearchAccount(AsyncTestCase):
     async def test_happy_path(self, mock_search: AsyncMock):
         mock_search.return_value = self.accounts
 
-        result = await account.search_account(query=self.query)
+        result = await account.search_account(data=self.data)
 
         self.assertEqual(result, self.expect_result)
         mock_search.assert_called_with(

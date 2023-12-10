@@ -79,9 +79,13 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     return Response(data=True)
 
 
+class SearchAccountInput(BaseModel):
+    query: str
+
+
 @router.post('/account/search')
-async def search_account(query: str) -> Response[Sequence[do.Account]]:
-    accounts = await db.account.search(query=query)
+async def search_account(data: SearchAccountInput) -> Response[Sequence[do.Account]]:
+    accounts = await db.account.search(query=data.query)
     return Response(data=accounts)
 
 
