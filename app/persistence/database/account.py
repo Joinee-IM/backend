@@ -166,6 +166,9 @@ async def get_google_token(account_id: int) -> tuple[str, str]:
 
 
 async def batch_read(account_ids: Sequence[int], include_unverified: bool = False) -> Sequence[do.Account]:
+    if not account_ids:
+        return []
+
     params = {fr'account_{i}': uuid for i, uuid in enumerate(account_ids)}
     in_sql = ', '.join([fr'%({param})s' for param in params])
 

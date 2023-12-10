@@ -47,9 +47,9 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(Exception)
     def general_exception_handler(_: Request, exc_: Exception):
-        log.error(exc_)
+        log.logger.error(exc_)
         traceback_str = traceback.format_exc()
-        log.error(f'Traceback:\n{traceback_str}')
+        log.logger.error(f'Traceback:\n{traceback_str}')
         return JSONResponse(
             status_code=500,
             content={'data': None, 'error': exc_.__class__.__name__},
