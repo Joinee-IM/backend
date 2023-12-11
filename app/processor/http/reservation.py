@@ -63,10 +63,20 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
     )
 
 
+class ReadReservationOutput(do.Reservation):
+    members: Sequence[do.ReservationMember]
+
+
 @router.get('/reservation/{reservation_id}')
-async def read_reservation(reservation_id: int) -> Response[do.Reservation]:
+async def read_reservation(reservation_id: int) -> Response[ReadReservationOutput]:
     reservation = await db.reservation.read(reservation_id=reservation_id)
-    return Response(data=reservation)
+    members = await db.reservation_member.browse_with_names(reservation_id=reservation_id)
+    return Response(
+        data=ReadReservationOutput(
+            **reservation.model_dump(),
+            members=members,
+        ),
+    )
 
 
 @router.post('/reservation/code/{invitation_code}')
@@ -213,7 +223,7 @@ async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> R
 
 
 @router.get('/reservation/{reservation_id}/members')
-async def read_reservation_members(reservation_id: int, _=Depends(get_auth_token)) \
+async def browse_reservation_members(reservation_id: int, _=Depends(get_auth_token)) \
         -> Response[Sequence[vo.ReservationMemberWithName]]:
     reservation = await db.reservation.read(reservation_id=reservation_id)
     reservation_members = await db.reservation_member.browse_with_names(reservation_id=reservation_id)

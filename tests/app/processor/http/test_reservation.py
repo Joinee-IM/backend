@@ -94,11 +94,36 @@ class TestReadReservation(AsyncTestCase):
             invitation_code='invitation_code',
             is_cancelled=False,
         )
-        self.expect_result = Response(data=self.reservation)
+        self.members = [
+            vo.ReservationMemberWithName(
+                reservation_id=self.reservation_id,
+                account_id=1,
+                is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
+                nickname='nickname',
+            ),
+            vo.ReservationMemberWithName(
+                reservation_id=self.reservation_id,
+                account_id=2,
+                is_manager=False,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
+                nickname='nickname2',
+            ),
+        ]
+        self.expect_result = Response(
+            data=reservation.ReadReservationOutput(
+                **self.reservation.model_dump(),
+                members=self.members,
+            ),
+        )
 
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_read: AsyncMock):
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse: AsyncMock, mock_read: AsyncMock):
         mock_read.return_value = self.reservation
+        mock_browse.return_value = self.members
 
         result = await reservation.read_reservation(reservation_id=self.reservation_id)
 
