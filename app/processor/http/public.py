@@ -121,7 +121,7 @@ class ResendEmailVerificationInput(BaseModel):
 
 @router.post('/email-verification/resend', tags=['Email Verification'])
 async def resend_email_verification(data: ResendEmailVerificationInput):
-    account_id, *_ = await db.account.read_by_email(email=data.email)
+    account_id, *_ = await db.account.read_by_email(email=data.email, include_unverified=True)
     code = await db.email_verification.read(account_id=account_id, email=data.email)
     await email.verification.send(to=data.email, code=str(code))
     return Response(data=EmailVerificationOutput(success=True))

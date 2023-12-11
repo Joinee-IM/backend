@@ -205,7 +205,7 @@ class TestResendEmailVerification(AsyncTestCase):
         result = await public.resend_email_verification(data=self.data)
 
         self.assertEqual(result, self.expect_output)
-        mock_read_by_email.assert_called_with(email=self.email)
+        mock_read_by_email.assert_called_with(email=self.email, include_unverified=True)
         mock_read_verification.assert_called_with(account_id=self.account_id, email=self.email)
         mock_send.assert_called_with(to=self.email, code=str(self.code))
 
