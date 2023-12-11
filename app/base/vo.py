@@ -5,9 +5,10 @@ view objects
 from datetime import time
 from typing import Sequence
 
-from pydantic import BaseModel, NaiveDatetime
+from pydantic import BaseModel
 
 from app.base import do, enums
+from app.utils import ServerTZDatetime
 
 
 class ViewStadium(do.Stadium):
@@ -24,14 +25,14 @@ class WeekTimeRange(BaseModel):
 
 
 class DateTimeRange(BaseModel):
-    start_time: NaiveDatetime
-    end_time: NaiveDatetime
+    start_time: ServerTZDatetime
+    end_time: ServerTZDatetime
 
 
 class ViewMyReservation(BaseModel):
     reservation_id: int
-    start_time: NaiveDatetime
-    end_time: NaiveDatetime
+    start_time: ServerTZDatetime
+    end_time: ServerTZDatetime
     stadium_name: str
     venue_name: str
     is_manager: bool

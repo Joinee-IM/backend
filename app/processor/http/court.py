@@ -2,7 +2,7 @@ from datetime import date, datetime, timedelta
 from typing import Sequence
 
 from fastapi import APIRouter, Depends, responses
-from pydantic import BaseModel, NaiveDatetime
+from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
@@ -10,7 +10,7 @@ import app.persistence.email as email
 from app.base import do, enums, vo
 from app.client import google_calendar
 from app.middleware.headers import get_auth_token
-from app.utils import Response, context, invitation_code
+from app.utils import Response, ServerTZDatetime, context, invitation_code
 
 router = APIRouter(
     tags=['Court'],
@@ -89,8 +89,8 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
 
 
 class AddReservationInput(BaseModel):
-    start_time: NaiveDatetime
-    end_time: NaiveDatetime
+    start_time: ServerTZDatetime
+    end_time: ServerTZDatetime
     technical_level: Sequence[enums.TechnicalType] = []
     remark: str | None
     member_count: int

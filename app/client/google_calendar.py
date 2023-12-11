@@ -3,10 +3,11 @@ from typing import Sequence
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from googleapiclient.discovery import build
-from pydantic import BaseModel, NaiveDatetime
+from pydantic import BaseModel
 
 import app.persistence.database as db
 from app.config import GoogleConfig, google_config
+from app.utils import ServerTZDatetime
 
 
 class Email(BaseModel):
@@ -14,8 +15,8 @@ class Email(BaseModel):
 
 
 class AddEventInput(BaseModel):
-    start_time: NaiveDatetime
-    end_time: NaiveDatetime
+    start_time: ServerTZDatetime
+    end_time: ServerTZDatetime
     location: str
     event_id: str | None = None
     all_emails: Sequence[Email] | None = None
@@ -91,7 +92,7 @@ class GoogleCalendar:
 
 
 async def add_google_calendar_event(
-    reservation_id: int, start_time: NaiveDatetime, end_time: NaiveDatetime,
+    reservation_id: int, start_time: ServerTZDatetime, end_time: ServerTZDatetime,
     account_id: int, location: str, member_ids: Sequence[int] = None,
 ):
     if not member_ids:
@@ -134,7 +135,7 @@ async def add_google_calendar_event_member(
 
 
 async def update_google_event(
-    reservation_id: int, location: str, start_time: NaiveDatetime, end_time: NaiveDatetime,
+    reservation_id: int, location: str, start_time: ServerTZDatetime, end_time: ServerTZDatetime,
 ):
     reservation = await db.reservation.read(reservation_id=reservation_id)
     manager_id = await db.reservation.get_manager_id(reservation_id=reservation_id)
