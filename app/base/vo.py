@@ -65,3 +65,7 @@ class ViewProviderCourt(BaseModel):
     venue_name: str
     court_number: int
     is_published: bool
+
+
+class ReservationMemberWithName(do.ReservationMember):
+    nickname: str

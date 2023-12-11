@@ -99,7 +99,7 @@ async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> R
 
 @router.delete('/reservation/{reservation_id}')
 async def delete_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
-    reservation_member = await db.reservation_member.browse(
+    reservation_member = await db.reservation_member.browse_with_names(
         reservation_id=reservation_id,
         account_id=context.account.id,
     )
@@ -122,7 +122,7 @@ class EditReservationInput(BaseModel):
 
 @router.patch('/reservation/{reservation_id}')
 async def edit_reservation(reservation_id: int, data: EditReservationInput, _=Depends(get_auth_token)) -> Response:
-    reservation_member = await db.reservation_member.browse(
+    reservation_member = await db.reservation_member.browse_with_names(
         reservation_id=reservation_id,
         account_id=context.account.id,
     )
@@ -181,14 +181,14 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
 
 @router.delete('/reservation/{reservation_id}/leave')
 async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
-    reservation_member = await db.reservation_member.browse(
+    reservation_member = await db.reservation_member.browse_with_names(
         reservation_id=reservation_id,
         account_id=context.account.id,
     )
     if not reservation_member:
         raise exc.NotFound
 
-    reservation_members = await db.reservation_member.browse(reservation_id=reservation_id)
+    reservation_members = await db.reservation_member.browse_with_names(reservation_id=reservation_id)
     if len(reservation_members) > 1:
         await db.reservation_member.leave(
             reservation_id=reservation_id,
@@ -210,3 +210,14 @@ async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> R
     await db.reservation_member.reject(reservation_id=reservation_id, account_id=context.account.id)
 
     return Response()
+
+
+@router.get('/reservation/{reservation_id}/members')
+async def read_reservation_members(reservation_id: int, _=Depends(get_auth_token)) \
+        -> Response[Sequence[vo.ReservationMemberWithName]]:
+    reservation = await db.reservation.read(reservation_id=reservation_id)
+    reservation_members = await db.reservation_member.browse_with_names(reservation_id=reservation_id)
+    if reservation.vacancy == -1 and context.account.id not in [member.account_id for member in reservation_members]:
+        raise exc.NoPermission
+
+    return Response(data=reservation_members)

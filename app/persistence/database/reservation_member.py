@@ -3,7 +3,7 @@ from typing import Sequence
 import asyncpg
 
 import app.exceptions as exc
-from app.base import do, enums
+from app.base import do, enums, vo
 from app.persistence.database.util import (
     PostgresQueryExecutor,
     generate_query_parameters,
@@ -46,10 +46,10 @@ async def batch_add_with_do(members: Sequence[do.ReservationMember]) -> None:
     ).execute()
 
 
-async def browse(
+async def browse_with_names(
         reservation_id: int | None = None,
         account_id: int | None = None,
-) -> Sequence[do.ReservationMember]:
+) -> Sequence[vo.ReservationMemberWithName]:
 
     criteria_dict = {
         'reservation_id': (reservation_id, 'reservation_id = %(reservation_id)s'),
@@ -61,21 +61,24 @@ async def browse(
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 
     results = await PostgresQueryExecutor(
-        sql=r'SELECT reservation_id, account_id, is_manager, status, source'
+        sql=r'SELECT reservation_id, account_id, is_manager, status, source, nickname'
             r'  FROM reservation_member'
+            r' INNER JOIN account'
+            r'    ON reservation_member.account_id = account.id'
             fr' {where_sql}'
             r' ORDER BY is_manager, account_id',
         **params,
     ).fetch_all()
 
     return [
-        do.ReservationMember(
+        vo.ReservationMemberWithName(
             reservation_id=reservation_id,
             account_id=account_id,
             is_manager=is_manager,
             status=status,
             source=source,
-        ) for reservation_id, account_id, is_manager, status, source in results
+            nickname=nickname,
+        ) for reservation_id, account_id, is_manager, status, source, nickname in results
     ]
 
 

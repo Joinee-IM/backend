@@ -1,4 +1,4 @@
-from app.base import do, enums
+from app.base import do, enums, vo
 from app.persistence.database import reservation_member
 from tests import AsyncMock, AsyncTestCase, Mock, patch
 
@@ -62,15 +62,16 @@ class TestBrowse(AsyncTestCase):
             'reservation_id': self.reservation_id,
         }
         self.raw_reservation_members = [
-            (1, 1, True, 'INVITED', 'INVITATION_CODE'),
+            (1, 1, True, 'INVITED', 'INVITATION_CODE', 'nickname'),
         ]
         self.reservation_members = [
-            do.ReservationMember(
+            vo.ReservationMemberWithName(
                 reservation_id=1,
                 account_id=1,
                 is_manager=True,
                 source=enums.ReservationMemberSource.invitation_code,
                 status=enums.ReservationMemberStatus.invited,
+                nickname='nickname',
             ),
         ]
 
@@ -79,15 +80,17 @@ class TestBrowse(AsyncTestCase):
     async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
         mock_fetch.return_value = self.raw_reservation_members
 
-        result = await reservation_member.browse(
+        result = await reservation_member.browse_with_names(
             account_id=self.account_id,
             reservation_id=self.reservation_id,
         )
 
         self.assertEqual(result, self.reservation_members)
         mock_init.assert_called_with(
-            sql=r'SELECT reservation_id, account_id, is_manager, status, source'
+            sql=r'SELECT reservation_id, account_id, is_manager, status, source, nickname'
                 r'  FROM reservation_member'
+                r' INNER JOIN account'
+                r'    ON reservation_member.account_id = account.id'
                 r' WHERE reservation_id = %(reservation_id)s'
                 r' AND account_id = %(account_id)s'
                 r' ORDER BY is_manager, account_id',

@@ -207,7 +207,7 @@ class TestDeleteReservation(AsyncTestCase):
         self.expect_result = Response()
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
     async def test_happy_path(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
@@ -226,7 +226,7 @@ class TestDeleteReservation(AsyncTestCase):
         mock_context.reset_context()
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
     async def test_no_permission(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
@@ -386,7 +386,7 @@ class TestEditReservation(AsyncTestCase):
     @patch('app.persistence.database.stadium.read', new_callable=AsyncMock)
     @patch('app.client.google_calendar.update_google_event', new_callable=AsyncMock)
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
@@ -436,7 +436,7 @@ class TestEditReservation(AsyncTestCase):
 
     @freeze_time('2023-11-11')
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
@@ -466,7 +466,7 @@ class TestEditReservation(AsyncTestCase):
 
     @freeze_time('2023-11-11')
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
@@ -497,7 +497,7 @@ class TestEditReservation(AsyncTestCase):
 
     @freeze_time('2023-11-11')
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.read', new_callable=AsyncMock)
@@ -564,7 +564,7 @@ class TestLeaveReservation(AsyncTestCase):
         self.expect_result = Response()
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.leave', new_callable=AsyncMock)
     async def test_happy_path(self, mock_leave: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
@@ -583,7 +583,7 @@ class TestLeaveReservation(AsyncTestCase):
         mock_context.reset_context()
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.delete', new_callable=AsyncMock)
     async def test_delete_reservation(self, mock_delete: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
@@ -601,7 +601,7 @@ class TestLeaveReservation(AsyncTestCase):
         mock_context.reset_context()
 
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
-    @patch('app.persistence.database.reservation_member.browse', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.leave', new_callable=AsyncMock)
     async def test_not_found(self, mock_leave: AsyncMock, mock_browse: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
