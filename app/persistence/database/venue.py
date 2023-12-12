@@ -130,6 +130,7 @@ async def edit(
         sport_equipments: str | None = None,
         facilities: str | None = None,
         court_type: str | None = None,
+        is_published: bool | None = None,
 ) -> None:
     criteria_dict = {
         'name': (name, 'name = %(name)s'),
@@ -145,6 +146,7 @@ async def edit(
         'sport_equipments': (sport_equipments, 'sport_equipments = %(sport_equipments)s'),
         'facilities': (facilities, 'facilities = %(facilities)s'),
         'court_type': (court_type, 'court_type = %(court_type)s'),
+        'is_published': (is_published, 'is_published = %(is_published)s'),
     }
 
     query, params = generate_query_parameters(criteria_dict=criteria_dict)
@@ -191,3 +193,53 @@ async def add(
         court_count=court_count, court_type=court_type, sport_id=sport_id, is_published=True,
     ).fetch_one()
     return id_
+
+
+async def batch_edit(
+        venue_ids: Sequence[int],
+        name: str | None = None,
+        floor: str | None = None,
+        area: int | None = None,
+        capacity: int | None = None,
+        sport_id: int | None = None,
+        is_reservable: int | None = None,
+        reservation_interval: int | None = None,
+        is_chargeable: bool | None = None,
+        fee_rate: float | None = None,
+        fee_type: enums.FeeType | None = None,
+        sport_equipments: str | None = None,
+        facilities: str | None = None,
+        court_type: str | None = None,
+        is_published: bool | None = None,
+) -> None:
+    criteria_dict = {
+        'name': (name, 'name = %(name)s'),
+        'floor': (floor, 'floor = %(floor)s'),
+        'area': (area, 'area = %(area)s'),
+        'capacity': (capacity, 'capacity = %(capacity)s'),
+        'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
+        'is_reservable': (is_reservable, 'is_reservable = %(is_reservable)s'),
+        'reservation_interval': (reservation_interval, 'reservation_interval = %(reservation_interval)s'),
+        'is_chargeable': (is_chargeable, 'is_chargeable = %(is_chargeable)s'),
+        'fee_rate': (fee_rate, 'fee_rate = %(fee_rate)s'),
+        'fee_type': (fee_type, 'fee_type = %(fee_type)s'),
+        'sport_equipments': (sport_equipments, 'sport_equipments = %(sport_equipments)s'),
+        'facilities': (facilities, 'facilities = %(facilities)s'),
+        'court_type': (court_type, 'court_type = %(court_type)s'),
+        'is_published': (is_published, 'is_published = %(is_published)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+    set_sql = ', '.join(query)
+
+    venue_params = {fr'venue_{i}': uuid for i, uuid in enumerate(venue_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in venue_params])
+
+    params.update(venue_params)
+
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE venue'
+            fr'   SET {set_sql}'
+            fr' WHERE id in ({in_sql})',
+        **params,
+    ).execute()

@@ -53,6 +53,21 @@ async def browse_venue(params: VenueSearchParameters = Depends()) -> Response[Br
     )
 
 
+class BatchEditVenueInput(BaseModel):
+    venue_ids: Sequence[int]
+    is_published: bool
+
+
+@router.patch('/venue/batch')
+async def batch_edit_venue(data: BatchEditVenueInput, _=Depends(get_auth_token)) -> Response:
+    venue = await db.venue.read(venue_id=data.venue_ids[0], include_unpublished=True)
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id, include_unpublished=True)
+    if context.account.id != stadium.owner_id:
+        raise exc.NoPermission
+    await db.venue.batch_edit(venue_ids=data.venue_ids, is_published=data.is_published)
+    return Response()
+
+
 class ReadVenueOutput(do.Venue):
     sport_name: str
 
