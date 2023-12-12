@@ -221,8 +221,8 @@ async def browse_provider_venue(
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
             fr' ORDER BY {sort_by} {order}'
-            fr'{" LIMIT = %(limit)s" if limit else ""}'
-            fr'{" OFFSET = %(offset)s" if offset else ""}',
+            fr'{" LIMIT %(limit)s" if limit else ""}'
+            fr'{" OFFSET %(offset)s" if offset else ""}',
         **params, limit=limit, offset=offset,
     ).fetch_all()
 
