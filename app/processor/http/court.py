@@ -18,6 +18,33 @@ router = APIRouter(
 )
 
 
+class BatchEditCourtInput(BaseModel):
+    court_ids: Sequence[int]
+    is_published: bool | None
+
+
+@router.patch('/court/batch')
+async def batch_edit_court(data: BatchEditCourtInput, _=Depends(get_auth_token)) -> Response:
+    courts = await db.court.batch_read(court_ids=data.court_ids, include_unpublished=True)
+    venues = await db.venue.batch_read(
+        venue_ids=list(set(court.venue_id for court in courts)),
+        include_unpublished=True,
+    )
+    stadiums = await db.stadium.batch_read(
+        stadium_ids=list(set(venue.stadium_id for venue in venues)),
+        include_unpublished=True,
+    )
+    if not all(context.account.id == stadium.owner_id for stadium in stadiums):
+        raise exc.NoPermission
+
+    await db.court.batch_edit(
+        court_ids=data.court_ids,
+        is_published=data.is_published,
+    )
+
+    return Response()
+
+
 class BrowseReservationParameters(BaseModel):
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     start_date: date | None = None

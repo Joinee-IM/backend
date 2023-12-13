@@ -75,3 +75,41 @@ async def batch_add(venue_id: int, add: int, start_from: int):
             fr'     VALUES {value_sql}',
         venue_id=venue_id, is_published=True, **params,
     ).execute()
+
+
+async def batch_read(court_ids: Sequence[int], include_unpublished: bool = False) -> Sequence[do.Court]:
+    params = {fr'court_id_{i}': uuid for i, uuid in enumerate(court_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    results = await PostgresQueryExecutor(
+        sql=fr'SELECT id, venue_id, number, is_published'
+            fr'  FROM court'
+            fr' WHERE venue_id IN ({in_sql})'
+            fr'{" AND is_published = True" if not include_unpublished else ""}',
+        **params,
+    ).fetch_all()
+
+    return [
+        do.Court(
+            id=id_,
+            venue_id=venue_id,
+            number=number,
+            is_published=is_published,
+        )
+        for id_, venue_id, number, is_published in results
+    ]
+
+
+async def batch_edit(
+        court_ids: Sequence[int],
+        is_published: bool | None = None,
+) -> None:
+    params = {fr'court_id_{i}': uuid for i, uuid in enumerate(court_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE court'
+            fr'   SET is_published = %(is_published)s'
+            fr' WHERE id IN ({in_sql})',
+        is_published=is_published, **params,
+    ).execute()

@@ -243,3 +243,35 @@ async def batch_edit(
             fr' WHERE id in ({in_sql})',
         **params,
     ).execute()
+
+
+async def batch_read(venue_ids: Sequence[int], include_unpublished: bool = False) -> Sequence[do.Venue]:
+    params = {fr'venue_{i}': uuid for i, uuid in enumerate(venue_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    results = await PostgresQueryExecutor(
+        sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
+            fr'       is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,'
+            fr'       sport_equipments, facilities, COUNT(court.*) AS court_count, '
+            fr'       court_type, sport_id, venue.is_published'
+            fr'  FROM venue'
+            fr'  LEFT JOIN court ON court.venue_id = venue.id'
+            fr' WHERE venue.id IN ({in_sql})'
+            fr'{" AND venue.is_published" if not include_unpublished else ""}'
+            fr'{" AND court.is_published" if not include_unpublished else ""}'
+            fr' GROUP BY venue.id',
+        **params,
+    ).fetch_all()
+
+    return [
+        do.Venue(
+            id=id_, stadium_id=stadium_id, name=name, floor=floor, reservation_interval=reservation_interval,
+            is_reservable=is_reservable, is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type,
+            area=area, current_user_count=current_user_count, capacity=capacity, sport_equipments=sport_equipments,
+            facilities=facilities, court_count=court_count, court_type=court_type, sport_id=sport_id,
+            is_published=is_published,
+        )
+        for id_, stadium_id, name, floor, reservation_interval, is_reservable,
+        is_chargeable, fee_rate, fee_type, area, current_user_count, capacity,
+        sport_equipments, facilities, court_count, court_type, sport_id, is_published in results
+    ]
