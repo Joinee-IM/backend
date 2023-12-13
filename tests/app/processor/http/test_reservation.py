@@ -732,3 +732,83 @@ class TestRejectInvitation(AsyncTestCase):
         )
         mock_reject.assert_not_called()
         mock_context.reset_context()
+
+
+class TestBrowseReservationMembers(AsyncTestCase):
+    def setUp(self):
+        self.account_id = 1
+        self.request_time = datetime(2023, 11, 11)
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
+        self.wrong_context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
+        self.reservation_id = 1
+        self.reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=0,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.no_room_reservation = do.Reservation(
+            id=1,
+            stadium_id=1,
+            venue_id=1,
+            court_id=1,
+            start_time=datetime(2023, 11, 17, 11, 11, 11),
+            end_time=datetime(2023, 11, 17, 13, 11, 11),
+            member_count=1,
+            vacancy=-1,
+            technical_level=[enums.TechnicalType.advanced],
+            remark='remark',
+            invitation_code='invitation_code',
+            is_cancelled=False,
+        )
+        self.reservation_members = [
+            vo.ReservationMemberWithName(
+                reservation_id=1,
+                account_id=1,
+                is_manager=True,
+                source=enums.ReservationMemberSource.invitation_code,
+                status=enums.ReservationMemberStatus.invited,
+                nickname='nickname',
+            ),
+        ]
+        self.expect_result = Response(data=self.reservation_members)
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_browse_members: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+        mock_read.return_value = self.reservation
+        mock_browse_members.return_value = self.reservation_members
+
+        result = await reservation.browse_reservation_members(reservation_id=self.reservation_id)
+
+        self.assertEqual(result, self.expect_result)
+        mock_context.reset_context()
+
+    @patch('app.processor.http.reservation.context', new_callable=MockContext)
+    @patch('app.persistence.database.reservation.read', new_callable=AsyncMock)
+    @patch('app.persistence.database.reservation_member.browse_with_names', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_browse_members: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.wrong_context
+        mock_read.return_value = self.no_room_reservation
+        mock_browse_members.return_value = self.reservation_members
+
+        with self.assertRaises(exc.NoPermission):
+            await reservation.browse_reservation_members(reservation_id=self.reservation_id)
+
+        mock_context.reset_context()
