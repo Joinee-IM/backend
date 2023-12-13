@@ -11,6 +11,159 @@ from app.utils.security import AuthedAccount
 from tests import AsyncMock, AsyncTestCase, Mock, MockContext, patch
 
 
+class TestBatchEditCourt(AsyncTestCase):
+    def setUp(self):
+        self.account_id = 1
+        self.request_time = datetime(2023, 11, 11)
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
+        self.data = court.BatchEditCourtInput(
+            court_ids=[1, 2],
+            is_published=True,
+        )
+        self.courts = [
+            do.Court(
+                id=1,
+                venue_id=1,
+                number=1,
+                is_published=True,
+            ),
+            do.Court(
+                id=2,
+                venue_id=1,
+                number=2,
+                is_published=True,
+            ),
+        ]
+        self.venues = [
+            do.Venue(
+                id=1,
+                stadium_id=1,
+                name='name',
+                floor='floor',
+                reservation_interval=1,
+                is_reservable=True,
+                area=1,
+                capacity=1,
+                current_user_count=1,
+                court_count=1,
+                court_type='場',
+                is_chargeable=True,
+                sport_id=1,
+                fee_rate=1,
+                fee_type=enums.FeeType.per_hour,
+                sport_equipments='equipment',
+                facilities='facility',
+                is_published=True,
+            ),
+            do.Venue(
+                id=2,
+                stadium_id=2,
+                name='name2',
+                floor='floor2',
+                reservation_interval=2,
+                is_reservable=False,
+                area=2,
+                capacity=2,
+                current_user_count=2,
+                court_count=2,
+                court_type='場',
+                is_chargeable=False,
+                sport_id=2,
+                fee_rate=2,
+                fee_type=enums.FeeType.per_person,
+                sport_equipments='equipment1',
+                facilities='facility1',
+                is_published=True,
+            ),
+        ]
+        self.stadiums = [
+            do.Stadium(
+                id=1,
+                name='name',
+                district_id=1,
+                owner_id=1,
+                address='address',
+                contact_number='contact num',
+                description='desc',
+                long=3.14,
+                lat=1.59,
+                is_published=True,
+            ),
+        ]
+        self.no_permission_stadiums = [
+            do.Stadium(
+                id=1,
+                name='name',
+                district_id=1,
+                owner_id=1,
+                address='address',
+                contact_number='contact num',
+                description='desc',
+                long=3.14,
+                lat=1.59,
+                is_published=True,
+            ),
+            do.Stadium(
+                id=1,
+                name='name',
+                district_id=1,
+                owner_id=2,  # different owner id
+                address='address',
+                contact_number='contact num',
+                description='desc',
+                long=3.14,
+                lat=1.59,
+                is_published=True,
+            ),
+        ]
+        self.expect_result = Response()
+
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.batch_edit', new_callable=AsyncMock)
+    async def test_happy_path(
+        self, mock_batch_edit: AsyncMock, mock_batch_read_stadium: AsyncMock,
+        mock_batch_read_venue: AsyncMock, mock_batch_read_court: AsyncMock,
+        mock_context: MockContext,
+    ):
+        mock_context._context = self.context
+
+        mock_batch_read_court.return_value = self.courts
+        mock_batch_read_venue.return_value = self.venues
+        mock_batch_read_stadium.return_value = self.stadiums
+
+        result = await court.batch_edit_court(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+        mock_batch_edit.assert_called()
+        mock_context.reset_context()
+
+    @patch('app.processor.http.court.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
+    async def test_no_permission(
+        self, mock_batch_read_stadium: AsyncMock,
+        mock_batch_read_venue: AsyncMock, mock_batch_read_court: AsyncMock,
+        mock_context: MockContext,
+    ):
+        mock_context._context = self.context
+
+        mock_batch_read_court.return_value = self.courts
+        mock_batch_read_venue.return_value = self.venues
+        mock_batch_read_stadium.return_value = self.no_permission_stadiums
+
+        with self.assertRaises(exc.NoPermission):
+            await court.batch_edit_court(data=self.data)
+
+        mock_context.reset_context()
+
+
 class TestBrowseReservationByCourtId(AsyncTestCase):
     def setUp(self) -> None:
         self.court_id = 1
