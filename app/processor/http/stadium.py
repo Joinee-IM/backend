@@ -53,6 +53,25 @@ async def browse_stadium(params: StadiumSearchParameters) -> Response[BrowseStad
     )
 
 
+class BatchEditStadiumInput(BaseModel):
+    stadium_ids: Sequence[int]
+    is_published: bool | None = None
+
+
+@router.patch('/stadium/batch')
+async def batch_edit_stadium(data: BatchEditStadiumInput, _=Depends(get_auth_token)) -> Response:
+    stadiums = await db.stadium.batch_read(stadium_ids=data.stadium_ids, include_unpublished=True)
+    if not all(stadium.owner_id == context.account.id for stadium in stadiums):
+        raise exc.NoPermission
+
+    await db.stadium.batch_edit(
+        stadium_ids=data.stadium_ids,
+        is_published=data.is_published,
+    )
+
+    return Response()
+
+
 @router.get('/stadium/{stadium_id}')
 async def read_stadium(stadium_id: int, _=Depends(get_auth_token)) -> Response[vo.ViewStadium]:
     include_unpublished = context.account.role is enums.RoleType.provider

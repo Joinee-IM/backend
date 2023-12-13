@@ -263,3 +263,89 @@ async def add(
         description=description, long=long, lat=lat, is_published=True,
     ).fetch_one()
     return id_
+
+
+async def batch_read(stadium_ids: Sequence[int], include_unpublished: bool = False) -> Sequence[do.Stadium]:
+    params = {fr'stadium_{i}': uuid for i, uuid in enumerate(stadium_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    results = await PostgresQueryExecutor(
+        sql=fr'SELECT stadium.id, stadium.name, district_id, contact_number, owner_id, address,'
+            fr'       description, long, lat, stadium.is_published,'
+            fr'       city.name,'
+            fr'       district.name,'
+            fr'       ARRAY_AGG(DISTINCT sport.name),'
+            fr'       ARRAY_AGG(DISTINCT business_hour.*)'
+            fr'  FROM stadium'
+            fr' INNER JOIN district ON stadium.district_id = district.id'
+            fr' INNER JOIN city ON district.city_id = city.id'
+            fr'  LEFT JOIN venue ON stadium.id = venue.stadium_id'
+            fr'  LEFT JOIN sport ON venue.sport_id = sport.id'
+            fr'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
+            fr'                         AND business_hour.type = %(place_type)s'
+            fr' WHERE stadium.id IN ({in_sql})'
+            fr'{" AND stadium.is_published = True" if not include_unpublished else ""}'
+            fr' GROUP BY stadium.id, city.id, district.id'
+            fr' ORDER BY stadium.id',
+        place_type=enums.PlaceType.stadium, **params,
+    ).fetch_all()
+
+    return [
+        vo.ViewStadium(
+            id=id_,
+            name=name,
+            district_id=district_id,
+            contact_number=contact_number,
+            description=description,
+            owner_id=owner_id,
+            address=address,
+            long=long,
+            lat=lat,
+            is_published=is_published,
+            city=city,
+            district=district,
+            sports=[name for name in sport_names if name],
+            business_hours=[
+                do.BusinessHour(
+                    id=bid,
+                    place_id=place_id,
+                    type=place_type,
+                    weekday=weekday,
+                    start_time=start_time,
+                    end_time=end_time,
+                ) for bid, place_id, place_type, weekday, start_time, end_time in business_hours
+            ],
+        )
+        for id_, name, district_id, contact_number, owner_id, address, description, long, lat, is_published, city,
+        district, sport_names, business_hours in results
+    ]
+
+
+async def batch_edit(
+        stadium_ids: Sequence[int],
+        name: str | None = None,
+        address: str | None = None,
+        contact_number: str | None = None,
+        is_published: bool | None = None,
+):
+    criteria_dict = {
+        'name': (name, 'name = %(name)s'),
+        'address': (address, 'address = %(address)s'),
+        'contact_number': (contact_number, 'contact_number = %(contact_number)s'),
+        'is_published': (is_published, 'is_published = %(is_published)s'),
+    }
+
+    query, params = generate_query_parameters(criteria_dict=criteria_dict)
+    set_sql = ', '.join(query)
+
+    stadium_params = {fr'stadium_{i}': uuid for i, uuid in enumerate(stadium_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in stadium_params])
+
+    params.update(stadium_params)
+
+    await PostgresQueryExecutor(
+        sql=fr'UPDATE stadium'
+            fr'   SET {set_sql}'
+            fr' WHERE id IN ({in_sql})',
+        **params,
+    ).execute()

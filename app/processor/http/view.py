@@ -72,15 +72,15 @@ class ViewProviderStadiumParams(BaseModel):
     is_published: bool | None = Query(default=None)
     sort_by: enums.ViewProviderStadiumSortBy = Query(default=enums.ViewProviderStadiumSortBy.district_name)
     order: enums.Sorter = Query(default=enums.Sorter.asc)
-    limit: int = Query(default=None)
-    offset: int = Query(default=None)
+    limit: int | None = Query(default=None)
+    offset: int | None = Query(default=None)
 
 
 class ViewProviderStadiumOutput(BaseModel):
     data: Sequence[vo.ViewProviderStadium]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None
+    offset: int | None
 
 
 @router.get('/view/stadium/provider')
