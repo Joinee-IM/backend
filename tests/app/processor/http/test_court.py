@@ -296,7 +296,7 @@ class TestBrowseReservationByCourtId(AsyncTestCase):
     @patch('app.persistence.database.court.read', new_callable=AsyncMock)
     @patch('app.persistence.database.business_hour.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
-    async def test_query_with_start_date(
+    async def test_query_with_no_params(
             self,
             mock_browse_reservation: AsyncMock,
             mock_browse_business_hour: AsyncMock,
