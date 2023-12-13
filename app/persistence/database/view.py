@@ -161,7 +161,7 @@ async def browse_provider_stadium(
 
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
-            fr' ORDER BY {sort_by} {order}'
+            fr' ORDER BY {sort_by} {order}, stadium.id'
             fr'{" LIMIT %(limit)s" if limit else ""}'
             fr'{" OFFSET %(offset)s" if offset else ""}',
         **params, limit=limit, offset=offset,
@@ -220,7 +220,7 @@ async def browse_provider_venue(
 
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
-            fr' ORDER BY {sort_by} {order}'
+            fr' ORDER BY {sort_by} {order}, stadium.id, venue.id'
             fr'{" LIMIT %(limit)s" if limit else ""}'
             fr'{" OFFSET %(offset)s" if offset else ""}',
         **params, limit=limit, offset=offset,
@@ -279,7 +279,7 @@ async def browse_provider_court(
 
     results = await PostgresQueryExecutor(
         sql=fr'{sql}'
-            fr' ORDER BY {sort_by} {order}'
+            fr' ORDER BY {sort_by} {order}, stadium.id, venue.id, court.id'
             fr'{" LIMIT %(limit)s" if limit else ""}'
             fr'{" OFFSET %(offset)s" if offset else ""}',
         **params, limit=limit, offset=offset,
