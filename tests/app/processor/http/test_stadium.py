@@ -105,6 +105,77 @@ class TestBrowseStadium(AsyncTestCase):
         )
 
 
+class TestBatchEditStadium(AsyncTestCase):
+    def setUp(self):
+        self.account_id = 1
+        self.request_time = datetime(2023, 11, 11)
+        self.context = {
+            'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=enums.RoleType.normal),
+            'REQUEST_TIME': self.request_time,
+        }
+        self.data = stadium.BatchEditStadiumInput(
+            stadium_ids=[1, 2],
+            is_published=True,
+        )
+        self.stadiums = [
+            do.Stadium(
+                id=1,
+                name='name',
+                district_id=1,
+                owner_id=1,
+                address='address',
+                contact_number='contact num',
+                description='desc',
+                long=3.14,
+                lat=1.59,
+                is_published=True,
+            ),
+        ]
+        self.no_permission_stadiums = [
+            do.Stadium(
+                id=1,
+                name='name',
+                district_id=1,
+                owner_id=2,
+                address='address',
+                contact_number='contact num',
+                description='desc',
+                long=3.14,
+                lat=1.59,
+                is_published=True,
+            ),
+        ]
+        self.expect_result = Response()
+
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.batch_edit', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_batch_edit: AsyncMock, mock_batch_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+
+        mock_batch_read.return_value = self.stadiums
+
+        result = await stadium.batch_edit_stadium(data=self.data)
+
+        self.assertEqual(result, self.expect_result)
+        mock_batch_edit.assert_called()
+        mock_context.reset_context()
+
+    @patch('app.processor.http.stadium.context', new_callable=MockContext)
+    @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.stadium.batch_edit', new_callable=AsyncMock)
+    async def test_no_permission(self, mock_batch_edit: AsyncMock, mock_batch_read: AsyncMock, mock_context: MockContext):
+        mock_context._context = self.context
+
+        mock_batch_read.return_value = self.no_permission_stadiums
+
+        with self.assertRaises(exc.NoPermission):
+            await stadium.batch_edit_stadium(data=self.data)
+
+        mock_batch_edit.assert_not_called()
+        mock_context.reset_context()
+
+
 class TestReadStadium(AsyncTestCase):
     def setUp(self) -> None:
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
