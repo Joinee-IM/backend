@@ -60,9 +60,12 @@ class BatchEditVenueInput(BaseModel):
 
 @router.patch('/venue/batch')
 async def batch_edit_venue(data: BatchEditVenueInput, _=Depends(get_auth_token)) -> Response:
-    venue = await db.venue.read(venue_id=data.venue_ids[0], include_unpublished=True)
-    stadium = await db.stadium.read(stadium_id=venue.stadium_id, include_unpublished=True)
-    if context.account.id != stadium.owner_id:
+    venues = await db.venue.batch_read(venue_ids=data.venue_ids, include_unpublished=True)
+    stadiums = await db.stadium.batch_read(
+        stadium_ids=list(set(venue.stadium_id for venue in venues)),
+        include_unpublished=True,
+    )
+    if not all(context.account.id == stadium.owner_id for stadium in stadiums):
         raise exc.NoPermission
     await db.venue.batch_edit(venue_ids=data.venue_ids, is_published=data.is_published)
     return Response()
