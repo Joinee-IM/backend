@@ -61,8 +61,6 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
     """
     這隻 func 如果給了 start_date 會直接 return start_date ~ start_date + 7 的資料，
     要透過 time range 搜尋的話要給 start_date = null
-
-    time format 要給 naive datetime, e.g. `2023-11-11T11:11:11`
     """
     court = await db.court.read(court_id=court_id)
     business_hours = await db.business_hour.browse(
