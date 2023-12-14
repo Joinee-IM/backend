@@ -47,7 +47,7 @@ async def browse_album(params: BrowseAlbumInput = Depends()) -> Response[Sequenc
     )
 
 
-@router.post('/album')
+@router.post('/album/batch')
 async def batch_add_album(
     place_type: enums.PlaceType, place_id: int,
     files: Sequence[UploadFile] = File(...),
@@ -90,6 +90,47 @@ async def batch_add_album(
             )
             for uuid in uuids
         ],
+    )
+
+
+@router.post('/album')
+async def add_album(
+    place_type: enums.PlaceType, place_id: int,
+    file: UploadFile = File(...),
+    _=Depends(get_auth_token),
+) -> Response[BrowseAlbumOutput]:
+    stadium_id = (await db.venue.read(venue_id=place_id, include_unpublished=True)).stadium_id \
+        if place_type is enums.PlaceType else place_id
+
+    stadium = await db.stadium.read(stadium_id=stadium_id, include_unpublished=True)
+    if stadium.owner_id != context.account.id:
+        raise exc.NoPermission
+
+    if file.content_type not in ALLOWED_MEDIA_TYPE:
+        log.logger.info(f'received content_type {file.content_type}, denied.')
+        raise exc.IllegalInput
+    uuid = await gcs_handler.upload(file=file.file, content_type=file.content_type, bucket_name=BUCKET_NAME)
+
+    await db.gcs_file.add_with_do(
+        do.GCSFile(
+            uuid=uuid,
+            key=str(uuid),
+            bucket=BUCKET_NAME,
+            filename=str(uuid),
+        ),
+    )
+
+    await db.album.batch_add(
+        place_type=place_type,
+        place_id=place_id,
+        uuids=[uuid],
+    )
+
+    return Response(
+        data=BrowseAlbumOutput(
+            file_uuid=uuid,
+            url=await gcs_handler.sign_url(filename=str(uuid)),
+        ),
     )
 
 
