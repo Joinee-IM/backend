@@ -56,7 +56,8 @@ class BrowseReservationOutput(BaseModel):
 
 
 @router.post('/court/{court_id}/reservation/browse')
-async def browse_reservation_by_court_id(court_id: int, params: BrowseReservationParameters) -> Response:
+async def browse_reservation_by_court_id(court_id: int, params: BrowseReservationParameters) \
+        -> Response[BrowseReservationOutput]:
     """
     這隻 func 如果給了 start_date 會直接 return start_date ~ start_date + 7 的資料，
     要透過 time range 搜尋的話要給 start_date = null
