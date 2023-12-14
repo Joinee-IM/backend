@@ -233,6 +233,32 @@ class TestReadVenue(AsyncTestCase):
 class TestBrowseCourt(AsyncTestCase):
     def setUp(self) -> None:
         self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=enums.RoleType.provider)}
+        self.params = venue.BrowseCourtByVenueIdParams(
+            time_ranges=[
+                vo.DateTimeRange(
+                    start_time=datetime(2023, 11, 17, 11, 11, 11),
+                    end_time=datetime(2023, 11, 17, 12, 11, 11),
+                ),
+            ],
+        )
+        self.no_time_range_params = venue.BrowseCourtByVenueIdParams()
+        self.reservations1 = []
+        self.reservations2 = [
+            do.Reservation(
+                id=1,
+                stadium_id=1,
+                venue_id=1,
+                court_id=1,
+                start_time=datetime(2023, 11, 17, 11, 11, 11),
+                end_time=datetime(2023, 11, 17, 13, 11, 11),
+                member_count=1,
+                vacancy=0,
+                technical_level=[enums.TechnicalType.advanced],
+                remark='remark',
+                invitation_code='invitation_code',
+                is_cancelled=False,
+            ),
+        ]
         self.venue_id = 1
         self.courts = [
             do.Court(
@@ -248,19 +274,59 @@ class TestBrowseCourt(AsyncTestCase):
                 is_published=True,
             ),
         ]
+        self.expect_courts = [
+            do.Court(
+                id=1,
+                venue_id=1,
+                number=1,
+                is_published=True,
+            ),
+        ]
         self.expect_result = Response(
+            data=self.expect_courts,
+        )
+        self.no_time_range_expect_result = Response(
             data=self.courts,
         )
 
     @patch('app.processor.http.venue.context', new_callable=MockContext)
     @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_browse: AsyncMock, mock_context: MockContext):
+    @patch('app.persistence.database.reservation.browse', new_callable=AsyncMock)
+    async def test_happy_path(
+        self, mock_browse_reservation: AsyncMock,
+        mock_browse: AsyncMock, mock_context: MockContext,
+    ):
+        mock_browse.return_value = self.courts
+        mock_context._context = self.context
+        mock_browse_reservation.side_effect = [
+            (self.reservations1, None),
+            (self.reservations2, None),
+        ]
+
+        result = await venue.browse_court_by_venue_id(
+            venue_id=self.venue_id,
+            params=self.params,
+        )
+
+        self.assertEqual(result, self.expect_result)
+        mock_browse.assert_called_with(
+            venue_id=self.venue_id,
+            include_unpublished=True,
+        )
+        mock_context.reset_context()
+
+    @patch('app.processor.http.venue.context', new_callable=MockContext)
+    @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
+    async def test_no_time_range(self, mock_browse: AsyncMock, mock_context: MockContext):
         mock_browse.return_value = self.courts
         mock_context._context = self.context
 
-        result = await venue.browse_court_by_venue_id(venue_id=self.venue_id)
+        result = await venue.browse_court_by_venue_id(
+            venue_id=self.venue_id,
+            params=self.no_time_range_params,
+        )
 
-        self.assertEqual(result, self.expect_result)
+        self.assertEqual(result, self.no_time_range_expect_result)
         mock_browse.assert_called_with(
             venue_id=self.venue_id,
             include_unpublished=True,

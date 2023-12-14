@@ -87,12 +87,11 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
         )
 
     available_date = None
-    is_available = True
-
     for time_range in params.time_ranges:
+        is_available = True
         for reservation in reservations:
             if reservation.start_time <= time_range.start_time \
-                    and reservation.end_time >= time_range.end_time\
+                    and reservation.end_time >= time_range.end_time \
                     and not reservation.vacancy:
                 is_available = False
         if is_available:

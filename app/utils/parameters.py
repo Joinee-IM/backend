@@ -5,7 +5,7 @@ import pydantic
 from fastapi import Query
 
 
-def convert_datetime(value):
+def convert_datetime(value: datetime.datetime):
     converted = value
     # converted = pydantic.datetime_parse.parse_datetime(value)
 
