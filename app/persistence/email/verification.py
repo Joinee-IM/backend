@@ -5,7 +5,7 @@ from app.config import service_config, smtp_config
 from app.persistence.email import smtp_handler
 
 
-async def send(to: str, code: str, subject='Joinee Email Verification'):
+async def send(to: str, code: str, subject='Jöinee 帳號驗證'):
     message = MIMEMultipart()
     message['From'] = f'{smtp_config.username}@{smtp_config.host}'
     message['To'] = to
@@ -13,10 +13,10 @@ async def send(to: str, code: str, subject='Joinee Email Verification'):
     body = f"""
                 <html>
                     <body>
-                        <p style="color: black;">Hello, {to}</p>
-                        <p style="color: black;">Thanks for registering for our application.</p>
-                        <p style="color: black;">Please click on the following link to verify!</p>
-                        <a href="{service_config.url}/auth/signup/success?code={code}">Click here to verify</a>
+                        <p style="color: black;">您好，{to}</p>
+                        <p style="color: black;">感謝您註冊我們的應用程式！</p>
+                        <p style="color: black;">請點擊以下連結進行驗證。</p>
+                        <a href="{service_config.url}/auth/signup/success?code={code}">點擊這裡進行驗證</a>
                     </body>
                 </html>
             """
