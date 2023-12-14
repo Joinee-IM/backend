@@ -9,9 +9,10 @@ import app.log as log
 import app.persistence.database as db
 import app.persistence.file_storage as fs
 from app.base import do, enums
+from app.const import ALLOWED_MEDIA_TYPE
 from app.middleware.headers import get_auth_token
 from app.persistence.file_storage.gcs import gcs_handler
-from app.utils import Response, context, security
+from app.utils import Response, context, security, update_cookie
 
 router = APIRouter(
     tags=['Account'],
@@ -30,20 +31,23 @@ async def read_account(account_id: int) -> Response[ReadAccountOutput]:
         raise exc.NoPermission
 
     account = await db.account.read(account_id=account_id)
-    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid))
-    return Response(data=ReadAccountOutput(
-        **account.model_dump(),
-        image_url=image_url,
-    ))
+    image_url = await gcs_handler.sign_url(filename=str(account.image_uuid)) if account.image_uuid else None
+    return Response(
+        data=ReadAccountOutput(
+            **account.model_dump(),
+            image_url=image_url,
+        ),
+    )
 
 
 class EditAccountInput(BaseModel):
     nickname: str | None = None
     gender: enums.GenderType | None = None
+    role: enums.RoleType | None = None
 
 
 @router.patch('/account/{account_id}')
-async def edit_account(account_id: int, data: EditAccountInput) -> Response[bool]:
+async def edit_account(account_id: int, data: EditAccountInput, response: responses.Response) -> Response[bool]:
     if account_id != context.account.id:
         raise exc.NoPermission
 
@@ -51,7 +55,10 @@ async def edit_account(account_id: int, data: EditAccountInput) -> Response[bool
         account_id=account_id,
         nickname=data.nickname,
         gender=data.gender,
+        role=data.role,
     )
+    token = security.encode_jwt(account_id=account_id, role=data.role)
+    _ = update_cookie(response=response, account_id=account_id, token=token, role=data.role)
     return Response(data=True)
 
 
@@ -60,8 +67,8 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     if context.account.id != account_id:
         raise exc.NoPermission
 
-    if image.content_type not in ['image/jpeg', 'image/png']:
-        log.info(f'received content_type {image.content_type}, denied.')
+    if image.content_type not in ALLOWED_MEDIA_TYPE:
+        log.logger.info(f'received content_type {image.content_type}, denied.')
         raise exc.IllegalInput
 
     file_uuid = uuid4()
@@ -72,9 +79,13 @@ async def upload_account_image(account_id: int, image: UploadFile) -> Response[b
     return Response(data=True)
 
 
-@router.get('/account/search')
-async def search_account(query: str) -> Response[Sequence[do.Account]]:
-    accounts = await db.account.search(query=query)
+class SearchAccountInput(BaseModel):
+    query: str
+
+
+@router.post('/account/search')
+async def search_account(data: SearchAccountInput) -> Response[Sequence[do.Account]]:
+    accounts = await db.account.search(query=data.query)
     return Response(data=accounts)
 
 

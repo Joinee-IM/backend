@@ -23,9 +23,9 @@ class TestBrowse(AsyncTestCase):
         ]
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
-    @patch('app.persistence.database.util.PostgresQueryExecutor.execute', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_execute: AsyncMock, mock_init: Mock):
-        mock_execute.return_value = self.raw_city
+    @patch('app.persistence.database.util.PostgresQueryExecutor.fetch_all', new_callable=AsyncMock)
+    async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
+        mock_fetch.return_value = self.raw_city
 
         result = await city.browse()
 
@@ -33,5 +33,4 @@ class TestBrowse(AsyncTestCase):
         mock_init.assert_called_with(
             sql=r'SELECT city.id, city.name'
                 r'  FROM city',
-            fetch='all',
         )

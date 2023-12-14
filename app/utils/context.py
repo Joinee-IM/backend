@@ -1,5 +1,4 @@
 from datetime import datetime
-from typing import Optional
 from uuid import UUID
 
 import starlette_context
@@ -13,8 +12,8 @@ class Context(metaclass=mcs.Singleton):
     _context = starlette_context.context
 
     CONTEXT_AUTHED_ACCOUNT_KEY = 'AUTHED_ACCOUNT'
-    REQUEST_UUID = 'REQUEST_UUID'
-    REQUEST_TIME = 'REQUEST_TIME'
+    REQUEST_UUID_KEY = 'REQUEST_UUID'
+    REQUEST_TIME_KEY = 'REQUEST_TIME'
 
     @property
     def account(self) -> AuthedAccount:
@@ -31,23 +30,23 @@ class Context(metaclass=mcs.Singleton):
 
     @property
     def request_uuid(self) -> UUID:
-        return self._context[self.REQUEST_UUID]
+        return self._context[self.REQUEST_UUID_KEY]
 
     def set_request_uuid(self, request_uuid: UUID) -> None:
-        self._context[self.REQUEST_UUID] = request_uuid
+        self._context[self.REQUEST_UUID_KEY] = request_uuid
 
-    def get_request_uuid(self) -> Optional[UUID]:
-        return self._context.get(self.REQUEST_UUID) if self._context.exists() else None
+    def get_request_uuid(self) -> UUID | None:
+        return self._context.get(self.REQUEST_UUID_KEY) if self._context.exists() else None
 
     @property
     def request_time(self) -> datetime:
-        return self._context[self.REQUEST_TIME]
+        return self._context[self.REQUEST_TIME_KEY]
 
     def set_request_time(self, request_time: datetime) -> None:
-        self._context[self.REQUEST_TIME] = request_time
+        self._context[self.REQUEST_TIME_KEY] = request_time
 
-    def get_request_time(self) -> Optional[datetime]:
-        return self._context.get(self.REQUEST_TIME) if self._context.exists() else None
+    def get_request_time(self) -> datetime | None:
+        return self._context.get(self.REQUEST_TIME_KEY) if self._context.exists() else None
 
 
 context = Context()

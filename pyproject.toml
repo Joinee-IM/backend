@@ -2,7 +2,7 @@
 name = "Joinee"
 version = "0.1.0"
 description = ""
-authors = ["wsa"]
+authors = ["wsa-2002"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
@@ -27,7 +27,9 @@ Authlib = "^1.2.1"
 httpx = "^0.25.1"
 starlette-session = "^0.4.3"
 google-api-python-client = "^2.108.0"
-requests = "2.30.0"  # need to fix version, since 2.31.0 will fail while uploading image to gcs
+requests = "2.31.0"
+google-cloud-logging = "^3.8.0"
+googlemaps = "^4.10.0"
 
 [tool.poetry.group.dev.dependencies]
 responses = "^0.23.3"

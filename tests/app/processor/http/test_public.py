@@ -13,7 +13,7 @@ from tests import AsyncMock, AsyncTestCase, Mock
 
 class TestDefaultPage(AsyncTestCase):
     def setUp(self) -> None:
-        self.expect_result = '<a href="/docs">/docs</a>'
+        self.expect_result = '<a href="/api/docs">/api/docs</a>'
 
     async def test_happy_path(self):
         result = await public.default_page()
@@ -42,6 +42,7 @@ class TestLogin(AsyncTestCase):
         self.expect_output = public.LoginOutput(
             account_id=self.account_id,
             token='token',
+            role=self.role,
         )
 
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
@@ -60,6 +61,7 @@ class TestLogin(AsyncTestCase):
         )
         mock_encode.assert_called_with(
             account_id=self.account_id,
+            role=self.role,
         )
 
         self.assertEqual(result, Response(data=self.expect_output))
@@ -97,6 +99,13 @@ class TestLogin(AsyncTestCase):
 
         mock_read.assert_called_with(email=self.login_input.email)
         mock_verify.assert_not_called()
+
+
+class TestLogout(AsyncTestCase):
+    async def test_happy_path(self):
+        response = FastAPIResponse()
+        await public.logout(response=response)
+        self.assertEqual(len(response.raw_headers), 3)
 
 
 class TestEmailVerification(AsyncTestCase):
@@ -197,7 +206,7 @@ class TestResendEmailVerification(AsyncTestCase):
         result = await public.resend_email_verification(data=self.data)
 
         self.assertEqual(result, self.expect_output)
-        mock_read_by_email.assert_called_with(email=self.email)
+        mock_read_by_email.assert_called_with(email=self.email, include_unverified=True)
         mock_read_verification.assert_called_with(account_id=self.account_id, email=self.email)
         mock_send.assert_called_with(to=self.email, code=str(self.code))
 

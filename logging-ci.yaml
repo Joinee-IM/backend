@@ -1,0 +1,19 @@
+version: 1
+loggers:
+  fastapi:
+    handlers: [ console ]
+    level: INFO
+formatters:
+  human:
+    format: '[%(asctime)s][%(levelname)s] %(name)s %(filename)s:%(funcName)s:%(lineno)d | %(message)s'
+    datefmt: '%Y-%m-%dT%H:%M:%S%z'
+handlers:
+  console:
+    class: logging.StreamHandler
+    formatter: human
+    level: DEBUG
+    stream: ext://sys.stdout
+root:
+  level: DEBUG
+  handlers:
+    - console

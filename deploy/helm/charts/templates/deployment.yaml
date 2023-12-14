@@ -39,6 +39,8 @@ spec:
           env:
             - name: GOOGLE_APPLICATION_CREDENTIALS
               value: /app/config/gcp-service-account.json
+            - name: ENV
+              value: prd
           ports:
             - name: http
               containerPort: {{ .Values.service.port }}

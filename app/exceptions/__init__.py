@@ -1,75 +1,64 @@
-class AckException(Exception):
-    """
-    Base exception class, represents that the error is acked by the server.
-    """
-    status_code: int = 400
+import traceback
+
+from fastapi import FastAPI, Request
+from fastapi.exceptions import RequestValidationError
+from fastapi.responses import JSONResponse
+
+import app.const as const
+
+from .ack_exception import (
+    AckException,
+    CourtReserved,
+    CourtUnreservable,
+    EmailExists,
+    IllegalInput,
+    LoginExpired,
+    LoginFailed,
+    NoPermission,
+    NotFound,
+    ReservationFull,
+    UniqueViolationError,
+    VenueUnreservable,
+    WrongPassword,
+)
 
 
-class NotFound(AckException):
-    """
-    Not found
-    """
-    status_code = 404
+def register_exception_handlers(app: FastAPI):
+    import app.log as log
 
+    @app.exception_handler(LoginFailed)
+    @app.exception_handler(LoginExpired)
+    def login_failed_exception_handler(_: Request, exc_: LoginFailed | LoginExpired):
+        response = JSONResponse(
+            status_code=exc_.status_code,
+            content={'data': None, 'error': exc_.__class__.__name__},
+        )
+        response.delete_cookie(const.COOKIE_ACCOUNT_KEY)
+        response.delete_cookie(const.COOKIE_TOKEN_KEY)
+        return response
 
-class UniqueViolationError(AckException):
-    """
-    Unique Violation Error
-    """
-    status_code = 409
+    @app.exception_handler(AckException)
+    def exception_handler(_: Request, exc_: AckException):
+        log.logger.info(exc_)
+        return JSONResponse(
+            status_code=exc_.status_code,
+            content={'data': None, 'error': exc_.__class__.__name__},
+        )
 
+    @app.exception_handler(Exception)
+    def general_exception_handler(_: Request, exc_: Exception):
+        log.logger.error(exc_)
+        traceback_str = traceback.format_exc()
+        log.logger.error(f'Traceback:\n{traceback_str}')
+        return JSONResponse(
+            status_code=500,
+            content={'data': None, 'error': exc_.__class__.__name__},
+        )
 
-class LoginExpired(AckException):
-    """
-    Login token expired
-    """
-    status_code = 401
-
-
-class LoginFailed(AckException):
-    """
-    Login failed
-    """
-    status_code = 401
-
-
-class NoPermission(AckException):
-    """
-    No access to resource
-    """
-    status_code = 403
-
-
-class EmailExists(AckException):
-    """
-    duplicate email
-    """
-    status_code = 200
-
-
-class IllegalInput(AckException):
-    """
-    Input is not legal
-    """
-    status_code = 422
-
-
-class CourtReserved(AckException):
-    """
-    Court is already reserved
-    """
-    status_code = 200
-
-
-class ReservationFull(AckException):
-    """
-    Reservation's vacancy <= 0
-    """
-    status_code = 200
-
-
-class WrongPassword(AckException):
-    """
-    old password is wrong while editing password
-    """
-    status_code = 400
+    @app.exception_handler(RequestValidationError)
+    def validation_exception_handler(_: Request, exc_: RequestValidationError):
+        log.logger.info(exc_)
+        return JSONResponse(
+            status_code=422,
+            content={'data': None, 'error': 'IllegalInput'},
+        )

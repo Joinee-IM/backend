@@ -8,8 +8,7 @@ async def browse() -> Sequence[do.City]:
     results = await PostgresQueryExecutor(
         sql=r'SELECT city.id, city.name'
             r'  FROM city',
-        fetch='all',
-    ).execute()
+    ).fetch_all()
 
     return [
         do.City(

@@ -3,7 +3,7 @@ data objects
 """
 
 from datetime import datetime, time
-from typing import Optional, Sequence
+from typing import Sequence
 from uuid import UUID
 
 from pydantic import BaseModel, EmailStr
@@ -15,8 +15,8 @@ class Account(BaseModel):
     id: int
     email: EmailStr
     nickname: str
-    gender: enums.GenderType
-    image_uuid: Optional[UUID]
+    gender: enums.GenderType | None
+    image_uuid: UUID | None
     role: enums.RoleType
     is_verified: bool
     is_google_login: bool
@@ -33,10 +33,13 @@ class Stadium(BaseModel):
     id: int
     name: str
     district_id: int
-    contact_number: Optional[str]
-    description: Optional[str]
+    owner_id: int
+    address: str
+    contact_number: str | None
+    description: str | None
     long: float
     lat: float
+    is_published: bool
 
 
 class City(BaseModel):
@@ -49,19 +52,20 @@ class Venue(BaseModel):
     stadium_id: int
     name: str
     floor: str
-    reservation_interval: Optional[int]
+    reservation_interval: int | None
     is_reservable: bool
     is_chargeable: bool
-    fee_rate: Optional[float]
-    fee_type: Optional[enums.FeeType]
+    fee_rate: float | None
+    fee_type: enums.FeeType | None
     area: int
     current_user_count: int
-    capability: int
-    sport_equipments: Optional[str]
-    facilities: Optional[str]
+    capacity: int
+    sport_equipments: str | None
+    facilities: str | None
     court_count: int
     court_type: str
     sport_id: int
+    is_published: bool
 
 
 class District(BaseModel):
@@ -101,19 +105,22 @@ class Reservation(BaseModel):
     member_count: int
     vacancy: int
     technical_level: Sequence[enums.TechnicalType]
-    remark: Optional[str]
+    remark: str | None
     invitation_code: str
     is_cancelled: bool
-    google_event_id: Optional[str] = None
+    google_event_id: str | None = None
 
 
 class Court(BaseModel):
     id: int
     venue_id: int
+    number: int
+    is_published: bool
 
 
 class ReservationMember(BaseModel):
     reservation_id: int
     account_id: int
-    is_joined: bool
     is_manager: bool
+    status: enums.ReservationMemberStatus
+    source: enums.ReservationMemberSource

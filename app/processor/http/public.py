@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 from uuid import UUID
 
 from fastapi import APIRouter
@@ -7,23 +6,24 @@ from fastapi import Response as FastAPIResponse
 from fastapi import responses
 from pydantic import BaseModel, EmailStr
 
+import app.const as const
 import app.exceptions as exc
 import app.persistence.database as db
 import app.persistence.email as email
 from app.base.enums import GenderType, RoleType
-from app.utils import Response
+from app.utils import Response, update_cookie
 from app.utils.security import encode_jwt, hash_password, verify_password
 
 router = APIRouter(tags=['Public'])
 
 
-@router.get('/', status_code=200, response_class=responses.HTMLResponse)
+@router.get('/', status_code=200, response_class=responses.HTMLResponse, include_in_schema=False)
 async def default_page():
-    return '<a href="/docs">/docs</a>'
+    return '<a href="/api/docs">/api/docs</a>'
 
 
 class HealthCheckOutput(BaseModel):
-    health: Optional[str] = 'ok'
+    health: str | None = 'ok'
 
 
 @router.get('/health')
@@ -40,6 +40,7 @@ class LoginInput(BaseModel):
 class LoginOutput:
     account_id: int
     token: str
+    role: RoleType
 
 
 @router.post('/login', tags=['Account'])
@@ -48,17 +49,22 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
         account_id, pass_hash, role, is_verified = await db.account.read_by_email(email=data.email)
     except exc.NotFound:
         raise exc.LoginFailed
-
     if not is_verified:
         raise exc.LoginFailed
 
     if not verify_password(data.password, pass_hash):
         raise exc.LoginFailed
 
-    token = encode_jwt(account_id=account_id)
-    response.set_cookie(key="account_id", value=str(account_id), httponly=True, samesite='none', secure=True)
-    response.set_cookie(key="token", value=str(token), httponly=True, samesite='none', secure=True)
-    return Response(data=LoginOutput(account_id=account_id, token=token))
+    token = encode_jwt(account_id=account_id, role=role)
+    update_cookie(response=response, account_id=account_id, token=token, role=role)
+    return Response(data=LoginOutput(account_id=account_id, token=token, role=role))
+
+
+@router.post('/logout', tags=['Account'])
+async def logout(response: FastAPIResponse) -> Response:
+    response.delete_cookie(const.COOKIE_ACCOUNT_KEY)
+    response.delete_cookie(const.COOKIE_TOKEN_KEY)
+    return Response()
 
 
 class EmailVerificationInput(BaseModel):
@@ -84,7 +90,7 @@ class AddAccountOutput:
 class AddAccountInput(BaseModel):
     email: EmailStr
     password: str
-    gender: GenderType | None = GenderType.unrevealed
+    gender: GenderType | None = None
     role: RoleType
 
     @property
@@ -116,7 +122,7 @@ class ResendEmailVerificationInput(BaseModel):
 
 @router.post('/email-verification/resend', tags=['Email Verification'])
 async def resend_email_verification(data: ResendEmailVerificationInput):
-    account_id, *_ = await db.account.read_by_email(email=data.email)
+    account_id, *_ = await db.account.read_by_email(email=data.email, include_unverified=True)
     code = await db.email_verification.read(account_id=account_id, email=data.email)
     await email.verification.send(to=data.email, code=str(code))
     return Response(data=EmailVerificationOutput(success=True))

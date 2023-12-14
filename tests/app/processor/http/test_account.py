@@ -2,7 +2,7 @@ from datetime import datetime
 from unittest.mock import patch
 from uuid import UUID
 
-from fastapi import File, UploadFile
+from fastapi import File, UploadFile, responses
 from starlette.datastructures import Headers
 
 import app.exceptions as exc
@@ -15,8 +15,8 @@ from tests import AsyncMock, AsyncTestCase, Mock, MockContext
 
 class TestReadAccount(AsyncTestCase):
     def setUp(self) -> None:
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.account_id = 1
         self.account = do.Account(
             id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
@@ -25,7 +25,7 @@ class TestReadAccount(AsyncTestCase):
         self.image_url = 'image_url'
         self.account_output = account.ReadAccountOutput(
             **self.account.model_dump(),
-            image_url=self.image_url,
+            image_url=None,
         )
         self.expect_output = account.Response(
             data=self.account_output,
@@ -57,11 +57,13 @@ class TestReadAccount(AsyncTestCase):
 class TestEditAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.response = responses.Response()
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.happy_path_data = account.EditAccountInput(
             nickname='nickname',
             gender=GenderType.male,
+            role=RoleType.normal,
         )
         self.expect_result = account.Response(data=True)
 
@@ -70,13 +72,17 @@ class TestEditAccount(AsyncTestCase):
     async def test_happy_path(self, mock_edit: AsyncMock, mock_context: MockContext):
         mock_context._context = self.context
 
-        result = await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+        result = await account.edit_account(
+            account_id=self.account_id, data=self.happy_path_data,
+            response=self.response,
+        )
         self.assertEqual(result, self.expect_result)
 
         mock_edit.assert_called_with(
             account_id=self.account_id,
             nickname=self.happy_path_data.nickname,
             gender=self.happy_path_data.gender,
+            role=self.happy_path_data.role,
         )
         mock_context.reset_context()
 
@@ -85,7 +91,10 @@ class TestEditAccount(AsyncTestCase):
         mock_context._context = self.wrong_context
 
         with self.assertRaises(exc.NoPermission):
-            await account.edit_account(account_id=self.account_id, data=self.happy_path_data)
+            await account.edit_account(
+                account_id=self.account_id, data=self.happy_path_data,
+                response=self.response,
+            )
 
         mock_context.reset_context()
 
@@ -105,8 +114,8 @@ class TestUploadAccountImage(AsyncTestCase):
         self.accept_image: UploadFile = UploadFile(File('asdf'), headers=self.accept_header)
         self.reject_image: UploadFile = UploadFile(File('asdf'), headers=self.reject_header)
 
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=1, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
 
         self.file_uuid = UUID('262b3702-1891-4e18-958e-82ebe758b0c9')
         self.bucket_name = 'bucket'
@@ -186,6 +195,9 @@ class TestUploadAccountImage(AsyncTestCase):
 class TestSearchAccount(AsyncTestCase):
     def setUp(self) -> None:
         self.query = 'query'
+        self.data = account.SearchAccountInput(
+            query=self.query,
+        )
         self.accounts = [
             do.Account(
                 id=1, email='email@email.com', nickname='nickname', gender=GenderType.male, image_uuid=None,
@@ -200,7 +212,7 @@ class TestSearchAccount(AsyncTestCase):
     async def test_happy_path(self, mock_search: AsyncMock):
         mock_search.return_value = self.accounts
 
-        result = await account.search_account(query=self.query)
+        result = await account.search_account(data=self.data)
 
         self.assertEqual(result, self.expect_result)
         mock_search.assert_called_with(
@@ -211,8 +223,8 @@ class TestSearchAccount(AsyncTestCase):
 class TestEditPassword(AsyncTestCase):
     def setUp(self) -> None:
         self.account_id = 1
-        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4))}
-        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4))}
+        self.context = {'AUTHED_ACCOUNT': AuthedAccount(id=self.account_id, time=datetime(2023, 11, 4), role=RoleType.normal)}
+        self.wrong_context = {'AUTHED_ACCOUNT': AuthedAccount(id=2, time=datetime(2023, 11, 4), role=RoleType.normal)}
         self.data = account.EditPasswordInput(
             old_password='old',
             new_password='new',
@@ -230,8 +242,10 @@ class TestEditPassword(AsyncTestCase):
     @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
     @patch('app.processor.http.account.security.hash_password', new_callable=Mock)
     @patch('app.persistence.database.account.edit', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_edit: AsyncMock, mock_hash: Mock, mock_verify: Mock,
-                              mock_read_by_email: AsyncMock, mock_read: AsyncMock, mock_context: MockContext):
+    async def test_happy_path(
+        self, mock_edit: AsyncMock, mock_hash: Mock, mock_verify: Mock,
+        mock_read_by_email: AsyncMock, mock_read: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
         mock_read.return_value = self.account
         mock_read_by_email.return_value = None, self.pass_hash, None, None
@@ -251,8 +265,10 @@ class TestEditPassword(AsyncTestCase):
     @patch('app.persistence.database.account.read', new_callable=AsyncMock)
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)
     @patch('app.processor.http.account.security.verify_password', new_callable=Mock)
-    async def test_wrong_password(self, mock_verify: Mock, mock_read_by_email: AsyncMock,
-                                  mock_read: AsyncMock, mock_context: MockContext):
+    async def test_wrong_password(
+        self, mock_verify: Mock, mock_read_by_email: AsyncMock,
+        mock_read: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
         mock_read.return_value = self.account
         mock_read_by_email.return_value = None, self.pass_hash, None, None
