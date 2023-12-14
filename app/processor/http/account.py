@@ -58,7 +58,7 @@ async def edit_account(account_id: int, data: EditAccountInput, response: respon
         role=data.role,
     )
     token = security.encode_jwt(account_id=account_id, role=data.role)
-    _ = update_cookie(response=response, account_id=account_id, token=token)
+    _ = update_cookie(response=response, account_id=account_id, token=token, role=data.role)
     return Response(data=True)
 
 

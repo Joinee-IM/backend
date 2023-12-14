@@ -42,6 +42,7 @@ class TestLogin(AsyncTestCase):
         self.expect_output = public.LoginOutput(
             account_id=self.account_id,
             token='token',
+            role=self.role,
         )
 
     @patch('app.persistence.database.account.read_by_email', new_callable=AsyncMock)

@@ -40,6 +40,7 @@ class LoginInput(BaseModel):
 class LoginOutput:
     account_id: int
     token: str
+    role: RoleType
 
 
 @router.post('/login', tags=['Account'])
@@ -55,8 +56,8 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
         raise exc.LoginFailed
 
     token = encode_jwt(account_id=account_id, role=role)
-    update_cookie(response=response, account_id=account_id, token=token)
-    return Response(data=LoginOutput(account_id=account_id, token=token))
+    update_cookie(response=response, account_id=account_id, token=token, role=role)
+    return Response(data=LoginOutput(account_id=account_id, token=token, role=role))
 
 
 @router.post('/logout', tags=['Account'])

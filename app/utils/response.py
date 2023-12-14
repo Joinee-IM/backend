@@ -5,8 +5,10 @@ import typing
 import pydantic
 from fastapi import responses
 
+from app.base import enums
 from app.const import (
     COOKIE_ACCOUNT_KEY,
+    COOKIE_ROLE_KEY,
     COOKIE_TOKEN_KEY,
     EXCEPTION_CLASS_DEFINITION_PATH,
 )
@@ -40,7 +42,9 @@ def update_cookie(
         response: responses.Response,
         account_id: int = '',
         token: str = '',
+        role: enums.RoleType = None,
 ) -> responses.Response:
     response.set_cookie(key=COOKIE_ACCOUNT_KEY, value=str(account_id), samesite='none', secure=True, httponly=True)
     response.set_cookie(key=COOKIE_TOKEN_KEY, value=str(token), samesite='none', secure=True, httponly=True)
+    response.set_cookie(key=COOKIE_ROLE_KEY, value=str(role), samesite='none', secure=True, httponly=True)
     return response
