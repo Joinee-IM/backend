@@ -30,6 +30,7 @@ google-api-python-client = "^2.108.0"
 requests = "2.31.0"
 google-cloud-logging = "^3.8.0"
 googlemaps = "^4.10.0"
+ruff = "^0.1.8"
 
 [tool.poetry.group.dev.dependencies]
 responses = "^0.23.3"
@@ -47,6 +48,9 @@ add-trailing-comma = "^3.1.0"
 src_paths = ["app", "tests"]
 split_on_trailing_comma = true
 
+[tool.ruff]
+ignore = ["F401", "F541", "E402", "E501"]
+select = ["E", "F"]
 
 [build-system]
 requires = ["poetry-core"]
