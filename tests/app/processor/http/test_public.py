@@ -105,7 +105,7 @@ class TestLogout(AsyncTestCase):
     async def test_happy_path(self):
         response = FastAPIResponse()
         await public.logout(response=response)
-        self.assertEqual(len(response.raw_headers), 3)
+        self.assertEqual(len(response.raw_headers), 4)
 
 
 class TestEmailVerification(AsyncTestCase):

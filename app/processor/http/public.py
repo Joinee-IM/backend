@@ -64,6 +64,7 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
 async def logout(response: FastAPIResponse) -> Response:
     response.delete_cookie(const.COOKIE_ACCOUNT_KEY)
     response.delete_cookie(const.COOKIE_TOKEN_KEY)
+    response.delete_cookie(const.COOKIE_ROLE_KEY)
     return Response()
 
 
