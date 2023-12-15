@@ -1,8 +1,33 @@
+from contextlib import asynccontextmanager
 from unittest.mock import patch
 
 from app.config import PGConfig
-from app.persistence.database import PGPoolHandler
+from app.persistence.database import PGPoolHandler, PoolHandlerBase
 from tests import AsyncMock, AsyncTestCase
+
+
+class MockPoolHandler(PoolHandlerBase):
+    async def initialize(self, db_config):
+        return await super().initialize(db_config=db_config)
+
+    @asynccontextmanager
+    async def cursor(self):
+        return await super().cursor()
+
+
+class TestPoolHandlerBase(AsyncTestCase):
+    async def test_initialized(self):
+        handler = MockPoolHandler()
+        with self.assertRaises(NotImplementedError):
+            await handler.initialize(db_config=PGConfig())
+
+    async def test_close(self):
+        handler = MockPoolHandler()
+        mock_pool = AsyncMock()
+        handler._pool = mock_pool
+        mock_pool.close = AsyncMock()
+        await handler.close()
+        self.assertIsNone(handler._pool)
 
 
 class TestPGPoolHandler(AsyncTestCase):

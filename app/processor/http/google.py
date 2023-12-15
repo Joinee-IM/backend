@@ -46,7 +46,7 @@ async def auth(request: Request):
     token_google = await oauth_handler.authorize_access_token(request=request)
     user_email = token_google['userinfo']['email']
     try:
-        account_id, _, role, _ = await db.account.read_by_email(email=user_email)
+        account_id, _, role, _ = await db.account.read_by_email(email=user_email, include_unverified=True)
         await db.account.update_google_token(
             account_id=account_id,
             access_token=token_google['access_token'],

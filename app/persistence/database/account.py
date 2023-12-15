@@ -97,9 +97,11 @@ async def update_google_token(account_id: int, access_token: str, refresh_token:
         sql=r"UPDATE account"
             r"   SET access_token = %(access_token)s,"
             r"       refresh_token = %(refresh_token)s,"
-            r"       is_google_login = %(is_google_login)s"
+            r"       is_google_login = %(is_google_login)s,"
+            r"       is_verified = %(is_verified)s"
             r" WHERE id = %(account_id)s",
         access_token=access_token, refresh_token=refresh_token, is_google_login=True, account_id=account_id,
+        is_verified=True,
     ).execute()
 
 
