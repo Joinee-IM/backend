@@ -48,7 +48,7 @@ async def browse_my_reservation(
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
     if or_query and where_sql:
-        where_sql = where_sql + ' AND ' + or_query
+        where_sql = where_sql + f' AND ({or_query})'
     elif or_query:
         where_sql = 'WHERE ' + or_query
 
