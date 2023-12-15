@@ -29,6 +29,7 @@ def register_exception_handlers(app: FastAPI):
     @app.exception_handler(LoginFailed)
     @app.exception_handler(LoginExpired)
     def login_failed_exception_handler(_: Request, exc_: LoginFailed | LoginExpired):
+        log.logger.info(f'Raised AckException {exc_.__class__.__name__}, cleaning cookie.')
         response = JSONResponse(
             status_code=exc_.status_code,
             content={'data': None, 'error': exc_.__class__.__name__},
@@ -39,7 +40,7 @@ def register_exception_handlers(app: FastAPI):
 
     @app.exception_handler(AckException)
     def exception_handler(_: Request, exc_: AckException):
-        log.logger.info(exc_)
+        log.logger.info(f'Raised AckException {exc_.__class__.__name__}')
         return JSONResponse(
             status_code=exc_.status_code,
             content={'data': None, 'error': exc_.__class__.__name__},
