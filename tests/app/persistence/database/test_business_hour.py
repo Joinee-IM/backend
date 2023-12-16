@@ -62,7 +62,7 @@ class TestBrowse(AsyncTestCase):
                 '  FROM business_hour'
                 ' WHERE type = %(place_type)s'
                 ' AND place_id = %(place_id)s'
-                ' AND (business_hour.weekday = %(weekday_0)s AND business_hour.start_time < %(end_time_0)s AND business_hour.end_time > %(start_time_0)s)'  # noqa
+                ' AND ((business_hour.weekday = %(weekday_0)s AND business_hour.start_time < %(end_time_0)s AND business_hour.end_time > %(start_time_0)s))'  # noqa
                 ''
                 ' ORDER BY id',
             **self.params,

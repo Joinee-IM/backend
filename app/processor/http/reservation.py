@@ -24,8 +24,8 @@ class BrowseReservationParameters(BaseModel):
     stadium_id: int | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None = Offset
     sort_by: enums.BrowseReservationSortBy = enums.BrowseReservationSortBy.time
     order: enums.Sorter = enums.Sorter.desc
 
@@ -33,8 +33,8 @@ class BrowseReservationParameters(BaseModel):
 class BrowseReservationOutput(BaseModel):
     data: Sequence[do.Reservation]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
 # use POST here since GET can't process request body

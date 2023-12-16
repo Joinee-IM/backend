@@ -716,7 +716,7 @@ class TestRejectInvitation(AsyncTestCase):
     @patch('app.processor.http.reservation.context', new_callable=MockContext)
     @patch('app.persistence.database.reservation_member.reject', new_callable=AsyncMock)
     @patch('app.persistence.database.reservation_member.read', new_callable=AsyncMock)
-    async def test_no_permission(
+    async def test_no_permission_reservation_joined(
         self, mock_read: AsyncMock, mock_reject: AsyncMock,
         mock_context: MockContext,
     ):

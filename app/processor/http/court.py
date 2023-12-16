@@ -56,12 +56,11 @@ class BrowseReservationOutput(BaseModel):
 
 
 @router.post('/court/{court_id}/reservation/browse')
-async def browse_reservation_by_court_id(court_id: int, params: BrowseReservationParameters) -> Response:
+async def browse_reservation_by_court_id(court_id: int, params: BrowseReservationParameters) \
+        -> Response[BrowseReservationOutput]:
     """
     這隻 func 如果給了 start_date 會直接 return start_date ~ start_date + 7 的資料，
     要透過 time range 搜尋的話要給 start_date = null
-
-    time format 要給 naive datetime, e.g. `2023-11-11T11:11:11`
     """
     court = await db.court.read(court_id=court_id)
     business_hours = await db.business_hour.browse(
@@ -88,12 +87,11 @@ async def browse_reservation_by_court_id(court_id: int, params: BrowseReservatio
         )
 
     available_date = None
-    is_available = True
-
     for time_range in params.time_ranges:
+        is_available = True
         for reservation in reservations:
             if reservation.start_time <= time_range.start_time \
-                    and reservation.end_time >= time_range.end_time\
+                    and reservation.end_time >= time_range.end_time \
                     and not reservation.vacancy:
                 is_available = False
         if is_available:

@@ -60,7 +60,7 @@ class TestAuth(AsyncTestCase):
         result = await google.auth(request=self.request)
 
         mock_authorize.assert_called_with(request=self.request)
-        mock_read.assert_called_with(email=self.email)
+        mock_read.assert_called_with(email=self.email, include_unverified=True)
         mock_update.assert_called_with(
             account_id=self.account_id,
             access_token=self.access_token,
@@ -84,7 +84,7 @@ class TestAuth(AsyncTestCase):
         result = await google.auth(request=self.request)
 
         mock_authorize.assert_called_with(request=self.request)
-        mock_read.assert_called_with(email=self.email)
+        mock_read.assert_called_with(email=self.email, include_unverified=True)
         mock_add.assert_called_with(
             email=self.email, is_google_login=True,
             nickname=self.email.split("@")[0],
@@ -115,7 +115,7 @@ class TestAuth(AsyncTestCase):
         result = await google.auth(request=self.next_url_request)
 
         mock_authorize.assert_called_with(request=self.next_url_request)
-        mock_read.assert_called_with(email=self.email)
+        mock_read.assert_called_with(email=self.email, include_unverified=True)
         mock_update.assert_called_with(
             account_id=self.account_id,
             access_token=self.access_token,

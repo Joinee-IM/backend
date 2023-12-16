@@ -34,7 +34,7 @@ async def browse(
     criteria_dict = {
         'city_id': (city_id, 'city_id = %(city_id)s'),
         'district_id': (district_id, 'district_id = %(district_id)s'),
-        'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
+        'stadium_id': (stadium_id, 'reservation.stadium_id = %(stadium_id)s'),
         'court_id': (court_id, 'court_id = %(court_id)s'),
         'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
         'start_date': (start_date, 'start_time >= %(start_date)s'),
@@ -68,7 +68,7 @@ async def browse(
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
     if or_query and where_sql:
-        where_sql = where_sql + ' AND ' + or_query
+        where_sql = where_sql + f' AND ({or_query})'
     elif or_query:
         where_sql = 'WHERE ' + or_query
 

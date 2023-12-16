@@ -89,11 +89,47 @@ async def read_venue(venue_id: int, _=Depends(get_auth_token)) -> Response[ReadV
     )
 
 
-@router.get('/venue/{venue_id}/court')
-async def browse_court_by_venue_id(venue_id: int, _=Depends(get_auth_token)) -> Response[Sequence[do.Court]]:
-    include_unpublished = context.account.role is enums.RoleType.provider
-    courts = await db.court.browse(venue_id=venue_id, include_unpublished=include_unpublished)
-    return Response(data=courts)
+class BrowseCourtByVenueIdParams(BaseModel):
+    time_ranges: Sequence[vo.DateTimeRange] | None = None
+
+
+# use post since get can't have body
+@router.post('/venue/{venue_id}/court')
+async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdParams, _=Depends(get_auth_token))\
+        -> Response[Sequence[do.Court]]:
+    include_unpublished = context.account.role is enums.RoleType.provider if context.get_account() else False
+    courts = await db.court.browse(
+        venue_id=venue_id,
+        include_unpublished=include_unpublished,
+    )
+
+    # return all if time ranges are not specified
+    if not params.time_ranges:
+        return Response(data=courts)
+
+    available_courts = []
+    for court in courts:
+        reservations, _ = await db.reservation.browse(
+            court_id=court.id,
+            time_ranges=params.time_ranges,
+        )
+        available_date = None
+
+        for time_range in params.time_ranges:
+            is_available = True
+            for reservation in reservations:
+                if reservation.start_time <= time_range.start_time \
+                        and reservation.end_time >= time_range.end_time \
+                        and not reservation.vacancy:
+                    is_available = False
+            if is_available:
+                available_date = time_range.start_time.date()
+                break
+        if not available_date:
+            continue
+        available_courts.append(court)
+
+    return Response(data=available_courts)
 
 
 class EditVenueInput(BaseModel):
