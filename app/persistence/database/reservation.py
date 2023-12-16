@@ -34,7 +34,7 @@ async def browse(
     criteria_dict = {
         'city_id': (city_id, 'city_id = %(city_id)s'),
         'district_id': (district_id, 'district_id = %(district_id)s'),
-        'stadium_id': (stadium_id, 'stadium_id = %(stadium_id)s'),
+        'stadium_id': (stadium_id, 'reservation.stadium_id = %(stadium_id)s'),
         'court_id': (court_id, 'court_id = %(court_id)s'),
         'sport_id': (sport_id, 'sport_id = %(sport_id)s'),
         'start_date': (start_date, 'start_time >= %(start_date)s'),
