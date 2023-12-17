@@ -214,7 +214,11 @@ async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> R
 async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
     reservation_member = await db.reservation_member.read(reservation_id=reservation_id, account_id=context.account.id)
 
-    if reservation_member.is_manager or reservation_member.status != enums.ReservationMemberStatus.invited or reservation_member.source != enums.ReservationMemberSource.invitation_code:
+    if (
+        reservation_member.is_manager
+        or reservation_member.status != enums.ReservationMemberStatus.invited
+        or reservation_member.source != enums.ReservationMemberSource.invitation_code
+    ):
         raise exc.NoPermission
 
     await db.reservation_member.reject(reservation_id=reservation_id, account_id=context.account.id)
