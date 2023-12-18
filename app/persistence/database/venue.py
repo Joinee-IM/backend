@@ -30,7 +30,11 @@ async def browse(
 
     where_sql = 'WHERE ' + ' AND '.join(query) if query else ''
 
-    order_sql = f'{sort_by.lower()} {order},'
+    order_sql = ''
+    if sort_by == enums.VenueAvailableSortBy.current_user_count:
+        order_sql = f'{sort_by.lower()} {order},'
+    elif sort_by == enums.VenueAvailableSortBy.price:
+        order_sql = f'fee_type {order}, fee_rate {order},'
 
     sql = (
         fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'

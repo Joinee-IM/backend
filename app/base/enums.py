@@ -15,8 +15,9 @@ class GenderType(StrEnum):
 
 
 class FeeType(StrEnum):
-    per_hour = 'PER_HOUR'
+    per_reservation = 'PER_RESERVATION'
     per_person = 'PER_PERSON'
+    per_hour = 'PER_HOUR'
     per_person_per_hour = 'PER_PERSON_PER_HOUR'
 
 
@@ -43,6 +44,7 @@ class Sorter(StrEnum):
 
 class VenueAvailableSortBy(StrEnum):
     current_user_count = 'CURRENT_USER_COUNT'
+    price = 'PRICE'
 
 
 class BrowseReservationSortBy(StrEnum):
