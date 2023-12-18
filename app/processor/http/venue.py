@@ -77,8 +77,7 @@ class ReadVenueOutput(do.Venue):
 
 @router.get('/venue/{venue_id}')
 async def read_venue(venue_id: int, _=Depends(get_auth_token)) -> Response[ReadVenueOutput]:
-    include_unpublished = context.account.role is enums.RoleType.provider
-
+    include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     venue = await db.venue.read(venue_id=venue_id, include_unpublished=include_unpublished)
     sport = await db.sport.read(sport_id=venue.sport_id)
     return Response(
@@ -97,7 +96,7 @@ class BrowseCourtByVenueIdParams(BaseModel):
 @router.post('/venue/{venue_id}/court')
 async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdParams, _=Depends(get_auth_token))\
         -> Response[Sequence[do.Court]]:
-    include_unpublished = context.account.role is enums.RoleType.provider if context.get_account() else False
+    include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     courts = await db.court.browse(
         venue_id=venue_id,
         include_unpublished=include_unpublished,
