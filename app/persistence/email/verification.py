@@ -7,7 +7,7 @@ from app.persistence.email import smtp_handler
 
 async def send(to: str, code: str, subject='Jöinee 帳號驗證'):
     message = MIMEMultipart()
-    message['From'] = f'{smtp_config.username}@{smtp_config.host}'
+    message['From'] = f'Jöinee'
     message['To'] = to
     message['Subject'] = subject
     body = f"""
