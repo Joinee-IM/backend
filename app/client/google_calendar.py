@@ -106,7 +106,7 @@ async def add_google_calendar_event(
     event = AddEventInput(
         start_time=start_time, end_time=end_time,
         all_emails=all_emails, location=location,
-        summary='[Jöinee Reservation] Exercise',
+        summary='[Jöinee 預約] 運動',
     )
 
     calendar = GoogleCalendar(account_id=account_id, config=google_config)
