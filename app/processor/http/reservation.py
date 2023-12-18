@@ -22,6 +22,7 @@ class BrowseReservationParameters(BaseModel):
     district_id: int | None = None
     sport_id: int | None = None
     stadium_id: int | None = None
+    has_vacancy: bool | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
     limit: int | None = Limit
@@ -47,6 +48,7 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
         stadium_id=params.stadium_id,
         time_ranges=params.time_ranges,
         technical_level=params.technical_level,
+        has_vacancy=params.has_vacancy,
         limit=params.limit,
         offset=params.offset,
         sort_by=params.sort_by,

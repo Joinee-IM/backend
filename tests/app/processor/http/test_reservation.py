@@ -70,6 +70,7 @@ class TestBrowseReservation(AsyncTestCase):
             stadium_id=self.params.stadium_id,
             time_ranges=self.params.time_ranges,
             technical_level=self.params.technical_level,
+            has_vacancy=self.params.has_vacancy,
             limit=self.params.limit,
             offset=self.params.offset,
             sort_by=self.params.sort_by,
