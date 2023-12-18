@@ -7,7 +7,7 @@ from app.persistence.email import smtp_handler
 
 async def send(meet_code: str, to: str | None = None, subject='Invitation from Jöinee', bcc: str | None = None):
     message = MIMEMultipart()
-    message['From'] = f'{smtp_config.username}@{smtp_config.host}'
+    message['From'] = 'Jöinee'
     message['Subject'] = subject
     if to is not None:
         message["To"] = to
