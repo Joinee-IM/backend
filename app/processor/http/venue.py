@@ -22,15 +22,15 @@ class VenueSearchParameters(BaseModel):
     is_reservable: bool | None = Query(default=None)
     sort_by: enums.VenueAvailableSortBy = Query(default=enums.VenueAvailableSortBy.current_user_count)
     order: enums.Sorter = Query(default=enums.Sorter.desc)
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None = Offset
 
 
 class BrowseVenueOutput(BaseModel):
     data: Sequence[do.Venue]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
 @router.get('/venue')
