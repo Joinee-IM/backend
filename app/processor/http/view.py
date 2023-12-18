@@ -26,14 +26,14 @@ class ViewMyReservationParams(BaseModel):
     sort_by: enums.ViewMyReservationSortBy = enums.ViewMyReservationSortBy.time
     order: enums.Sorter = enums.Sorter.desc
     limit: int | None = Limit
-    offset: int | None= Offset
+    offset: int | None = Offset
 
 
 class ViewMyReservationOutput(BaseModel):
     data: Sequence[vo.ViewMyReservation]
     total_count: int
     limit: int | None = None
-    offset: int | None = NOne
+    offset: int | None = None
 
 
 @router.post('/view/my-reservation')
