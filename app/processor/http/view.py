@@ -25,15 +25,15 @@ class ViewMyReservationParams(BaseModel):
     source: enums.ReservationMemberSource | None = None
     sort_by: enums.ViewMyReservationSortBy = enums.ViewMyReservationSortBy.time
     order: enums.Sorter = enums.Sorter.desc
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None= Offset
 
 
 class ViewMyReservationOutput(BaseModel):
     data: Sequence[vo.ViewMyReservation]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = NOne
 
 
 @router.post('/view/my-reservation')

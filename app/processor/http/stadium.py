@@ -22,15 +22,15 @@ class StadiumSearchParameters(BaseModel):
     district_id: int | None = None
     sport_id: int | None = None
     time_ranges: Sequence[vo.WeekTimeRange] | None = None
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None = Offset
 
 
 class BrowseStadiumOutput(BaseModel):
     data: Sequence[vo.ViewStadium]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
 # use POST here since GET can't process request body
