@@ -8,6 +8,7 @@ import app.persistence.database as db
 from app.base import do, enums, vo
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
+from app import log
 
 router = APIRouter(
     tags=['Venue'],
@@ -112,14 +113,17 @@ async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdPa
             court_id=court.id,
             time_ranges=params.time_ranges,
         )
+        log.logger.error(reservations)
         available_date = None
 
         for time_range in params.time_ranges:
             is_available = True
             for reservation in reservations:
+                log.logger.error(time_range)
+                log.logger.error((reservation.start_time, reservation.end_time))
                 if reservation.start_time <= time_range.start_time \
                         and reservation.end_time >= time_range.end_time \
-                        and not reservation.vacancy:
+                        and reservation.vacancy <= 0:
                     is_available = False
             if is_available:
                 available_date = time_range.start_time.date()
