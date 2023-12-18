@@ -5,10 +5,10 @@ from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
+from app import log
 from app.base import do, enums, vo
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
-from app import log
 
 router = APIRouter(
     tags=['Venue'],
