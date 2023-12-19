@@ -69,7 +69,7 @@ resources: {}
   # lines, adjust them as necessary, and remove the curly braces after 'resources:'.
 
 autoscaling:
-  enabled: true
+  enabled: false
   minReplicas: 2
   maxReplicas: 3
   targetCPUUtilizationPercentage: 80
