@@ -1,4 +1,4 @@
-# Joinee Backend Service
+# Jöinee Backend Service
 ## Prerequisites
 Please make sure you have installed `python 3.10` and `poetry`
 ## Setup

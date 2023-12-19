@@ -85,11 +85,11 @@ async def browse_with_names(
 async def leave(reservation_id: int, account_id: int) -> None:
     async with pg_pool_handler.cursor() as cursor:
         cursor: asyncpg.Connection
-        is_manager = await cursor.fetchval(
+        is_manager, source = await cursor.fetchval(
             r'DELETE FROM reservation_member'
             r' WHERE reservation_id = $1'
             r'   AND account_id = $2'
-            r' RETURNING is_manager',
+            r' RETURNING is_manager, source',
             reservation_id, account_id,
         )
         if is_manager:
@@ -104,6 +104,13 @@ async def leave(reservation_id: int, account_id: int) -> None:
                 r' WHERE reservation_id = $1'
                 r'  AND account_id = (SELECT account_id FROM tmp_tbl)',
                 reservation_id, True,
+            )
+        if source == enums.ReservationMemberSource.search:
+            await cursor.execute(
+                r'UPDATE reservation'
+                r'   SET vacancy = vacancy + 1'
+                r' WHERE id = $1',
+                reservation_id,
             )
 
 

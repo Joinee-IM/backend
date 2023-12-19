@@ -22,7 +22,7 @@ env:
 
 jobs:
   setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+    name: Setup, Build, and Release
     runs-on: ubuntu-latest
 
     steps:
@@ -61,7 +61,7 @@ jobs:
         cache-from: type=gha
         cache-to: type=gha, mode=max
 
-    - name: Deploy
+    - name: Release
       run: |-
         echo "$ENV" > deploy/helm/charts/.env
         echo "$GCP_SERVICE_ACCOUNT" > deploy/helm/charts/gcp-service-account.json

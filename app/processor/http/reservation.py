@@ -22,6 +22,7 @@ class BrowseReservationParameters(BaseModel):
     district_id: int | None = None
     sport_id: int | None = None
     stadium_id: int | None = None
+    has_vacancy: bool | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
     limit: int | None = Limit
@@ -47,6 +48,7 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
         stadium_id=params.stadium_id,
         time_ranges=params.time_ranges,
         technical_level=params.technical_level,
+        has_vacancy=params.has_vacancy,
         limit=params.limit,
         offset=params.offset,
         sort_by=params.sort_by,
@@ -214,7 +216,11 @@ async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> R
 async def reject_invitation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
     reservation_member = await db.reservation_member.read(reservation_id=reservation_id, account_id=context.account.id)
 
-    if reservation_member.is_manager or reservation_member.status != enums.ReservationMemberStatus.invited or reservation_member.source != enums.ReservationMemberSource.invitation_code:
+    if (
+        reservation_member.is_manager
+        or reservation_member.status != enums.ReservationMemberStatus.invited
+        or reservation_member.source != enums.ReservationMemberSource.invitation_code
+    ):
         raise exc.NoPermission
 
     await db.reservation_member.reject(reservation_id=reservation_id, account_id=context.account.id)

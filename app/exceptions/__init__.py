@@ -1,7 +1,7 @@
 import traceback
 
 from fastapi import FastAPI, Request
-from fastapi.exceptions import RequestValidationError
+from fastapi.exceptions import RequestValidationError, ResponseValidationError
 from fastapi.responses import JSONResponse
 
 import app.const as const
@@ -66,5 +66,6 @@ def register_exception_handlers(app: FastAPI):
     app.add_exception_handler(LoginFailed, login_failed_exception_handler)
     app.add_exception_handler(LoginExpired, login_failed_exception_handler)
     app.add_exception_handler(AckException, ack_exception_handler)
-    app.add_exception_handler(Exception, general_exception_handler)
     app.add_exception_handler(RequestValidationError, validation_exception_handler)
+    app.add_exception_handler(ResponseValidationError, validation_exception_handler)
+    app.add_exception_handler(Exception, general_exception_handler)

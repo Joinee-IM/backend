@@ -5,6 +5,7 @@ from pydantic import BaseModel
 
 import app.exceptions as exc
 import app.persistence.database as db
+from app import log
 from app.base import do, enums, vo
 from app.middleware.headers import get_auth_token
 from app.utils import Limit, Offset, Response, context
@@ -22,15 +23,15 @@ class VenueSearchParameters(BaseModel):
     is_reservable: bool | None = Query(default=None)
     sort_by: enums.VenueAvailableSortBy = Query(default=enums.VenueAvailableSortBy.current_user_count)
     order: enums.Sorter = Query(default=enums.Sorter.desc)
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None = Offset
 
 
 class BrowseVenueOutput(BaseModel):
     data: Sequence[do.Venue]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
 @router.get('/venue')
@@ -77,8 +78,7 @@ class ReadVenueOutput(do.Venue):
 
 @router.get('/venue/{venue_id}')
 async def read_venue(venue_id: int, _=Depends(get_auth_token)) -> Response[ReadVenueOutput]:
-    include_unpublished = context.account.role is enums.RoleType.provider
-
+    include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     venue = await db.venue.read(venue_id=venue_id, include_unpublished=include_unpublished)
     sport = await db.sport.read(sport_id=venue.sport_id)
     return Response(
@@ -97,7 +97,7 @@ class BrowseCourtByVenueIdParams(BaseModel):
 @router.post('/venue/{venue_id}/court')
 async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdParams, _=Depends(get_auth_token))\
         -> Response[Sequence[do.Court]]:
-    include_unpublished = context.account.role is enums.RoleType.provider if context.get_account() else False
+    include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     courts = await db.court.browse(
         venue_id=venue_id,
         include_unpublished=include_unpublished,
@@ -113,14 +113,17 @@ async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdPa
             court_id=court.id,
             time_ranges=params.time_ranges,
         )
+        log.logger.error(reservations)
         available_date = None
 
         for time_range in params.time_ranges:
             is_available = True
             for reservation in reservations:
+                log.logger.error(time_range)
+                log.logger.error((reservation.start_time, reservation.end_time))
                 if reservation.start_time <= time_range.start_time \
                         and reservation.end_time >= time_range.end_time \
-                        and not reservation.vacancy:
+                        and reservation.vacancy <= 0:
                     is_available = False
             if is_available:
                 available_date = time_range.start_time.date()

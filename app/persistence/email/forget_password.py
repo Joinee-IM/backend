@@ -5,9 +5,9 @@ from app.config import service_config, smtp_config
 from app.persistence.email import smtp_handler
 
 
-async def send(to: str, code: str, subject='Joinee reset password verification'):
+async def send(to: str, code: str, subject='Jöinee reset password verification'):
     message = MIMEMultipart()
-    message['From'] = f'{smtp_config.username}@{smtp_config.host}'
+    message['From'] = 'Jöinee'
     message['To'] = to
     message['Subject'] = subject
     body = f"""

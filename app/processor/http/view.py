@@ -25,15 +25,15 @@ class ViewMyReservationParams(BaseModel):
     source: enums.ReservationMemberSource | None = None
     sort_by: enums.ViewMyReservationSortBy = enums.ViewMyReservationSortBy.time
     order: enums.Sorter = enums.Sorter.desc
-    limit: int = Limit
-    offset: int = Offset
+    limit: int | None = Limit
+    offset: int | None = Offset
 
 
 class ViewMyReservationOutput(BaseModel):
     data: Sequence[vo.ViewMyReservation]
     total_count: int
-    limit: int
-    offset: int
+    limit: int | None = None
+    offset: int | None = None
 
 
 @router.post('/view/my-reservation')
@@ -90,7 +90,7 @@ async def view_provider_stadium(
 ) -> Response[ViewProviderStadiumOutput]:
     account = await db.account.read(account_id=context.account.id)
 
-    if account.role is not enums.RoleType.provider:
+    if account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
     stadiums, total_count = await db.view.browse_provider_stadium(
@@ -137,7 +137,7 @@ async def view_provider_venue(
 ) -> Response[ViewProviderVenueOutput]:
     account = await db.account.read(account_id=context.account.id)
 
-    if account.role is not enums.RoleType.provider:
+    if account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
     venues, total_count = await db.view.browse_provider_venue(
@@ -184,7 +184,7 @@ async def view_provider_court(
 ) -> Response[ViewProviderCourtOutput]:
     account = await db.account.read(account_id=context.account.id)
 
-    if account.role is not enums.RoleType.provider:
+    if account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
     court, total_count = await db.view.browse_provider_court(
