@@ -22,7 +22,7 @@ env:
 
 jobs:
   setup-build-publish-deploy:
-    name: Setup, Build, Publish, and Deploy
+    name: Setup, Build, and Release
     runs-on: ubuntu-latest
 
     steps:
