@@ -555,7 +555,6 @@ class TestAddVenue(AsyncTestCase):
             capacity=self.data.capacity,
             sport_equipments=self.data.sport_equipments,
             facilities=self.data.facilities,
-            court_count=self.data.court_count,
             court_type=self.data.court_type,
             sport_id=self.data.sport_id,
         )

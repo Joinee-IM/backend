@@ -208,7 +208,6 @@ async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[
         capacity=data.capacity,
         sport_equipments=data.sport_equipments,
         facilities=data.facilities,
-        court_count=data.court_count,
         court_type=data.court_type,
         sport_id=data.sport_id,
     )
