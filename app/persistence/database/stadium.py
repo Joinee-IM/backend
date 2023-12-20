@@ -81,6 +81,8 @@ async def browse(
         fr'  LEFT JOIN sport ON venue.sport_id = sport.id'
         fr'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
         fr'                         AND business_hour.type = %(place_type)s'
+        fr' WHERE TRUE'
+        fr'{" AND stadium.is_published AND venue.is_published" if not include_unpublished else ""}'
         fr' GROUP BY stadium.id, city.id, district.id'
     )
 

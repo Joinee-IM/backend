@@ -146,6 +146,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id'
                     r' ORDER BY stadium.id'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -188,6 +190,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id) AS tbl',
                 place_type=enums.PlaceType.stadium,
                 **self.query_params,
@@ -231,6 +235,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id'
                     r' ORDER BY stadium.id'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -265,6 +271,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id) AS tbl',
                 place_type=enums.PlaceType.stadium, **self.no_filter_params,
             ),
