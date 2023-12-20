@@ -51,7 +51,8 @@ async def login(data: LoginInput, response: FastAPIResponse) -> Response[LoginOu
         raise exc.LoginFailed
     if not is_verified:
         raise exc.LoginFailed
-
+    if not pass_hash:
+        raise exc.LoginFailed
     if not verify_password(data.password, pass_hash):
         raise exc.LoginFailed
 
