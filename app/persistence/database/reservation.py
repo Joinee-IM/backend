@@ -240,6 +240,15 @@ async def delete(reservation_id: int) -> None:
         )
 
 
+async def cancel(reservation_id: int) -> None:
+    await PostgresQueryExecutor(
+        sql='UPDATE reservation'
+            '   SET is_cancelled = %(is_cancelled)s'
+            ' WHERE id = %(reservation_id)s',
+        reservation_id=reservation_id, is_cancelled=True,
+    ).execute()
+
+
 async def edit(
         reservation_id: int,
         stadium_id: int | None = None,

@@ -197,6 +197,23 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
     return Response()
 
 
+@router.delete('/reservation/{reservation_id}/cancel')
+async def cancel_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse_with_names(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
+    if not reservation_member:
+        raise exc.NotFound
+
+    if not reservation_member[0].is_manager:
+        raise exc.NoPermission
+
+    await db.reservation.cancel(reservation_id=reservation_id)
+
+    return Response()
+
+
 @router.delete('/reservation/{reservation_id}/leave')
 async def leave_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
     reservation_member = await db.reservation_member.browse_with_names(
