@@ -6,9 +6,9 @@ from googleapiclient.discovery import build
 from pydantic import BaseModel
 
 import app.persistence.database as db
+from app import log
 from app.config import GoogleConfig, google_config
 from app.utils import ServerTZDatetime
-from app import log
 
 
 class Email(BaseModel):
