@@ -90,7 +90,7 @@ async def batch_read(court_ids: Sequence[int], include_unpublished: bool = False
     results = await PostgresQueryExecutor(
         sql=fr'SELECT id, venue_id, number, is_published'
             fr'  FROM court'
-            fr' WHERE venue_id IN ({in_sql})'
+            fr' WHERE id IN ({in_sql})'
             fr'{" AND is_published = True" if not include_unpublished else ""}',
         **params,
     ).fetch_all()
