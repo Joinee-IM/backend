@@ -8,6 +8,7 @@ from pydantic import BaseModel
 import app.persistence.database as db
 from app.config import GoogleConfig, google_config
 from app.utils import ServerTZDatetime
+from app import log
 
 
 class Email(BaseModel):
@@ -110,8 +111,11 @@ async def add_google_calendar_event(
     )
 
     calendar = GoogleCalendar(account_id=account_id, config=google_config)
+    log.logger.info('building calendar connection')
     await calendar.build_connection()
+    log.logger.info('calendar connection built.')
     result = calendar.add_event(data=event)
+    log.logger.info('event added')
 
     await db.reservation.add_event_id(reservation_id=reservation_id, event_id=result['id'])
 
