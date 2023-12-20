@@ -89,7 +89,7 @@ async def leave(reservation_id: int, account_id: int) -> None:
             r'DELETE FROM reservation_member'
             r' WHERE reservation_id = $1'
             r'   AND account_id = $2'
-            r' RETURNING is_manager, source',
+            r' RETURNING (is_manager, source)',
             reservation_id, account_id,
         )
         if is_manager:
