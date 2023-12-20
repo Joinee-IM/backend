@@ -85,6 +85,8 @@ class SearchAccountInput(BaseModel):
 
 @router.post('/account/search')
 async def search_account(data: SearchAccountInput) -> Response[Sequence[do.Account]]:
+    if not data.query:
+        return Response(data=[])
     accounts = await db.account.search(query=data.query)
     return Response(data=accounts)
 
