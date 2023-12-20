@@ -543,7 +543,7 @@ class TestAddVenue(AsyncTestCase):
 
         self.assertEqual(result, self.expect_output)
 
-        mock_read_stadium.assert_called_with(stadium_id=self.data.stadium_id)
+        mock_read_stadium.assert_called_with(stadium_id=self.data.stadium_id, include_unpublished=True)
         mock_add_venue.assert_called_with(
             stadium_id=self.data.stadium_id,
             name=self.data.name,
@@ -559,6 +559,7 @@ class TestAddVenue(AsyncTestCase):
             facilities=self.data.facilities,
             court_type=self.data.court_type,
             sport_id=self.data.sport_id,
+            is_published=self.stadium.is_published,
         )
         mock_add_hours.assert_called_with(
             place_type=enums.PlaceType.venue,
@@ -586,5 +587,5 @@ class TestAddVenue(AsyncTestCase):
                 data=self.data,
             )
 
-        mock_read_stadium.assert_called_with(stadium_id=self.data.stadium_id)
+        mock_read_stadium.assert_called_with(stadium_id=self.data.stadium_id, include_unpublished=True)
         mock_context.reset_context()

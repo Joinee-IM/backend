@@ -194,7 +194,7 @@ class AddVenueOutput(BaseModel):
 
 @router.post('/venue')
 async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[AddVenueOutput]:
-    stadium = await db.stadium.read(stadium_id=data.stadium_id)
+    stadium = await db.stadium.read(stadium_id=data.stadium_id, include_unpublished=True)
 
     if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
@@ -214,6 +214,7 @@ async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[
         facilities=data.facilities,
         court_type=data.court_type,
         sport_id=data.sport_id,
+        is_published=stadium.is_published,
     )
 
     await db.business_hour.batch_add(

@@ -179,6 +179,7 @@ async def add(
     facilities: str | None,
     court_type: str,
     sport_id: int,
+    is_published: bool = True,
 ) -> int:
     id_, = await PostgresQueryExecutor(
         sql=r'INSERT INTO venue'
@@ -193,7 +194,7 @@ async def add(
         stadium_id=stadium_id, name=name, floor=floor, reservation_interval=reservation_interval,
         is_reservable=is_reservable, is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type,
         area=area, capacity=capacity, sport_equipments=sport_equipments, facilities=facilities,
-        court_type=court_type, sport_id=sport_id, is_published=True,
+        court_type=court_type, sport_id=sport_id, is_published=is_published,
     ).fetch_one()
     return id_
 
