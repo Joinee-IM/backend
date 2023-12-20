@@ -81,6 +81,12 @@ async def read_reservation(reservation_id: int) -> Response[ReadReservationOutpu
     )
 
 
+@router.get('/reservation/code/{invitation_code}')
+async def read_reservation_by_invitation_code(invitation_code: str) -> Response[do.Reservation]:
+    reservation = await db.reservation.read_by_code(invitation_code=invitation_code)
+    return Response(data=reservation)
+
+
 @router.post('/reservation/code/{invitation_code}')
 async def join_reservation(invitation_code: str, _=Depends(get_auth_token)) -> Response[bool]:
     account_id = context.account.id
