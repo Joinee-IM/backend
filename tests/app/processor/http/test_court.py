@@ -831,12 +831,13 @@ class TestBatchAddCourt(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
 
-        mock_read_venue.assert_called_with(venue_id=self.venue_id)
-        mock_read_stadium.assert_called_with(stadium_id=self.venue.stadium_id)
+        mock_read_venue.assert_called_with(venue_id=self.venue_id, include_unpublished=True)
+        mock_read_stadium.assert_called_with(stadium_id=self.venue.stadium_id, include_unpublished=True)
         mock_court_batch_add.assert_called_with(
             venue_id=self.venue_id,
             add=self.add,
             start_from=self.venue.court_count + 1,
+            is_published=self.venue.is_published,
         )
         mock_context.reset_context()
 
