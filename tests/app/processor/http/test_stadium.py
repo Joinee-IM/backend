@@ -149,11 +149,18 @@ class TestBatchEditStadium(AsyncTestCase):
 
     @patch('app.processor.http.stadium.context', new_callable=MockContext)
     @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.venue.batch_read', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.batch_edit', new_callable=AsyncMock)
-    async def test_happy_path(self, mock_batch_edit: AsyncMock, mock_batch_read: AsyncMock, mock_context: MockContext):
+    async def test_happy_path(
+        self, mock_batch_edit: AsyncMock, mock_browse_court: AsyncMock,
+        mock_batch_read_venue: AsyncMock, mock_batch_read: AsyncMock, mock_context: MockContext,
+    ):
         mock_context._context = self.context
 
         mock_batch_read.return_value = self.stadiums
+        mock_batch_read_venue.return_value = []
+        mock_browse_court.return_value = []
 
         result = await stadium.batch_edit_stadium(data=self.data)
 

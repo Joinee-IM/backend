@@ -68,7 +68,11 @@ async def batch_edit_venue(data: BatchEditVenueInput, _=Depends(get_auth_token))
     )
     if not all(context.account.id == stadium.owner_id for stadium in stadiums):
         raise exc.NoPermission
+    courts = await db.court.browse(venue_ids=data.venue_ids)
     await db.venue.batch_edit(venue_ids=data.venue_ids, is_published=data.is_published)
+    if data.is_published is False:
+        await db.court.batch_edit(court_ids=[court.id for court in courts], is_published=data.is_published)
+
     return Response()
 
 
@@ -98,7 +102,7 @@ async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdPa
         -> Response[Sequence[do.Court]]:
     include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     courts = await db.court.browse(
-        venue_id=venue_id,
+        venue_ids=[venue_id],
         include_unpublished=include_unpublished,
     )
 

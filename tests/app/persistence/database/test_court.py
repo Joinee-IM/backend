@@ -87,15 +87,15 @@ class TestBrowse(AsyncTestCase):
     async def test_happy_path(self, mock_fetch: AsyncMock, mock_init: Mock):
         mock_fetch.return_value = self.raw_court
 
-        result = await court.browse(venue_id=self.venue_id)
+        result = await court.browse(venue_ids=[self.venue_id])
 
         self.assertEqual(result, self.courts)
         mock_init.assert_called_with(
             sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
-                ' WHERE venue_id = %(venue_id)s'
+                ' WHERE venue_id IN (%(venue_id_0)s)'
                 ' AND is_published = True',
-            venue_id=self.venue_id,
+            venue_id_0=self.venue_id,
         )
 
     @patch('app.persistence.database.util.PostgresQueryExecutor.__init__', new_callable=Mock)
@@ -103,14 +103,14 @@ class TestBrowse(AsyncTestCase):
     async def test_include_unpublished(self, mock_fetch: AsyncMock, mock_init: Mock):
         mock_fetch.return_value = self.raw_court
 
-        result = await court.browse(venue_id=self.venue_id, include_unpublished=True)
+        result = await court.browse(venue_ids=[self.venue_id], include_unpublished=True)
 
         self.assertEqual(result, self.courts)
         mock_init.assert_called_with(
             sql='SELECT id, venue_id, number, is_published'
                 '  FROM court'
-                ' WHERE venue_id = %(venue_id)s',
-            venue_id=self.venue_id,
+                ' WHERE venue_id IN (%(venue_id_0)s)',
+            venue_id_0=self.venue_id,
         )
 
 

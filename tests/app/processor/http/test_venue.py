@@ -147,13 +147,15 @@ class TestBatchEditVenue(AsyncTestCase):
     @patch('app.persistence.database.venue.batch_read', new_callable=AsyncMock)
     @patch('app.persistence.database.stadium.batch_read', new_callable=AsyncMock)
     @patch('app.persistence.database.venue.batch_edit', new_callable=AsyncMock)
+    @patch('app.persistence.database.court.browse', new_callable=AsyncMock)
     async def test_happy_path(
-        self, mock_batch_edit: AsyncMock, mock_batch_read_stadium: AsyncMock,
+        self, mock_browse_court: AsyncMock, mock_batch_edit: AsyncMock, mock_batch_read_stadium: AsyncMock,
         mock_batch_read_venue: AsyncMock, mock_context: MockContext,
     ):
         mock_context._context = self.context
         mock_batch_read_venue.return_value = self.venues
         mock_batch_read_stadium.return_value = self.stadiums
+        mock_browse_court.return_value = None
 
         result = await venue.batch_edit_venue(data=self.data)
 
@@ -310,7 +312,7 @@ class TestBrowseCourt(AsyncTestCase):
 
         self.assertEqual(result, self.expect_result)
         mock_browse.assert_called_with(
-            venue_id=self.venue_id,
+            venue_ids=[self.venue_id],
             include_unpublished=True,
         )
         mock_context.reset_context()
@@ -328,7 +330,7 @@ class TestBrowseCourt(AsyncTestCase):
 
         self.assertEqual(result, self.no_time_range_expect_result)
         mock_browse.assert_called_with(
-            venue_id=self.venue_id,
+            venue_ids=[self.venue_id],
             include_unpublished=True,
         )
         mock_context.reset_context()
