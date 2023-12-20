@@ -26,7 +26,7 @@ async def browse(
         'city_id': (city_id, 'district.city_id = %(city_id)s'),
         'district_id': (district_id, 'district.id = %(district_id)s'),
         'sport_id': (sport_id, 'venue.sport_id = %(sport_id)s'),
-        'is_published': (True if not include_unpublished else None, 'stadium.is_published = %(is_published)s'),
+        'is_published': (True if not include_unpublished else None, 'stadium.is_published = %(is_published)s AND venue.is_published = %(is_published)s'),  # noqa
     }
 
     query, params = generate_query_parameters(criteria_dict=criteria_dict)
