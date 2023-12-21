@@ -25,6 +25,7 @@ class BrowseReservationParameters(BaseModel):
     has_vacancy: bool | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
+    is_cancelled: bool | None = None,
     limit: int | None = Limit
     offset: int | None = Offset
     sort_by: enums.BrowseReservationSortBy = enums.BrowseReservationSortBy.time
@@ -49,6 +50,7 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
         time_ranges=params.time_ranges,
         technical_level=params.technical_level,
         has_vacancy=params.has_vacancy,
+        is_cancelled=params.is_cancelled,
         limit=params.limit,
         offset=params.offset,
         sort_by=params.sort_by,
