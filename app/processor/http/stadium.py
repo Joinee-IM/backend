@@ -64,10 +64,17 @@ async def batch_edit_stadium(data: BatchEditStadiumInput, _=Depends(get_auth_tok
     if not all(stadium.owner_id == context.account.id for stadium in stadiums):
         raise exc.NoPermission
 
+    venues = await db.venue.batch_read(stadium_ids=[stadium.id for stadium in stadiums])
+    courts = await db.court.browse(venue_ids=[venue.id for venue in venues])
+
     await db.stadium.batch_edit(
         stadium_ids=data.stadium_ids,
         is_published=data.is_published,
     )
+
+    if data.is_published is False:
+        await db.venue.batch_edit(venue_ids=[venue.id for venue in venues], is_published=False)
+        await db.court.batch_edit(court_ids=[court.id for court in courts], is_published=False)
 
     return Response()
 

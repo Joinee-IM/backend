@@ -68,7 +68,11 @@ async def batch_edit_venue(data: BatchEditVenueInput, _=Depends(get_auth_token))
     )
     if not all(context.account.id == stadium.owner_id for stadium in stadiums):
         raise exc.NoPermission
+    courts = await db.court.browse(venue_ids=data.venue_ids)
     await db.venue.batch_edit(venue_ids=data.venue_ids, is_published=data.is_published)
+    if data.is_published is False:
+        await db.court.batch_edit(court_ids=[court.id for court in courts], is_published=data.is_published)
+
     return Response()
 
 
@@ -78,8 +82,7 @@ class ReadVenueOutput(do.Venue):
 
 @router.get('/venue/{venue_id}')
 async def read_venue(venue_id: int, _=Depends(get_auth_token)) -> Response[ReadVenueOutput]:
-    include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
-    venue = await db.venue.read(venue_id=venue_id, include_unpublished=include_unpublished)
+    venue = await db.venue.read(venue_id=venue_id, include_unpublished=True)
     sport = await db.sport.read(sport_id=venue.sport_id)
     return Response(
         data=ReadVenueOutput(
@@ -99,7 +102,7 @@ async def browse_court_by_venue_id(venue_id: int, params: BrowseCourtByVenueIdPa
         -> Response[Sequence[do.Court]]:
     include_unpublished = context.account.role == enums.RoleType.provider if context.get_account() else False
     courts = await db.court.browse(
-        venue_id=venue_id,
+        venue_ids=[venue_id],
         include_unpublished=include_unpublished,
     )
 
@@ -191,7 +194,7 @@ class AddVenueOutput(BaseModel):
 
 @router.post('/venue')
 async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[AddVenueOutput]:
-    stadium = await db.stadium.read(stadium_id=data.stadium_id)
+    stadium = await db.stadium.read(stadium_id=data.stadium_id, include_unpublished=True)
 
     if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
@@ -209,9 +212,9 @@ async def add_venue(data: AddVenueInput, _=Depends(get_auth_token)) -> Response[
         capacity=data.capacity,
         sport_equipments=data.sport_equipments,
         facilities=data.facilities,
-        court_count=data.court_count,
         court_type=data.court_type,
         sport_id=data.sport_id,
+        is_published=stadium.is_published,
     )
 
     await db.business_hour.batch_add(

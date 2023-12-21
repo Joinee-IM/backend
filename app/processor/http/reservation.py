@@ -25,6 +25,7 @@ class BrowseReservationParameters(BaseModel):
     has_vacancy: bool | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
+    is_cancelled: bool | None = None
     limit: int | None = Limit
     offset: int | None = Offset
     sort_by: enums.BrowseReservationSortBy = enums.BrowseReservationSortBy.time
@@ -49,6 +50,7 @@ async def browse_reservation(params: BrowseReservationParameters) -> Response[Br
         time_ranges=params.time_ranges,
         technical_level=params.technical_level,
         has_vacancy=params.has_vacancy,
+        is_cancelled=params.is_cancelled,
         limit=params.limit,
         offset=params.offset,
         sort_by=params.sort_by,
@@ -79,6 +81,12 @@ async def read_reservation(reservation_id: int) -> Response[ReadReservationOutpu
             members=members,
         ),
     )
+
+
+@router.get('/reservation/code/{invitation_code}')
+async def read_reservation_by_invitation_code(invitation_code: str) -> Response[do.Reservation]:
+    reservation = await db.reservation.read_by_code(invitation_code=invitation_code)
+    return Response(data=reservation)
 
 
 @router.post('/reservation/code/{invitation_code}')
@@ -187,6 +195,23 @@ async def edit_reservation(reservation_id: int, data: EditReservationInput, _=De
             start_time=start_time,
             end_time=end_time,
         )
+
+    return Response()
+
+
+@router.delete('/reservation/{reservation_id}/cancel')
+async def cancel_reservation(reservation_id: int, _=Depends(get_auth_token)) -> Response:
+    reservation_member = await db.reservation_member.browse_with_names(
+        reservation_id=reservation_id,
+        account_id=context.account.id,
+    )
+    if not reservation_member:
+        raise exc.NotFound
+
+    if not reservation_member[0].is_manager:
+        raise exc.NoPermission
+
+    await db.reservation.cancel(reservation_id=reservation_id)
 
     return Response()
 

@@ -23,7 +23,7 @@ async def browse(
         end_date: date | None = None,
         technical_level: enums.TechnicalType | None = None,
         has_vacancy: bool | None = None,
-        is_cancelled: bool | None = False,
+        is_cancelled: bool | None = None,
         limit: int | None = None,
         offset: int | None = None,
         sort_by: enums.BrowseReservationSortBy = None,
@@ -238,6 +238,15 @@ async def delete(reservation_id: int) -> None:
             ' WHERE id = $1',
             reservation_id,
         )
+
+
+async def cancel(reservation_id: int) -> None:
+    await PostgresQueryExecutor(
+        sql='UPDATE reservation'
+            '   SET is_cancelled = %(is_cancelled)s'
+            ' WHERE id = %(reservation_id)s',
+        reservation_id=reservation_id, is_cancelled=True,
+    ).execute()
 
 
 async def edit(

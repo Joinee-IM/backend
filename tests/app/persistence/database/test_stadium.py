@@ -134,6 +134,7 @@ class TestBrowse(AsyncTestCase):
                     r' AND district.id = %(district_id)s'
                     r' AND venue.sport_id = %(sport_id)s'
                     r' AND stadium.is_published = %(is_published)s'
+                    r' AND venue.is_published = %(is_published)s'
                     r' AND ((business_hour.weekday = %(weekday_0)s'
                     r' AND business_hour.start_time < %(end_time_0)s'
                     r' AND business_hour.end_time > %(start_time_0)s))'
@@ -145,6 +146,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id'
                     r' ORDER BY stadium.id'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -175,6 +178,7 @@ class TestBrowse(AsyncTestCase):
                     r' AND district.id = %(district_id)s'
                     r' AND venue.sport_id = %(sport_id)s'
                     r' AND stadium.is_published = %(is_published)s'
+                    r' AND venue.is_published = %(is_published)s'
                     r' AND ((business_hour.weekday = %(weekday_0)s'
                     r' AND business_hour.start_time < %(end_time_0)s'
                     r' AND business_hour.end_time > %(start_time_0)s))'
@@ -186,6 +190,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id) AS tbl',
                 place_type=enums.PlaceType.stadium,
                 **self.query_params,
@@ -220,6 +226,7 @@ class TestBrowse(AsyncTestCase):
                     r'       LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'             AND business_hour.type = %(place_type)s'
                     r' WHERE stadium.is_published = %(is_published)s'
+                    r' AND venue.is_published = %(is_published)s'
                     r'        GROUP BY stadium.id, city.id, district.id'
                     r'   ) tbl ON tbl.stadium_id = stadium.id'
                     r' INNER JOIN district ON stadium.district_id = district.id'
@@ -228,6 +235,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id'
                     r' ORDER BY stadium.id'
                     r' LIMIT %(limit)s OFFSET %(offset)s',
@@ -253,6 +262,7 @@ class TestBrowse(AsyncTestCase):
                     r'       LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'             AND business_hour.type = %(place_type)s'
                     r' WHERE stadium.is_published = %(is_published)s'
+                    r' AND venue.is_published = %(is_published)s'
                     r'        GROUP BY stadium.id, city.id, district.id'
                     r'   ) tbl ON tbl.stadium_id = stadium.id'
                     r' INNER JOIN district ON stadium.district_id = district.id'
@@ -261,6 +271,8 @@ class TestBrowse(AsyncTestCase):
                     r'  LEFT JOIN sport ON venue.sport_id = sport.id'
                     r'  LEFT JOIN business_hour ON business_hour.place_id = stadium.id'
                     r'                         AND business_hour.type = %(place_type)s'
+                    r' WHERE TRUE'
+                    r' AND stadium.is_published AND venue.is_published'
                     r' GROUP BY stadium.id, city.id, district.id) AS tbl',
                 place_type=enums.PlaceType.stadium, **self.no_filter_params,
             ),

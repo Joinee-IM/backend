@@ -185,12 +185,12 @@ async def add_reservation(court_id: int, data: AddReservationInput, _=Depends(ge
     account = await db.account.read(account_id=account_id)
     stadium = await db.stadium.read(stadium_id=venue.stadium_id)
     location = f'{stadium.name} {venue.name} 第 {court.number} {venue.court_type}'
-    if data.member_ids:
-        invitees = await db.account.batch_read(account_ids=data.member_ids)
-        await email.invitation.send(
-            meet_code=invite_code,
-            bcc=', '.join(invitee.email for invitee in invitees),
-        )
+    # if data.member_ids:
+    #     invitees = await db.account.batch_read(account_ids=data.member_ids)
+    #     await email.invitation.send(
+    #         meet_code=invite_code,
+    #         bcc=', '.join(invitee.email for invitee in invitees),
+    #     )
     if account.is_google_login:
         await google_calendar.add_google_calendar_event(
             reservation_id=reservation_id,
@@ -229,12 +229,16 @@ class AddCourtInput(BaseModel):
 
 @router.post('/court')
 async def batch_add_court(data: AddCourtInput, _=Depends(get_auth_token)) -> Response[bool]:
-    venue = await db.venue.read(venue_id=data.venue_id)
-    stadium = await db.stadium.read(stadium_id=venue.stadium_id)
+    venue = await db.venue.read(venue_id=data.venue_id, include_unpublished=True)
+    stadium = await db.stadium.read(stadium_id=venue.stadium_id, include_unpublished=True)
 
     if stadium.owner_id != context.account.id or context.account.role != enums.RoleType.provider:
         raise exc.NoPermission
 
-    await db.court.batch_add(venue_id=data.venue_id, add=data.add, start_from=venue.court_count + 1)
+    await db.court.batch_add(
+        venue_id=data.venue_id, add=data.add,
+        start_from=venue.court_count + 1,
+        is_published=venue.is_published,
+    )
 
     return Response(data=True)

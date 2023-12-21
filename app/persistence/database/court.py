@@ -23,13 +23,19 @@ async def read(court_id: int, include_unpublished: bool = False) -> do.Court:
     return do.Court(id=id_, venue_id=venue_id, number=number, is_published=is_published)
 
 
-async def browse(venue_id: int, include_unpublished: bool = False) -> Sequence[do.Court]:
+async def browse(venue_ids: Sequence[int], include_unpublished: bool = False) \
+        -> Sequence[do.Court]:
+    if not venue_ids:
+        return []
+    params = {fr'venue_id_{i}': uuid for i, uuid in enumerate(venue_ids)}
+    in_sql = ', '.join([fr'%({param})s' for param in params])
+
     results = await PostgresQueryExecutor(
         sql=fr'SELECT id, venue_id, number, is_published'
             fr'  FROM court'
-            fr' WHERE venue_id = %(venue_id)s'
+            fr' WHERE venue_id IN ({in_sql})'
             fr'{" AND is_published = True" if not include_unpublished else ""}',
-        venue_id=venue_id,
+        **params,
     ).fetch_all()
 
     return [
@@ -65,7 +71,7 @@ async def edit(
     ).execute()
 
 
-async def batch_add(venue_id: int, add: int, start_from: int):
+async def batch_add(venue_id: int, add: int, start_from: int, is_published: bool = True):
     numbers = range(start_from, start_from + add)
     value_sql = ', '.join(f'(%(venue_id)s, %(number_{i})s, %(is_published)s)' for i, _ in enumerate(numbers))
     params = {f'number_{i}': number for i, number in enumerate(numbers)}
@@ -73,7 +79,7 @@ async def batch_add(venue_id: int, add: int, start_from: int):
         sql=fr'INSERT INTO court'
             fr'            (venue_id, number, is_published)'
             fr'     VALUES {value_sql}',
-        venue_id=venue_id, is_published=True, **params,
+        venue_id=venue_id, is_published=is_published, **params,
     ).execute()
 
 
@@ -84,7 +90,7 @@ async def batch_read(court_ids: Sequence[int], include_unpublished: bool = False
     results = await PostgresQueryExecutor(
         sql=fr'SELECT id, venue_id, number, is_published'
             fr'  FROM court'
-            fr' WHERE venue_id IN ({in_sql})'
+            fr' WHERE id IN ({in_sql})'
             fr'{" AND is_published = True" if not include_unpublished else ""}',
         **params,
     ).fetch_all()
@@ -104,6 +110,9 @@ async def batch_edit(
         court_ids: Sequence[int],
         is_published: bool | None = None,
 ) -> None:
+    if not court_ids:
+        return
+
     params = {fr'court_id_{i}': uuid for i, uuid in enumerate(court_ids)}
     in_sql = ', '.join([fr'%({param})s' for param in params])
 

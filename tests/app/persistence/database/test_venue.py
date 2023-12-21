@@ -244,7 +244,6 @@ class TestAdd(AsyncTestCase):
         self.capacity = 1000
         self.sport_equipments = '桌球拍'
         self.facilities = '吹風機'
-        self.court_count = 5
         self.court_type = '桌'
         self.sport_id = 1
 
@@ -261,24 +260,24 @@ class TestAdd(AsyncTestCase):
             stadium_id=self.stadium_id, name=self.name, floor=self.floor, reservation_interval=self.reservation_interval,
             is_reservable=self.is_reservable, is_chargeable=self.is_chargeable, fee_rate=self.fee_rate,
             fee_type=self.fee_type, area=self.area, capacity=self.capacity, sport_equipments=self.sport_equipments,
-            facilities=self.facilities, court_count=self.court_count, court_type=self.court_type, sport_id=self.sport_id,
+            facilities=self.facilities, court_type=self.court_type, sport_id=self.sport_id,
         )
 
         self.assertEqual(result, self.expect_result)
         mock_init.assert_called_with(
             sql=r'INSERT INTO venue'
                 r'            (stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate,'
-                r'             fee_type, area, capacity, sport_equipments, facilities, court_count, court_type,'
+                r'             fee_type, area, capacity, sport_equipments, facilities, court_type,'
                 r'             sport_id, is_published)'
                 r'     VALUES (%(stadium_id)s, %(name)s, %(floor)s, %(reservation_interval)s, %(is_reservable)s,'
                 r'            %(is_chargeable)s, %(fee_rate)s, %(fee_type)s, %(area)s, %(capacity)s,'
-                r'            %(sport_equipments)s, %(facilities)s, %(court_count)s, %(court_type)s, %(sport_id)s,'
+                r'            %(sport_equipments)s, %(facilities)s, %(court_type)s, %(sport_id)s,'
                 r'            %(is_published)s)'
                 r'  RETURNING id',
             stadium_id=self.stadium_id, name=self.name, floor=self.floor, reservation_interval=self.reservation_interval,
             is_reservable=self.is_reservable,
             is_chargeable=self.is_chargeable, fee_rate=self.fee_rate, fee_type=self.fee_type, area=self.area,
             capacity=self.capacity, sport_equipments=self.sport_equipments,
-            facilities=self.facilities, court_count=self.court_count, court_type=self.court_type, sport_id=self.sport_id,
+            facilities=self.facilities, court_type=self.court_type, sport_id=self.sport_id,
             is_published=True,
         )

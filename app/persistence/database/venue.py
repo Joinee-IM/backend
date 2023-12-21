@@ -177,24 +177,24 @@ async def add(
     capacity: int,
     sport_equipments: str | None,
     facilities: str | None,
-    court_count: int,
     court_type: str,
     sport_id: int,
+    is_published: bool = True,
 ) -> int:
     id_, = await PostgresQueryExecutor(
         sql=r'INSERT INTO venue'
             r'            (stadium_id, name, floor, reservation_interval, is_reservable, is_chargeable, fee_rate,'
-            r'             fee_type, area, capacity, sport_equipments, facilities, court_count, court_type,'
+            r'             fee_type, area, capacity, sport_equipments, facilities, court_type,'
             r'             sport_id, is_published)'
             r'     VALUES (%(stadium_id)s, %(name)s, %(floor)s, %(reservation_interval)s, %(is_reservable)s,'
             r'            %(is_chargeable)s, %(fee_rate)s, %(fee_type)s, %(area)s, %(capacity)s,'
-            r'            %(sport_equipments)s, %(facilities)s, %(court_count)s, %(court_type)s, %(sport_id)s,'
+            r'            %(sport_equipments)s, %(facilities)s, %(court_type)s, %(sport_id)s,'
             r'            %(is_published)s)'
             r'  RETURNING id',
         stadium_id=stadium_id, name=name, floor=floor, reservation_interval=reservation_interval,
         is_reservable=is_reservable, is_chargeable=is_chargeable, fee_rate=fee_rate, fee_type=fee_type,
         area=area, capacity=capacity, sport_equipments=sport_equipments, facilities=facilities,
-        court_count=court_count, court_type=court_type, sport_id=sport_id, is_published=True,
+        court_type=court_type, sport_id=sport_id, is_published=is_published,
     ).fetch_one()
     return id_
 
@@ -216,6 +216,9 @@ async def batch_edit(
         court_type: str | None = None,
         is_published: bool | None = None,
 ) -> None:
+    if not venue_ids:
+        return
+
     criteria_dict = {
         'name': (name, 'name = %(name)s'),
         'floor': (floor, 'floor = %(floor)s'),
@@ -249,9 +252,20 @@ async def batch_edit(
     ).execute()
 
 
-async def batch_read(venue_ids: Sequence[int], include_unpublished: bool = False) -> Sequence[do.Venue]:
-    params = {fr'venue_{i}': uuid for i, uuid in enumerate(venue_ids)}
+async def batch_read(
+    venue_ids: Sequence[int] | None = None,
+    stadium_ids: Sequence[int] | None = None,
+    include_unpublished: bool = False,
+) -> Sequence[do.Venue]:
+    if not venue_ids and not stadium_ids:
+        return []
+
+    params = {fr'venue_{i}': venue_id for i, venue_id in enumerate(venue_ids or [])}
     in_sql = ', '.join([fr'%({param})s' for param in params])
+
+    stadium_params = {fr'stadium_{i}': stadium_id for i, stadium_id in enumerate(stadium_ids or [])}
+    stadium_in_sql = ', '.join([fr'%({param})s' for param in stadium_params])
+    params.update(stadium_params)
 
     results = await PostgresQueryExecutor(
         sql=fr'SELECT venue.id, stadium_id, name, floor, reservation_interval, is_reservable,'
@@ -260,7 +274,9 @@ async def batch_read(venue_ids: Sequence[int], include_unpublished: bool = False
             fr'       court_type, sport_id, venue.is_published'
             fr'  FROM venue'
             fr'  LEFT JOIN court ON court.venue_id = venue.id'
-            fr' WHERE venue.id IN ({in_sql})'
+            fr' WHERE TRUE'
+            fr'{f" AND venue.id IN ({in_sql})" if in_sql else ""}'
+            fr'{f" AND stadium_id IN ({stadium_in_sql})" if stadium_in_sql else ""}'
             fr'{" AND venue.is_published" if not include_unpublished else ""}'
             fr'{" AND court.is_published" if not include_unpublished else ""}'
             fr' GROUP BY venue.id',
