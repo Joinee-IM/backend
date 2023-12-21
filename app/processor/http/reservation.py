@@ -25,7 +25,7 @@ class BrowseReservationParameters(BaseModel):
     has_vacancy: bool | None = None
     time_ranges: Sequence[vo.DateTimeRange] | None = None
     technical_level: enums.TechnicalType | None = None
-    is_cancelled: bool | None = None,
+    is_cancelled: bool | None = None
     limit: int | None = Limit
     offset: int | None = Offset
     sort_by: enums.BrowseReservationSortBy = enums.BrowseReservationSortBy.time
